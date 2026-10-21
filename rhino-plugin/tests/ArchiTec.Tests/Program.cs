@@ -56,7 +56,7 @@ using(var server=new McpServer(port,(name,args,token)=>{calls++;return Task.From
     client.DefaultRequestHeaders.Add("Origin","https://untrusted.example");
     using(var r=await Post(init))Test("MCP rejects browser origins",()=>Assert(r.StatusCode==HttpStatusCode.Forbidden));
     client.DefaultRequestHeaders.Remove("Origin");
-    using(var r=await Post("""{"jsonrpc":"2.0","id":2,"method":"tools/list"}""")){using var j=JsonDocument.Parse(await r.Content.ReadAsStringAsync());Test("MCP tools contain no execution bypass",()=>Assert(j.RootElement.GetProperty("result").GetProperty("tools").GetArrayLength()==3));}
+    using(var r=await Post("""{"jsonrpc":"2.0","id":2,"method":"tools/list"}""")){using var j=JsonDocument.Parse(await r.Content.ReadAsStringAsync());Test("MCP tools contain no execution bypass",()=>Assert(j.RootElement.GetProperty("result").GetProperty("tools").GetArrayLength()==4));}
     using(var r=await Post("""{"jsonrpc":"2.0","method":"notifications/initialized"}"""))Test("MCP notifications use 202",()=>Assert(r.StatusCode==HttpStatusCode.Accepted));
     using(var r=await Post("""{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_context","arguments":{}}}""")){using var j=JsonDocument.Parse(await r.Content.ReadAsStringAsync());Test("MCP tool dispatch",()=>Assert(calls==1 && !j.RootElement.GetProperty("result").GetProperty("isError").GetBoolean()));}
     using(var r=await Post("""{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"execute_code","arguments":{}}}""")){using var j=JsonDocument.Parse(await r.Content.ReadAsStringAsync());Test("MCP rejects arbitrary code tools",()=>Assert(j.RootElement.GetProperty("error").GetProperty("code").GetInt32()==-32602));}
@@ -65,6 +65,7 @@ using(var server=new McpServer(port,(name,args,token)=>{calls++;return Task.From
 }
 passed+=await ProviderProtocolTests.Run();
 passed+=await ConnectionWorkflowTests.Run();
+passed+=await McpConnectionTests.Run();
 Console.WriteLine($"{passed} tests passed.");
 return 0;
 

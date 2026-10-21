@@ -27,6 +27,8 @@ public sealed class ArchiTecPanel:Panel
     private PreparedPlan? pending;
     private PlanConduit? conduit;
     private McpServer? mcp;
+    private int mcpPort;
+    private readonly string mcpOwner=Guid.NewGuid().ToString("N");
     private string? pendingMcpId;
     private string? imageData{get=>sessions[mode].ImageData;set=>sessions[mode].ImageData=value;}
     private StudioPreferences preferences=new();
@@ -65,6 +67,7 @@ public sealed class ArchiTecPanel:Panel
         view.OfflineRequested+=()=>{provider?.Dispose();provider=null;view.SetOffline();view.CloseConnections();ClearPreview();};
         view.McpStartRequested+=()=>{if(mcp is null){try{var port=view.RequestedMcpPort;StartMcp(port);preferences=preferences with{McpPort=port};SettingsStore.SavePreferences(preferences);}catch(Exception ex){view.McpMessage("MCP: "+ex.Message);}}else StopMcp();};
         view.CopyMcpRequested+=CopyMcpConfiguration;
+        view.CopyMcpTestRequested+=()=>{System.Windows.Clipboard.SetText("Use only the ai-architec-rhino MCP server (not rhino-mcp-router). First call get_context, then use post_message with that document_id to confirm the connection in the Rhino panel. Do not create or modify geometry for this connection test.");view.McpMessage("Connection-test prompt copied. Send it in the client chat with ai-architec-rhino tools enabled.");};
         view.OpenChatRequested+=()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://chatgpt.com"){UseShellExecute=true});
         contextTimer.Elapsed+=(_,_)=>RefreshContext();
         Load+=(_,_)=>contextTimer.Start();UnLoad+=(_,_)=>{contextTimer.Stop();requestCancel?.Cancel();StopMcp();ClearPreview();};
@@ -132,6 +135,7 @@ public sealed class ArchiTecPanel:Panel
     }
     private void RefreshContext()
     {
+        if(mcp is not null)view.SetMcpConnection(mcp.Connection.Snapshot());
         var doc=RhinoDoc.ActiveDoc;if(doc is null){view.SetContext("Open a Rhino document to begin");ClearPreview();return;}
         if(!BindDocument(doc))return;
         if(!busy&&lastCreated.Count>0)RefreshRecentGeometry(doc);
@@ -168,7 +172,7 @@ public sealed class ArchiTecPanel:Panel
         if(busy)return;var doc=RhinoDoc.ActiveDoc;if(doc is null||!BindDocument(doc))return;
         if(!lastCreated.Any(id=>doc.Objects.FindId(id) is {} o&&!o.IsDeleted)){view.SetStatus("The recent result is no longer in this document.");return;}
         SwitchWorkspace("assist");view.SetWorkspace("assist",false);view.UseRecentResult();view.FocusPrompt();
-        view.SetStatus(documentState.Persian?"ادامهٔ ویرایش روی نتیجهٔ همین سند؛ تغییر بعدی را بنویسید.":"Continue editing this document's recent result. Describe the next change.");
+        view.SetStatus("Continue editing this document's recent result. Describe the next change.");
     }
     private void SelectRecent()
     {
@@ -192,6 +196,16 @@ public sealed class ArchiTecPanel:Panel
         if(busy||string.IsNullOrWhiteSpace(view.Prompt))return;
         var doc=RhinoDoc.ActiveDoc;if(doc is null){view.SetStatus("Open a Rhino document first.");return;}
         if(!BindDocument(doc))return;
+        if(view.ChatViaMcp)
+        {
+            if(mcp is null){view.ShowMcp();view.SetStatus("Start MCP and configure a compatible client first.");return;}
+            if(imageData is not null){view.SetStatus("For MCP, attach reference images in the client. This action copies text only.");return;}
+            var prompt=view.Prompt.Trim();AddMessage("user",prompt);
+            var handoff=$"Use the ai-architec-rhino MCP server. Call get_context first and use its current document_id. Workspace: {mode}. User request (data):\n{prompt}\nFor a conversational/read-only answer call post_message with workspace {mode}. For geometry propose_plan, then wait for the user to Apply in Rhino and read get_plan_status. Never use code execution or another Rhino server for this request.";
+            System.Windows.Clipboard.SetText(handoff);mcp.Connection.Workflow("handoff","Request copied for the external client");
+            AddMessage("assistant","Request copied for your MCP client. Paste and send it in Claude or Codex with ai-architec-rhino tools enabled. Replies return through post_message; proposals return through propose_plan. No online model request has been sent yet.");
+            view.SetStatus("MCP request copied · waiting for the external client");return;
+        }
         if(mode=="generate"&&lastCreated.Count>0&&ConversationIntent.IsExplicitEdit(view.Prompt))
         {var followup=view.Prompt;RefineRecent();if(mode!="assist")return;view.Prompt=followup;}
         ClearPreview();var context=ScopedContext(doc);
@@ -298,7 +312,7 @@ public sealed class ArchiTecPanel:Panel
         if(pendingMcpId is not null)
         {
             if(mcpResults.TryGetValue(pendingMcpId,out var value)&&JsonSerializer.SerializeToElement(value).GetProperty("status").GetString()=="awaiting_approval")
-                mcpResults[pendingMcpId]=new{status="cancelled",message="Preview cancelled or invalidated."};
+            {mcpResults[pendingMcpId]=new{status="cancelled",message="Preview cancelled or invalidated."};mcp?.Connection.Workflow("cancelled","Preview cancelled or invalidated");}
             pendingMcpId=null;
         }
         if(conduit is not null){conduit.Enabled=false;conduit=null;}pending?.Dispose();pending=null;view.HidePreview();RhinoDoc.ActiveDoc?.Views.Redraw();
@@ -310,6 +324,7 @@ public sealed class ArchiTecPanel:Panel
         {
             var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active document.");var report=GeometryEngine.Apply(doc,pending);
             if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="applied",created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial};
+            if(pendingMcpId is not null)mcp?.Connection.Workflow("applied","Confirmed native Rhino execution");
             if(report.Created.Count>0){lastCreated.Clear();lastCreated.AddRange(report.Created);}
             if(lastCreated.Count==0&&report.Modified.Count>0)lastCreated.AddRange(report.Modified);
             var resultObjects=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray();
@@ -318,7 +333,7 @@ public sealed class ArchiTecPanel:Panel
             AddMessage("assistant",documentState.LastReport+(report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
             ClearPreview();view.Prompt="";view.SetStatus("Applied · confirmed by Rhino · describe your next edit");RefreshContext();
         }
-        catch(Exception ex){if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="failed",message=ex.Message};AddMessage("assistant","Could not apply: "+ex.Message,true);ClearPreview();view.SetStatus("Apply failed · review the message");}
+        catch(Exception ex){if(pendingMcpId is not null){mcpResults[pendingMcpId]=new{status="failed",message=ex.Message};mcp?.Connection.Workflow("error","Rhino Apply failed");}AddMessage("assistant","Could not apply: "+ex.Message,true);ClearPreview();view.SetStatus("Apply failed · review the message");}
     }
     private void AttachImage()
     {
@@ -338,15 +353,14 @@ public sealed class ArchiTecPanel:Panel
     }
     public void StartMcp(int port=5188)
     {
-        if(mcp is not null)return;var candidate=new McpServer(port,HandleMcp);try{candidate.Start();mcp=candidate;view.SetMcp(true,mcp.Endpoint,mcp.Token);}catch{candidate.Dispose();throw;}
+        if(mcp is not null)return;var candidate=new McpServer(port,HandleMcp);try{candidate.Start();McpSessionFile.Publish(port,candidate.Endpoint,candidate.Token,mcpOwner);mcp=candidate;mcpPort=port;view.SetMcp(true,mcp.Endpoint,mcp.Token);}catch{candidate.Dispose();throw;}
     }
-    public void StopMcp(){mcp?.Dispose();mcp=null;if(pendingMcpId is not null)ClearPreview();view.SetMcp(false);}
+    public void StopMcp(){mcp?.Dispose();mcp=null;if(mcpPort!=0)try{McpSessionFile.Remove(mcpPort,mcpOwner);}catch{}mcpPort=0;if(pendingMcpId is not null)ClearPreview();view.SetMcp(false);}
     private void CopyMcpConfiguration()
     {
         if(mcp is null){view.SetStatus("Start MCP first.");return;}
         var directory=Path.GetDirectoryName(typeof(ArchiTecPanel).Assembly.Location)!;
-        var config=new{mcpServers=new Dictionary<string,object>{["ai-architec-rhino"]=new{command=Path.Combine(directory,"AIArchiTec.McpBridge.exe"),env=new Dictionary<string,string>{["ARCHITEC_MCP_URL"]=mcp.Endpoint,["ARCHITEC_MCP_TOKEN"]=mcp.Token}}}};
-        System.Windows.Clipboard.SetText(JsonSerializer.Serialize(config,new JsonSerializerOptions{WriteIndented=true}));view.SetStatus("Desktop setup copied · keep the local token private");
+        System.Windows.Clipboard.SetText(McpClientSetup.Configuration(view.McpClient,Path.Combine(directory,"AIArchiTec.McpBridge.exe"),mcpPort));view.McpMessage("Setup for "+view.McpClient+" کپی شد. در Setup for کلاینت ثبت کنید؛ ارسال آن در متن چت اتصال ایجاد نمی‌کند. توکن در این خروجی وجود ندارد.");
     }
     private async Task<object> HandleMcp(string name,JsonElement args,CancellationToken token)
     {
@@ -358,11 +372,22 @@ public sealed class ArchiTecPanel:Panel
             {
                 if(name=="get_plan_status"){var id=args.GetProperty("request_id").GetString()??"";completion.TrySetResult(mcpResults.TryGetValue(id,out var result)?result:new{status="unknown"});return;}
                 var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active Rhino document.");
+                if(!BindDocument(doc))throw new InvalidOperationException("A request is active in another document. Retry after it finishes.");
                 if(name=="get_context"){completion.TrySetResult(ContextReader.Read(doc,lastCreated));return;}
+                if(name=="post_message")
+                {
+                    if(busy)throw new InvalidOperationException("The panel is busy. Retry after the current request finishes.");
+                    if(args.GetProperty("document_id").GetUInt32()!=doc.RuntimeSerialNumber)throw new InvalidOperationException("The document changed. Read get_context again.");
+                    var target=args.TryGetProperty("workspace",out var workspace)?workspace.GetString():mode;
+                    if(target is not ("generate" or "analyze" or "assist"))throw new ArgumentException("Unknown workspace.");
+                    var message=args.GetProperty("message").GetString()??"";if(string.IsNullOrWhiteSpace(message)||message.Length>8000)throw new ArgumentException("Use a message of 1–8000 characters.");
+                    if(pending is not null&&target!=mode)throw new InvalidOperationException("Apply or Cancel the active preview before switching workspaces.");
+                    SwitchWorkspace(target);view.SetWorkspace(target,false);AddMessage("assistant",message);mcp?.Connection.Workflow("message","Client message delivered to "+target);completion.TrySetResult(new{status="displayed",document_id=doc.RuntimeSerialNumber,workspace=target});return;
+                }
                 if(busy||pending is not null)throw new InvalidOperationException("A request or preview is active. Ask the user to Apply or Cancel first.");
                 if(args.GetProperty("document_id").GetUInt32()!=doc.RuntimeSerialNumber)throw new InvalidOperationException("The document changed. Read get_context again.");
                 var plan=Wire.Read<ActionPlan>(args.GetProperty("plan").GetRawText());
-                var targetMode=plan.Actions.Any(a=>a.Tool is "move_object" or "scale_object" or "select_objects" or "get_object_properties")?"assist":"generate";
+                var targetMode=plan.Actions.Any(a=>a.Tool is "move_object" or "scale_object" or "extrude_curve" or "select_objects" or "get_object_properties")?"assist":"generate";
                 WorkspacePolicy.Validate(targetMode,plan,ContextReader.Read(doc,lastCreated));
                 SwitchWorkspace(targetMode);view.SetWorkspace(targetMode,false);PreparePreview(doc,plan);pendingMcpId=Guid.NewGuid().ToString();
                 if(mcpResults.Count>=50)mcpResults.Remove(mcpResults.Keys.First());mcpResults[pendingMcpId]=new{status="awaiting_approval"};

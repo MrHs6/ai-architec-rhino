@@ -1,5 +1,16 @@
-# Validation — AI Archi-Tec 0.4.0-beta.1
+# Validation — AI Archi-Tec 0.4.1-beta.2
 
+## Evidence for 0.4.1-beta.2 (22 October 2026)
+
+- Solution build: zero warnings/errors; **94 automated checks passed**. New tests exercise authenticated initialization, session headers, announced-client identity, tool discovery, status polling, disconnect, token-free JSON/TOML exports, Windows DPAPI discovery and the real stdio executable.
+- The installed `0.4.1-beta.2` RHP loaded in a fresh Rhino 8.31 process. The preceding local test packages were archived with per-file SHA256 verification before removal. Public 0.4.1-beta.1 was not released.
+- **9 native MCP UI checks passed**: English workspace guides, separate Codex/Claude setup, honest web-connector guidance, Copy for MCP semantics, independent API status and separate client/stage/last-contact displays.
+- **8 installed bridge-to-Rhino checks passed**: encrypted discovery, initialize, four tools, active empty document, a real post_message in the panel, awaiting-approval proposal, actual announced test-client name, cancelled proposal status and clean disconnect. No active geometry was created or modified; the acceptance client was explicitly named as a protocol test, not Claude/ChatGPT.
+- **19 workspace/audit, 19 native geometry and 11 isolated profile checks passed again** on this installed revision. No personal profiles were changed.
+- New UI captures show the real English interface. The MCP image uses a live local protocol-test handshake, not a signed-in Claude/Codex/ChatGPT account. Prior building images and the downloadable example remain limited offline geometry demonstrations.
+- No paid API key was used. Live provider generation/vision and a real external AI account still need account-based acceptance. The web/tunnel path is documented, not provisioned or claimed to be connected.
+
+## Prior revision record
 ## Current revision
 
 - Generate, Analyze and Model Assist have independent session drafts, reference attachments, histories and option controls. Switching cancels the single active viewport preview.

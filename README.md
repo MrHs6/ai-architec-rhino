@@ -10,15 +10,17 @@
 
 ایدهٔ معماری را در پنل **AI Archi-Tec** وارد کنید، طرح پیشنهادی را در همان سند راینو ببینید و با **Apply to Rhino** به هندسهٔ قابل ویرایش تبدیل کنید. برای استفاده از هوش مصنوعی، سرویس و کلید شخصی خودتان را تنظیم کنید؛ یا کلاینت دسکتاپ سازگار را به MCP محلی پلاگین وصل کنید.
 
-**Beta: `0.4.0-beta.1` · Windows x64 · Rhino 8.31+ (.NET 8)**
+**Beta: `0.4.1-beta.2` · Windows x64 · Rhino 8.31+ (.NET 8)**
 
 نیازمند راینو ۸.۳۱ یا جدیدتر از شاخهٔ Rhino 8. این یک نسخهٔ آزمایشی برای مدل‌سازی مفهومی است؛ محدودیت‌ها و وضعیت آزمون‌ها پایین همین صفحه آمده‌اند.
 
 در نسخهٔ 0.4، پروفایل API پیش از اتصال ذخیره و فعال می‌شود؛ خطای شبکه با وضعیت ذخیره مخلوط نمی‌شود. پس از Apply، چت نتیجهٔ واقعی را گزارش می‌کند و ادامهٔ ویرایش به همان مدل وصل است. [آموزش ساخت و ادامهٔ ویرایش](docs/CONVERSATIONAL-WORKFLOW.fa.md) · [بررسی پلاگین‌های مرجع](docs/REFERENCE-REVIEW.fa.md)
 
+نسخهٔ 0.4.1 رابط و راهنمای داخل پلاگین را کاملاً انگلیسی ارائه می‌کند. وضعیت سرور، نام اعلام‌شدهٔ کلاینت، آخرین تماس و مراحل درخواست/پیش‌نمایش/اجرا جدا دیده می‌شوند. خروجی تنظیمات Claude و Codex متفاوت و بدون توکن است. [MCP setup and chat guide — English](docs/MCP-QUICKSTART.en.md) · [راهنمای فارسی](docs/MCP-QUICKSTART.fa.md)
+
 ## دانلود و نصب سریع
 
-**[دانلود نصب‌کنندهٔ ویندوز ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.0-beta.1/ai-architec-rhino-0.4.0-beta.1-windows-installer.zip)** · [دانلود مستقیم Yak](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.0-beta.1/ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak) · [صفحهٔ نسخه و فایل‌ها](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.0-beta.1)
+**[دانلود نصب‌کنندهٔ ویندوز ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/ai-architec-rhino-0.4.1-beta.2-windows-installer.zip)** · [دانلود مستقیم Yak](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/ai-architec-rhino-0.4.1-beta.2-rh8_31-win.yak) · [صفحهٔ نسخه و فایل‌ها](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.1-beta.2)
 
 1. نصب‌کنندهٔ ZIP را دانلود و **Extract All** کنید؛ فایل‌ها را کنار هم نگه دارید.
 2. سندتان را ذخیره و **تمام پنجره‌های راینو را ببندید**؛ سپس فایل **`install.cmd`** را اجرا کنید. این فایل ابزار رسمی **Yak** همراه راینو را فراخوانی می‌کند.
@@ -31,20 +33,20 @@
 نصب مستقیم در CMD نیز ممکن است:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.1-beta.2-rh8_31-win.yak"
 ```
 
 مسیر فایل را با محل دانلود خودتان جایگزین کنید. راه‌های دیگر نصب، مسیر سفارشی راینو، به‌روزرسانی، حذف و رفع خطا در **[راهنمای نصب فارسی](docs/INSTALLATION.fa.md)** توضیح داده شده‌اند.
 
 ## محیط واقعی پلاگین
 
-<p align="center"><img src="rhino-plugin/docs/studio-panel.png" width="500" alt="پنل واقعی AI Archi-Tec داخل Rhino؛ نمونهٔ آفلاین ساختمان پنج‌طبقه"></p>
+<p align="center"><img src="rhino-plugin/docs/studio-panel.png" width="500" alt="English AI Archi-Tec workspace in Rhino with an explicitly labeled local MCP protocol test"></p>
 
-تصویر بالا پنل واقعی نسخهٔ جدید است. نمونهٔ ساختمان پایین با حالت محدود **Offline examples** ساخته شده است؛ تصویر، مدرک آزمون مدل آنلاین نیست.
+تصویر بالا رابط انگلیسی واقعی و آزمون پروتکل MCP محلی را نشان می‌دهد؛ این آزمون حساب آنلاین نیست. نمونهٔ ساختمان پایین با حالت محدود **Offline examples** ساخته شده است.
 
 ![هندسهٔ واقعی ساختمان نمونه در Rhino](rhino-plugin/docs/building-output.png)
 
-[دانلود فایل قابل ویرایش ساختمان نمونه 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.0-beta.1/demo-building.3dm) — ۴۶ جزء بومی راینو شامل دال‌ها، ستون‌ها، نما و بام.
+[دانلود فایل قابل ویرایش ساختمان نمونه 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/demo-building.3dm) — ۴۶ جزء بومی راینو شامل دال‌ها، ستون‌ها، نما و بام.
 
 ## چه کارهایی انجام می‌دهد؟
 
