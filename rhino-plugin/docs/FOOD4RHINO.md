@@ -3,7 +3,7 @@
 Product: **AI Archi-Tec for Rhino**
 Owner: **Hasan Sharif Askari**
 Website: https://ai-arch.ir
-Version: **0.3.0-beta.1**
+Version: **0.3.0-beta.2**
 Platform: Rhino 8.31+, Windows x64, .NET 8. Tested with Rhino 8.31.
 
 ## Listing text

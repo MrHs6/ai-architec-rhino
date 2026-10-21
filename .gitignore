@@ -5,3 +5,5 @@
 .env
 *.user
 *.local.json
+/work/
+/outputs/

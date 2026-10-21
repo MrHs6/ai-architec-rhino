@@ -40,6 +40,7 @@ public partial class StudioView:UserControl
         var bitmap=new BitmapImage();bitmap.BeginInit();bitmap.CacheOption=BitmapCacheOption.OnLoad;bitmap.StreamSource=stream;bitmap.EndInit();bitmap.Freeze();
         RailLogoBrush.ImageSource=bitmap;BrandLogoBrush.ImageSource=bitmap;AboutLogoBrush.ImageSource=bitmap;
         AboutVersion.Text="Version "+(typeof(StudioView).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]??"beta");
+        AboutInstallPath.Text=typeof(StudioView).Assembly.Location;
         loading=false;SetWorkspace("generate",false);
     }
     public void LoadProfiles(Dictionary<string,ConnectionSettings> values){foreach(var p in values)profiles[p.Key]=p.Value;}

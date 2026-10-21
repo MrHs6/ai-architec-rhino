@@ -34,7 +34,23 @@ if /I "%~1"=="/check" (
   echo Yak and bundled package paths verified. No installation performed.
   exit /b 0
 )
+"%SystemRoot%\System32\tasklist.exe" /FI "IMAGENAME eq Rhino.exe" /NH | "%SystemRoot%\System32\findstr.exe" /I /C:"Rhino.exe" >nul
+if not errorlevel 1 (
+  echo Save your work and close every Rhino window before installing.
+  echo A running prototype can overwrite its registration again at shutdown.
+  exit /b 1
+)
 "%ARCHITEC_RHINO_SYSTEM%\Yak.exe" install "%ARCHITEC_PACKAGE%"
 if errorlevel 1 exit /b 1
+if not exist "%~dp0repair-registration.cmd" (
+  echo Registration repair script is missing. Extract every file from the installer ZIP.
+  exit /b 1
+)
+call "%~dp0repair-registration.cmd" "%ARCHITEC_PACKAGE%"
+if errorlevel 1 (
+  echo Yak installed the package, but registration repair could not finish.
+  echo Run repair-registration.cmd with the bundled .yak path and check its error before restarting Rhino.
+  exit /b 1
+)
 echo Installed. Save your work, restart Rhino, then type archtec and press Enter.
 exit /b 0

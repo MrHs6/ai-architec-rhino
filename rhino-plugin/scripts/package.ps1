@@ -35,7 +35,7 @@ function Write-Archive([string]$Source,[string]$Destination){
 Write-Archive $payload $yakPath
 & (Join-Path $PSScriptRoot 'verify-package.ps1') -PackagePath $yakPath
 Copy-Item -LiteralPath $yakPath -Destination $bundle
-foreach($fileName in @('install.ps1','install.cmd')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $fileName) -Destination $bundle}
+foreach($fileName in @('install.ps1','install.cmd','repair-registration.ps1','repair-registration.cmd')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $fileName) -Destination $bundle}
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\INSTALLER-README.md') -Destination (Join-Path $bundle 'README.md')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'PRIVACY.md') -Destination $bundle
 Get-ChildItem -LiteralPath $bundle -File | Sort-Object Name | ForEach-Object {
