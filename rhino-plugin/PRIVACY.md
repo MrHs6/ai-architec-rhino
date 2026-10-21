@@ -2,7 +2,7 @@
 
 The API-key workflow is bring-your-own-key, as requested by the project owner. Requests go directly from the plugin to the explicitly configured API source. The earlier server-only credential architecture in the handover was superseded by this requirement.
 
-No API credential is bundled. Optional persistence uses Windows DPAPI CurrentUser in `%LOCALAPPDATA%\AIArchiTec\Rhino8\connection.json`. Without Remember enabled, the key stays in process memory. There is no plugin analytics or telemetry endpoint.
+No API credential is bundled. Optional persistence uses Windows DPAPI CurrentUser in `%LOCALAPPDATA%\AIArchiTec\Rhino8\profiles.json` and the active-profile compatibility file `connection.json`. Each provider has independent preferences. Turning Remember off and saving removes that profile's saved key from both copies. Without Remember enabled, the key stays in process memory. General preferences are stored separately in `preferences.json`. There is no plugin analytics or telemetry endpoint.
 
 An AI request includes the user's prompt, recent conversation, document units/layer summary, and selected or recently panel-created object IDs/types/layers/bounding boxes. It does not upload the entire Rhino file or viewport screenshot. An explicitly attached reference image is sent only when the user submits an AI request to a supported vision model. Provider handling and billing follow the user's chosen service.
 

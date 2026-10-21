@@ -3,7 +3,7 @@
 Product: **AI Archi-Tec for Rhino**
 Owner: **Hasan Sharif Askari**
 Website: https://ai-arch.ir
-Version: **0.2.0-beta.3**
+Version: **0.3.0-beta.1**
 Platform: Rhino 8.31+, Windows x64, .NET 8. Tested with Rhino 8.31.
 
 ## Listing text
@@ -22,4 +22,3 @@ Early beta: automatic full-building design, Grasshopper and public cloud MCP hos
 This task creates the release files and a listing draft. It does not create a McNeel account or publish a public listing.
 
 References: [Yak package structure](https://developer.rhino3d.com/en/guides/yak/the-anatomy-of-a-package/), [manifest](https://developer.rhino3d.com/en/guides/yak/the-package-manifest/), [Rhino plugin installation](https://www.rhino3d.com/en/docs/guides/scripts-plugins/how-to-use/).
-

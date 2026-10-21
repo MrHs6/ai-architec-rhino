@@ -6,7 +6,8 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>AIArchiTec.Studio</AssemblyName>
-    <Version>0.2.0-beta.3</Version>
+    <AssemblyName Condition="'$(StudioAssemblyName)' != ''">$(StudioAssemblyName)</AssemblyName>
+    <Version>0.3.0-beta.1</Version>
     <Title>ai-architec-rhino</Title>
     <RhinoSystemDir Condition="'$(RhinoSystemDir)' == ''">C:\Program Files\Rhino 8\System</RhinoSystemDir>
   </PropertyGroup>

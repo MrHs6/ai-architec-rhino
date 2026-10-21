@@ -4,22 +4,22 @@
 
 An architectural modeling assistant that runs inside Rhino. Open Studio with **`archtec`**, describe a concept, inspect the proposed geometry in the current document, then **Apply to Rhino**. Use your own API account or connect a compatible desktop AI client through localhost MCP.
 
-**Current release: 0.2.0-beta.3. Windows x64, licensed Rhino 8.31+ within Rhino 8, .NET 8 runtime.** This is a concept-modeling beta; live paid-provider/vision trials and clean installation on a second licensed workstation remain outstanding.
+**Current release: 0.3.0-beta.1. Windows x64, licensed Rhino 8.31+ within Rhino 8, .NET 8 runtime.** This is a concept-modeling beta; live paid-provider/vision trials and clean installation on a second licensed workstation remain outstanding.
 
 ## Install
 
-1. Download the [Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.2.0-beta.3/ai-architec-rhino-0.2.0-beta.3-windows-installer.zip) from the [release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.2.0-beta.3).
+1. Download the [Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/ai-architec-rhino-0.3.0-beta.1-windows-installer.zip) from the [release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.3.0-beta.1).
 2. Extract all files, keeping `install.cmd` next to the `.yak` package. Run `install.cmd`; it invokes Rhino's installed Yak tool for the current Windows user.
 3. Save your work and restart Rhino.
 4. Type **`archtec`** and press Enter.
-5. Open **Settings**, choose your API source, enter your personal key, load compatible models and select a model. Alternatively start **MCP** and configure a compatible local desktop client.
+5. Open **API profiles**, choose your API source, enter your personal key, load compatible models and select a model. Alternatively start **MCP** and configure a compatible local desktop client.
 
 No Visual Studio, Node or SDK is needed for the ready-made installer. API access and billing belong to each user's provider account; no shared key or AI credit is included.
 
-Alternatively [download the Yak directly](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.2.0-beta.3/ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak), drag it onto Rhino, or run:
+Alternatively [download the Yak directly](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak), drag it onto Rhino, or run:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
 ```
 
 Adjust the path. Restart after installation. CMD calls Yak directly without altering PowerShell execution policy. For a custom Rhino installation, set `ARCHITEC_RHINO_SYSTEM` to its System folder before running `install.cmd`. `install.cmd /check` only verifies local paths. `install.ps1 -CheckOnly` also checks Rhino version, package identity and the accompanying checksum when PowerShell scripts are allowed by your device policy.
@@ -32,18 +32,20 @@ Preferences: **Tools > Options > AI Archi-Tec**. Plugin management: **Tools > Op
 
 ![Editable native building geometry](../rhino-plugin/docs/building-output.png)
 
-The screenshots show the real limited offline building example, not an unverified online-AI result. [Download the editable 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.2.0-beta.3/demo-building.3dm): 46 native parts for a five-floor concept building.
+The screenshots show the real limited offline building example, not an unverified online-AI result. [Download the editable 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/demo-building.3dm): 46 native parts for a five-floor concept building.
 
 ## Features and workflow
 
-- Dockable native Studio; Generate, Analyze and modeling-assist workflows.
-- Personal OpenRouter, OpenAI or compatible API endpoint; fetched model catalog and exact selected model IDs. Compatible models must support `/models`, `/chat/completions` and structured `json_schema` output.
-- Reference images for confirmed OpenRouter vision models; interpretation quality still needs live testing.
+- Dockable native Studio with independent Generate, Analyze and Model Assist drafts, references, histories and options.
+- Separate OpenRouter, OpenAI, xAI/Grok, Google Gemini, Anthropic/Claude and compatible/local profiles. Native Gemini and Anthropic protocols, fetched catalogs and exact selected model IDs. [Protocol details](PROVIDERS.md)
+- Native Gemini image parts; OpenRouter/xAI/Anthropic images follow model capabilities. Interpretation quality still needs live testing.
 - Editable rectangular multi-floor concept buildings with separate slabs, columns, facade panels, layers and floor/role metadata.
 - Boxes, lines, polylines, curves, extrusion, movement, scaling, selection and property reading.
 - Structured-plan validation, wire preview, explicit Apply, and native Rhino batch Undo. Arbitrary model-generated code is not executed.
 - Authenticated localhost MCP and a bundled stdio desktop bridge.
 - Independent per-user settings and optional Windows DPAPI key persistence; no embedded API key.
+
+Local Analyze audits measure dimensions, geometry validity/closure and layers. Model Assist offers deterministic Move/Scale/Extrude controls with selected/recent target scopes. Connection overview, API profiles, MCP connection, Preferences and About the creator are separate pages. The supplied full-resolution logo is used in the header, navigation and About page.
 
 **Prompt → API or local MCP client → validated plan → viewport preview → Apply → native objects.** Generate alone does not modify the document. Inspect the preview before Apply; use Ctrl+Z in Rhino to undo. Analyze reads limited context and does not propose geometry changes.
 
@@ -65,7 +67,7 @@ A cloud service cannot reach your Windows localhost directly. A compatible local
 
 ## Beta status
 
-30 automated core/provider/MCP checks, 19 native Rhino geometry checks and 4 building checks passed during development. A real MCP proposal/Apply, fifth-floor-only edit, stable GUIDs and exact Undo restoration were verified. The complete native solution and release packaging also passed on a hosted Windows runner. [Validation report](../rhino-plugin/docs/VALIDATION.md)
+67 automated checks, a rerun of 19 native Rhino geometry checks, and 20 native workspace/profile/audit/assist checks passed. Four building checks were recorded in the prior beta. A real MCP proposal/Apply, fifth-floor-only edit, stable GUIDs and exact Undo restoration were verified. The complete native solution and release packaging also passed on a hosted Windows runner. [Validation report](../rhino-plugin/docs/VALIDATION.md)
 
 Live paid-provider responses, vision interpretation quality and clean startup on a second licensed machine still require validation. Concept geometry is not BIM or construction documentation. Arbitrary image reconstruction, unrestricted building generation, Grasshopper, persistent project memory and cloud hosting are not implemented. Food4Rhino/Yak catalog publication is separate from this GitHub release.
 

@@ -10,7 +10,7 @@
 
 ## روش پیشنهادی: نصب‌کنندهٔ ویندوز
 
-1. [نسخهٔ بتا](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.2.0-beta.3) را باز کنید و از **Assets** فایل `ai-architec-rhino-0.2.0-beta.3-windows-installer.zip` را بگیرید. گزینهٔ **Source code** نصب‌کننده نیست.
+1. [نسخهٔ بتا](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.3.0-beta.1) را باز کنید و از **Assets** فایل `ai-architec-rhino-0.3.0-beta.1-windows-installer.zip` را بگیرید. گزینهٔ **Source code** نصب‌کننده نیست.
 2. ZIP را با **Extract All** استخراج کنید؛ `install.cmd` و فایل `.yak` باید کنار هم باشند.
 3. `install.cmd` را اجرا کنید. نصب برای همان حساب ویندوز با Yak همراه راینو انجام می‌شود.
 4. پس از پیام موفقیت، فایل راینو را ذخیره کنید و راینو را ببندید و مجدداً باز کنید.
@@ -30,7 +30,7 @@ install.cmd
 یا مسیر یک بستهٔ محلی را بدهید:
 
 ```cmd
-install.cmd "D:\Downloads\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak"
+install.cmd "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
 ```
 
 اگر راینو در مسیر دیگری نصب است:
@@ -47,7 +47,7 @@ install.cmd
 فایل `.yak` نسخه را دانلود و روی پنجرهٔ Rhino بکشید، یا این فرمان را اجرا کنید:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
 ```
 
 مسیر را مطابق دستگاه خود اصلاح کنید. سپس راینو را مجدداً اجرا کنید. نصب از جست‌وجوی عمومی **PackageManager** فقط پس از انتشار بسته در کاتالوگ مربوط در دسترس خواهد بود؛ فعلاً فایل این مخزن را نصب کنید.
@@ -64,7 +64,7 @@ install.cmd
 PowerShell نسخهٔ راینو، هویت بسته و SHA256 همراه ZIP را بررسی می‌کند. فایل مستقل `SHA256SUMS.txt` نیز در Assets همان نسخه منتشر می‌شود. برای مشاهدهٔ hash دانلود:
 
 ```powershell
-Get-FileHash .\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak -Algorithm SHA256
+Get-FileHash .\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak -Algorithm SHA256
 ```
 
 برای نصب خودکار از URL مستقیم، `-PackageUrl` و `-Sha256` واقعی همان نسخه را به `install.ps1` بدهید. برای نصب بدون تغییر سند/بسته از `-WhatIf` استفاده کنید. جزئیات در [راهنمای توزیع](../rhino-plugin/docs/DISTRIBUTION.md) آمده است.
@@ -79,7 +79,7 @@ Get-FileHash .\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak -Algorithm SHA256
 | Tools → Options → AI Archi-Tec | تنظیمات شخصی اتصال |
 | Tools → Options → Plug-ins | مدیریت نصب و بارگذاری پلاگین |
 
-پس از واردکردن تنظیمات در Options، در Studio → Settings فهرست مدل‌ها را دریافت و مدل را انتخاب کنید. تغییر تنظیمات، به‌تنهایی درخواست پولی به سرویس ارسال نمی‌کند.
+پس از واردکردن تنظیمات در Options، در Studio → API profiles فهرست مدل‌ها را دریافت و مدل را انتخاب کنید. تغییر تنظیمات، به‌تنهایی درخواست پولی به سرویس ارسال نمی‌کند.
 
 ## اولین مدل
 

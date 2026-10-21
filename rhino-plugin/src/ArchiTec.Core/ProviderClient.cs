@@ -15,28 +15,36 @@ public sealed class ProviderClient : IPlannerClient
 {
     private readonly HttpClient http;
     private readonly bool openRouter;
+    private readonly bool xai;
     private Dictionary<string,ModelDescriptor> catalog = [];
-    public ProviderClient(string endpoint,string apiKey,bool isOpenRouter,HttpMessageHandler? handler = null)
+    public ProviderClient(string endpoint,string apiKey,bool isOpenRouter,HttpMessageHandler? handler = null,bool isXai=false)
     {
         if(!Uri.TryCreate(endpoint.TrimEnd('/')+"/",UriKind.Absolute,out var url) ||
             url.Scheme!="https" && !(url.Scheme=="http" && url.IsLoopback) || !string.IsNullOrEmpty(url.UserInfo) || !string.IsNullOrEmpty(url.Query) || !string.IsNullOrEmpty(url.Fragment))
             throw new ArgumentException("Use an HTTPS API base URL (HTTP is allowed only on localhost).");
         if(string.IsNullOrWhiteSpace(apiKey))throw new ArgumentException("Enter your own API key.");
         openRouter=isOpenRouter;
+        xai=isXai;
+        if(xai&&url!=new Uri("https://api.x.ai/v1/"))throw new ArgumentException("xAI uses https://api.x.ai/v1/.");
         if(openRouter && url != new Uri("https://openrouter.ai/api/v1/"))throw new ArgumentException("OpenRouter uses https://openrouter.ai/api/v1/.");
         http=new HttpClient(handler ?? new HttpClientHandler{AllowAutoRedirect=false}){BaseAddress=url,Timeout=TimeSpan.FromSeconds(120)};
         http.DefaultRequestHeaders.Authorization=new AuthenticationHeaderValue("Bearer",apiKey.Trim());
     }
     public async Task<ModelCatalog> Models(CancellationToken cancel)
     {
-        using var response=await http.GetAsync("models",HttpCompletionOption.ResponseHeadersRead,cancel);
+        using var response=await http.GetAsync(xai?"language-models":"models",HttpCompletionOption.ResponseHeadersRead,cancel);
         using var json=JsonDocument.Parse(await Body(response,cancel));
         var result=new List<ModelDescriptor>();
-        foreach(var m in json.RootElement.GetProperty("data").EnumerateArray())
+        foreach(var m in json.RootElement.GetProperty(xai?"models":"data").EnumerateArray())
         {
             var id=m.GetProperty("id").GetString();
             if(string.IsNullOrWhiteSpace(id))continue;
             bool vision=false;
+            if(xai)
+            {
+                if(!m.TryGetProperty("output_modalities",out var output)||!output.EnumerateArray().Any(v=>v.GetString()=="text"))continue;
+                vision=m.TryGetProperty("input_modalities",out var input)&&input.EnumerateArray().Any(v=>v.GetString()=="image");
+            }
             if(openRouter)
             {
                 var supported=m.TryGetProperty("supported_parameters",out var p) ? p.EnumerateArray().Select(v=>v.GetString()).ToArray() : [];
@@ -78,15 +86,9 @@ public sealed class ProviderClient : IPlannerClient
         if(message.TryGetProperty("refusal",out var refusal) && refusal.ValueKind==JsonValueKind.String)
             throw new InvalidOperationException("The selected model declined this request.");
         var raw=message.GetProperty("content").GetString() ?? throw new InvalidOperationException("No structured response received.");
-        var result=Wire.Read<ProviderReply>(raw);
-        if(result.Message is null||result.Message.Length>20000)throw new InvalidOperationException("Provider response text is missing or too large.");
-        var plan=result.Plan is null ? null : new ActionPlan {Version=result.Plan.Version,Summary=result.Plan.Summary,LengthUnit=result.Plan.LengthUnit,
-            Actions=result.Plan.Actions.Select(a=>new ModelAction {Tool=a.Tool,Parameters=JsonDocument.Parse(a.ParametersJson).RootElement.Clone()}).ToList()};
-        if(plan is not null)PlanValidator.Validate(plan);
-        if(request.Mode=="analyze" && plan is not null)throw new InvalidOperationException("Analyze response included modeling actions and was rejected.");
-        return new PlanResponse(result.Message,plan,request.Model);
+        return ProviderReplyReader.Parse(raw,request);
     }
-    private static async Task<string> Body(HttpResponseMessage response,CancellationToken cancel)
+    internal static async Task<string> Body(HttpResponseMessage response,CancellationToken cancel)
     {
         if(!response.IsSuccessStatusCode)
         {
@@ -117,7 +119,8 @@ public static class PlannerInstructions
     For rectangular multi-floor buildings prefer create_building to generate editable slabs, columns and façade panels. Use individual geometry actions for custom elements and massing. Reference images guide approximate geometry and composition, not photorealistic reconstruction; state approximations honestly.
     Use actual existing GUIDs from the context for modifications. Never invent object IDs.
     If a target is ambiguous or context is insufficient, ask a concise question with plan:null.
-    Only generate operations explicitly requested by the user. In analyze mode always use plan:null.
+    Only generate operations explicitly requested by the user. In analyze mode always use plan:null and discuss only the requested analysis focus. Do not claim engineering, code, thermal or daylight simulation from bounding-box context.
+    Generate mode creates new geometry; do not move, scale or select existing objects there. Model Assist mode only edits, extrudes, selects or reads existing targets in the supplied scope; do not create replacement buildings or unrelated primitives there.
     You can explain architecture in chat without actions. Never claim execution: these are only proposed actions.
     Default units to meters when the request specifies meters, otherwise respect the request/document.
     All coordinates use the plan's length_unit, in world coordinates. A box is axis aligned, rooted at origin unless specified.

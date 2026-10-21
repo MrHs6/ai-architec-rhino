@@ -28,4 +28,41 @@ PASS MCP notifications use 202
 PASS MCP tool dispatch
 PASS MCP rejects arbitrary code tools
 PASS MCP rejects unknown protocol headers
-30 tests passed.
+PASS Google Gemini filters unsupported models and discovers vision
+PASS Google Gemini uses the exact catalog ID
+PASS Google Gemini parses native structured output
+PASS Google Gemini keeps API keys out of URLs
+PASS Gemini native authentication and GenerateContent path
+PASS Gemini native image and structured generation config
+PASS Gemini paginates the model catalog
+PASS Google Gemini rejects incomplete output
+PASS Google Gemini redacts API errors
+PASS Anthropic / Claude filters unsupported models and discovers vision
+PASS Anthropic / Claude uses the exact catalog ID
+PASS Anthropic / Claude parses native structured output
+PASS Anthropic / Claude keeps API keys out of URLs
+PASS Anthropic key and version headers
+PASS Anthropic native image and output_config
+PASS Anthropic paginates the model catalog
+PASS Anthropic / Claude rejects incomplete output
+PASS Anthropic / Claude redacts API errors
+PASS xAI / Grok filters unsupported models and discovers vision
+PASS xAI / Grok uses the exact catalog ID
+PASS xAI / Grok parses native structured output
+PASS xAI / Grok keeps API keys out of URLs
+PASS xAI language catalog and JSON schema protocol
+PASS xAI / Grok rejects incomplete output
+PASS xAI / Grok redacts API errors
+PASS Google Gemini rejects wrong credential destination
+PASS Anthropic / Claude rejects wrong credential destination
+PASS xAI / Grok rejects wrong credential destination
+PASS Workspace drafts, images and histories are isolated
+PASS Workspace switching preserves draft
+PASS Workspace rejects analyze action outside its purpose/scope
+PASS Workspace rejects generate action outside its purpose/scope
+PASS Workspace rejects assist action outside its purpose/scope
+PASS Workspace rejects assist action outside its purpose/scope
+PASS Workspace rejects assist action outside its purpose/scope
+PASS Model Assist accepts scoped edit
+PASS Generate accepts creation
+67 tests passed.

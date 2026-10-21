@@ -10,13 +10,13 @@
 
 ایدهٔ معماری را در پنل **AI Archi-Tec** وارد کنید، طرح پیشنهادی را در همان سند راینو ببینید و با **Apply to Rhino** به هندسهٔ قابل ویرایش تبدیل کنید. برای استفاده از هوش مصنوعی، سرویس و کلید شخصی خودتان را تنظیم کنید؛ یا کلاینت دسکتاپ سازگار را به MCP محلی پلاگین وصل کنید.
 
-**Beta: `0.2.0-beta.3` · Windows x64 · Rhino 8.31+ (.NET 8)**
+**Beta: `0.3.0-beta.1` · Windows x64 · Rhino 8.31+ (.NET 8)**
 
 نیازمند راینو ۸.۳۱ یا جدیدتر از شاخهٔ Rhino 8. این یک نسخهٔ آزمایشی برای مدل‌سازی مفهومی است؛ محدودیت‌ها و وضعیت آزمون‌ها پایین همین صفحه آمده‌اند.
 
 ## دانلود و نصب سریع
 
-**[دانلود نصب‌کنندهٔ ویندوز ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.2.0-beta.3/ai-architec-rhino-0.2.0-beta.3-windows-installer.zip)** · [دانلود مستقیم Yak](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.2.0-beta.3/ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak) · [صفحهٔ نسخه و فایل‌ها](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.2.0-beta.3)
+**[دانلود نصب‌کنندهٔ ویندوز ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/ai-architec-rhino-0.3.0-beta.1-windows-installer.zip)** · [دانلود مستقیم Yak](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak) · [صفحهٔ نسخه و فایل‌ها](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.3.0-beta.1)
 
 1. نصب‌کنندهٔ ZIP را دانلود و **Extract All** کنید؛ فایل‌ها را کنار هم نگه دارید.
 2. فایل **`install.cmd`** را اجرا کنید. این فایل ابزار رسمی **Yak** همراه راینو را فراخوانی می‌کند.
@@ -29,7 +29,7 @@
 نصب مستقیم در CMD نیز ممکن است:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
 ```
 
 مسیر فایل را با محل دانلود خودتان جایگزین کنید. راه‌های دیگر نصب، مسیر سفارشی راینو، به‌روزرسانی، حذف و رفع خطا در **[راهنمای نصب فارسی](docs/INSTALLATION.fa.md)** توضیح داده شده‌اند.
@@ -38,24 +38,27 @@
 
 <p align="center"><img src="rhino-plugin/docs/studio-panel.png" width="500" alt="پنل واقعی AI Archi-Tec داخل Rhino؛ نمونهٔ آفلاین ساختمان پنج‌طبقه"></p>
 
-تصویر بالا پنل واقعی پلاگین است. این نمونه با حالت محدود **Offline examples** ساخته شده است؛ تصویر، مدرک آزمون مدل آنلاین نیست.
+تصویر بالا پنل واقعی نسخهٔ جدید است. نمونهٔ ساختمان پایین با حالت محدود **Offline examples** ساخته شده است؛ تصویر، مدرک آزمون مدل آنلاین نیست.
 
 ![هندسهٔ واقعی ساختمان نمونه در Rhino](rhino-plugin/docs/building-output.png)
 
-[دانلود فایل قابل ویرایش ساختمان نمونه 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.2.0-beta.3/demo-building.3dm) — ۴۶ جزء بومی راینو شامل دال‌ها، ستون‌ها، نما و بام.
+[دانلود فایل قابل ویرایش ساختمان نمونه 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/demo-building.3dm) — ۴۶ جزء بومی راینو شامل دال‌ها، ستون‌ها، نما و بام.
 
 ## چه کارهایی انجام می‌دهد؟
 
 | قابلیت | رفتار نسخهٔ فعلی |
 |---|---|
 | پنل داخل راینو | فرمان `archtec`، پنل قابل Dock و حالت شناور با `AIArchitectFloat` |
-| API شخصی | OpenRouter، OpenAI و سرویس‌های سازگار با OpenAI با نشانی و کلید خود کاربر |
+| API شخصی | پروفایل مستقل OpenRouter، OpenAI، xAI/Grok، Google Gemini، Anthropic/Claude و OpenAI-compatible/local |
+| فضای کاری مستقل | Generate، Analyze و Model Assist هرکدام گزینه‌ها، ورودی، مرجع و مکالمهٔ جدا دارند |
 | انتخاب مدل | فهرست مدل‌ها از سرویس دریافت می‌شود؛ شناسهٔ انتخابی بدون تعویض مخفی ارسال می‌شود |
-| ورودی تصویر | ضمیمه‌کردن تصویر برای مدل‌های OpenRouter که قابلیت vision آن‌ها تأیید شده است |
+| ورودی تصویر | ورودی بومی Gemini؛ OpenRouter، xAI و Anthropic طبق قابلیت تصویری اعلام‌شدهٔ مدل |
 | ساختمان مفهومی | ساختمان مستطیلی چندطبقه با اجزای جدا، لایه‌بندی و مشخصات طبقه/نقش |
 | مدل‌سازی پایه | باکس، خط، پلی‌لاین، منحنی و extrusion؛ جابه‌جایی، تغییر مقیاس، انتخاب و خواندن مشخصات |
 | کنترل خروجی | اعتبارسنجی طرح، پیش‌نمایش در viewport، اجرای صریح با Apply و Undo در راینو |
-| Analyze | دریافت زمینهٔ محدود مدل و پیشنهاد تحلیلی؛ در این حالت تغییری در هندسه پیشنهاد نمی‌شود |
+| Analyze | گزارش محلی ابعاد، اعتبار/بسته‌بودن هندسه و لایه‌ها؛ انتخاب scope و تفسیر اختیاری AI، بدون تغییر هندسه |
+| Model Assist | Move، Scale و Extrude روی انتخاب یا خروجی اخیر، با مقدار و محور مشخص و پیش‌نمایش قبل از Apply |
+| تنظیمات و About | صفحات جدا برای API، MCP، Preferences و نمای کلی اتصال؛ معرفی سازنده با لوگوی اصلی |
 | MCP محلی | سرور localhost با توکن و پل stdio برای کلاینت‌های دسکتاپ سازگار |
 | تنظیمات مستقل | تنظیمات هر حساب ویندوز جداست؛ ذخیرهٔ اختیاری کلید با Windows DPAPI |
 
@@ -83,7 +86,9 @@ Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights and a 
 
 ## اتصال API و MCP
 
-در پنل **Settings** یا بخش **Tools → Options → AI Archi-Tec** تنظیمات شخصی را وارد کنید. در Studio، **Load compatible models** را بزنید و مدل را انتخاب کنید. سرویس سازگار باید `/models`، `/chat/completions` و خروجی `json_schema` را پشتیبانی کند. فهرست مدل‌ها به معنی سازگاری قطعی همهٔ مدل‌های سرویس نیست.
+صفحهٔ **API profiles** را از آیکون کلید باز کنید؛ هر سرویس کلید، نشانی و مدل مستقل دارد. **Connect and discover models** فهرست حساب همان سرویس را دریافت می‌کند. Grok از API مستقیم xAI، Gemini از GenerateContent و Claude از Anthropic Messages استفاده می‌کند؛ OpenRouter، OpenAI و سرویس سفارشی از قالب سازگار OpenAI استفاده می‌کنند. [تفاوت پروتکل‌ها و منابع رسمی](docs/PROVIDERS.md)
+
+آیکون کره، **MCP connection** را باز می‌کند؛ آیکون چرخ‌دنده، **Preferences** را برای فضای کاری پیش‌فرض، تراکم مکالمه و Zoom پیش‌نمایش باز می‌کند. دکمهٔ دوطرفهٔ بالای پنل، نمای کلی اتصال را نشان می‌دهد. بخش **About the creator** سازنده و روند کار پروژه را معرفی می‌کند.
 
 دکمهٔ **MCP** سرور `http://127.0.0.1:5188/mcp` را روی همان کامپیوتر روشن می‌کند. **Copy desktop client configuration** تنظیمات پل محلی را آماده می‌کند. کلاینت می‌تواند زمینهٔ سند را بخواند و طرح پیشنهاد کند؛ اجرای طرح همچنان با Apply در راینو است. **یک سرویس ابری به localhost ویندوز دسترسی مستقیم ندارد** و به کلاینت/پل سازگار روی کامپیوتر نیاز دارد. بازکردن سایت ChatGPT اتصال MCP را خودکار تنظیم نمی‌کند.
 
@@ -91,7 +96,7 @@ Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights and a 
 
 ## وضعیت بتا و محدودیت‌ها
 
-- ساخت کامل در Windows و **۳۰ آزمون خودکار هسته، provider و MCP** اجرا شده‌اند. آزمون داخلی Rhino شامل **۱۹ بررسی هندسی + ۴ بررسی ساختمان** بوده است؛ پیشنهاد/اجرای واقعی MCP، جابه‌جایی فقط طبقهٔ پنجم و بازگشت دقیق با Undo نیز بررسی شده‌اند.
+- **۶۷ آزمون خودکار** شامل سه پروتکل جدید، صفحه‌بندی مدل‌ها، ورودی تصویر، هدر کلید و استقلال workspaceها گذشتند. در نسخهٔ جدید، **۱۹ آزمون هندسه و ۲۰ بررسی رابط/گزارش/پروفایل** در خود راینو نیز گذشتند. چهار بررسی ساختمان و آزمون Apply/Undo از نسخهٔ قبلی ثبت شده‌اند.
 - آزمایش پاسخ زندهٔ سرویس‌های پولی و کیفیت تفسیر تصویر با حساب واقعی هنوز تکمیل نشده است. آزمون کامل نصب تمیز و شروع مجدد روی دستگاه دوم نیز باقی است. [گزارش اعتبارسنجی](rhino-plugin/docs/VALIDATION.md)
 - خروجی فعلی هندسهٔ مفهومی است. بازسازی دقیق هر تصویر، طراحی خودکار کامل هر ساختمان، BIM، نقشهٔ اجرایی، Grasshopper و حافظهٔ پایدار پروژه در این نسخه پیاده‌سازی نشده‌اند.
 - این نسخه مخصوص Windows و Rhino 8 است؛ برای macOS، Rhino 7 یا همهٔ نسخه‌های اولیهٔ Rhino 8 بستهٔ سازگار ارائه نشده است.

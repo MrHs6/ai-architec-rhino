@@ -13,7 +13,7 @@ install.cmd
 For an explicit local package:
 
 ```cmd
-install.cmd "D:\Downloads\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak"
+install.cmd "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
 ```
 
 CMD calls Yak directly and works when PowerShell scripts are disabled. `install.cmd /check` checks that Yak and the bundled package exist without installing. For a custom Rhino path, set `ARCHITEC_RHINO_SYSTEM` before running CMD. PowerShell additionally supports checksum verification and remote downloads:
@@ -30,7 +30,7 @@ For unattended installation from a direct release URL, use `-PackageUrl 'https:/
 Inside Rhino, drag the `.yak` onto the window, or use Rhino's `PackageManager` after the owner publishes the package to an accessible catalog. Direct CLI installation also works:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.2.0-beta.3-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
 ```
 
 Save your document and restart Rhino after installation or upgrade. Type **`archtec`** and press Enter. `AIArchitect` remains an alternative command. Preferences are under **Tools > Options > AI Archi-Tec**; installation/loading controls are under **Tools > Options > Plug-ins**. In Studio > Settings, choose your own service, key and model, or start MCP and copy your desktop client's configuration.
@@ -41,7 +41,7 @@ To remove the plugin, use PackageManager or `Yak.exe uninstall ai-architec-rhino
 
 The installed workflow is `.github/workflows/rhino-plugin.yml` at repository root; its reusable source is `rhino-plugin/ci/github-actions.yml`. Pull requests and source pushes build the entire Windows plugin using the pinned official RhinoCommon SDK NuGet package, run all 30 core checks and upload the `.yak`, installer ZIP and SHA256SUMS as an Actions artifact. No Rhino license, private API key or local Rhino installation is needed to compile and package on the runner. Actual geometry/UI checks require licensed Rhino on a desktop.
 
-After merging reviewed changes, a maintainer can create and push a tag matching `rhino-v<manifest-version>`, for example `rhino-v0.2.0-beta.3`. A successful tagged build creates a **draft prerelease** with the assets attached. A maintainer reviews and publishes that draft. Pushing source alone does not make a public release, and a private repository's release remains private. Workflow dispatch manually rebuilds artifacts once the workflow is available on the default branch.
+After merging reviewed changes, a maintainer can create and push a tag matching `rhino-v<manifest-version>`, for example `rhino-v0.3.0-beta.1`. A successful tagged build creates a **draft prerelease** with the assets attached. A maintainer reviews and publishes that draft. Pushing source alone does not make a public release, and a private repository's release remains private. Workflow dispatch manually rebuilds artifacts once the workflow is available on the default branch.
 
 ## GitLab
 
@@ -61,4 +61,3 @@ The listing draft is in `docs/FOOD4RHINO.md`. Public Food4Rhino/Yak catalog publ
 ```
 
 Without `-UseNuGet`, the build uses SDK assemblies in the installed Rhino directory. `package.ps1` creates a versioned Yak ZIP using its [documented package format](https://developer.rhino3d.com/en/guides/yak/the-anatomy-of-a-package/), validates its payload, then bundles the installer. It does not redistribute Rhino/Eto host binaries. Change the project version and `manifest.yml` together before each release. Compile/package steps can be automated; startup and modeling acceptance must still be performed on licensed Rhino.
-

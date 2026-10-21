@@ -1,0 +1,20 @@
+PASS generate options are independent
+PASS analyze options are independent
+PASS assist options are independent
+PASS Api has a dedicated page
+PASS Mcp has a dedicated page
+PASS General has a dedicated page
+PASS About has a dedicated page
+PASS Dashboard has a dedicated page
+PASS Provider key drafts remain independent
+PASS Provider endpoint restores with its profile
+PASS Six providers are available
+PASS Original full-resolution logo is embedded
+PASS Dimensions audit measures native geometry
+PASS Health audit reports native closure
+PASS Layer audit uses scoped objects
+PASS DPAPI protects profile credentials
+PASS DPAPI roundtrip succeeds for this Windows user
+PASS Remember-off removes both stored key copies
+PASS Saving one provider preserves the other encrypted profile
+19 workspace/profile/audit checks passed; personal settings and active geometry were not changed.
