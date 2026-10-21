@@ -3,14 +3,16 @@
 <p align="center">دستیار مدل‌سازی معماری داخل راینو — با API شخصی یا اتصال محلی MCP</p>
 <p align="center"><a href="docs/README.en.md">English</a> · <a href="docs/INSTALLATION.fa.md">راهنمای نصب</a> · <a href="docs/CONNECTIONS.fa.md">اتصال API و MCP</a> · <a href="https://github.com/MrHs6/ai-architec-rhino/releases">دانلودها</a></p>
 
-[![Windows build](https://github.com/MrHs6/ai-architec-rhino/actions/workflows/rhino-plugin.yml/badge.svg)](https://github.com/MrHs6/ai-architec-rhino/actions/workflows/rhino-plugin.yml)
+[![Windows build](https://github.com/MrHs6/ai-architec-rhino/actions/workflows/rhino-plugin.yml/badge.svg?branch=main)](https://github.com/MrHs6/ai-architec-rhino/actions/workflows/rhino-plugin.yml)
 ![Rhino 8.31+](https://img.shields.io/badge/Rhino-8.31%2B-703CE8)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 ![Beta](https://img.shields.io/badge/status-beta-orange)
 
 ایدهٔ معماری را در پنل **AI Archi-Tec** وارد کنید، طرح پیشنهادی را در همان سند راینو ببینید و با **Apply to Rhino** به هندسهٔ قابل ویرایش تبدیل کنید. برای استفاده از هوش مصنوعی، سرویس و کلید شخصی خودتان را تنظیم کنید؛ یا کلاینت دسکتاپ سازگار را به MCP محلی پلاگین وصل کنید.
 
-**نسخهٔ فعلی: `0.2.0-beta.3` — ویندوز x64، Rhino 8.31 یا جدیدتر از شاخهٔ Rhino 8 با runtime دات‌نت ۸.** این یک نسخهٔ آزمایشی برای مدل‌سازی مفهومی است؛ محدودیت‌ها و وضعیت آزمون‌ها پایین همین صفحه آمده‌اند.
+**Beta: `0.2.0-beta.3` · Windows x64 · Rhino 8.31+ (.NET 8)**
+
+نیازمند راینو ۸.۳۱ یا جدیدتر از شاخهٔ Rhino 8. این یک نسخهٔ آزمایشی برای مدل‌سازی مفهومی است؛ محدودیت‌ها و وضعیت آزمون‌ها پایین همین صفحه آمده‌اند.
 
 ## دانلود و نصب سریع
 
