@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+.env
+*.user
+*.local.json
+artifacts/
+test-results/
+!AIArchiTec.sln
+package/

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "summary": "Create a five-floor concept building with editable slabs, columns and glazing. World origin; 15 × 20 m footprint; 3.2 m floor heights.",
+  "length_unit": "meters",
+  "actions": [
+    {"tool": "create_building", "parameters": {"width": 15, "depth": 20, "floors": 5, "floor_height": 3.2, "facade": "glazed", "layer": "AI_Building"}}
+  ]
+}

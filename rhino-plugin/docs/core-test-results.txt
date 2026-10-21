@@ -1,0 +1,31 @@
+PASS Persian digits and explicit meter dimensions
+PASS Follow-up preserves target GUID
+PASS Building example produces one validated semantic action
+PASS Reject fractional floor count
+PASS Reject slab taller than a floor
+PASS Reject duplicate tool parameters
+PASS Reject ambiguous targets
+PASS Do not invent free-form offline geometry
+PASS Reject script tool
+PASS Reject negative dimension
+PASS Reject unknown parameters
+PASS Reject invalid GUID
+PASS Reject oversized coordinate
+PASS Reject nonboolean cap
+PASS Reject insecure remote API
+PASS Reject alternate OpenRouter destination
+PASS Filter unsupported models and preserve exact ID
+PASS Parse structured response and validate tool parameters
+PASS No model fallback in provider payload
+PASS Reject unavailable model
+PASS Analyze cannot return geometry plan
+PASS API errors redact credentials
+PASS MCP requires token
+PASS MCP initialize negotiates supported version
+PASS MCP rejects browser origins
+PASS MCP tools contain no execution bypass
+PASS MCP notifications use 202
+PASS MCP tool dispatch
+PASS MCP rejects arbitrary code tools
+PASS MCP rejects unknown protocol headers
+30 tests passed.

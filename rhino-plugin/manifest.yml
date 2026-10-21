@@ -1,0 +1,16 @@
+name: ai-architec-rhino
+version: 0.2.0-beta.3
+authors:
+  - Hasan Sharif Askari
+description: >
+  AI Archi-Tec architectural modeling assistant for Rhino 8 on Windows.
+  Bring your own OpenRouter or OpenAI-compatible API key, or connect a desktop
+  AI client through the local MCP server. Validated native geometry actions,
+  viewport preview, explicit Apply and Rhino Undo. Early beta.
+url: "https://ai-arch.ir"
+keywords:
+  - architecture
+  - ai
+  - mcp
+  - modeling
+icon: logo.png

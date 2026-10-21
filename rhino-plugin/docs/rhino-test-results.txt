@@ -1,0 +1,25 @@
+PASS Preview does not add document objects
+PASS Native box has exact 10 x 15 x 12 meter dimensions
+PASS Native box is solid with volume 1800 m3
+PASS Box belongs to AI_Building layer
+PASS Move preserves object GUID and offsets X by 2 meters
+PASS Unrelated geometry remains unchanged
+PASS Rhino undo succeeds for movement
+PASS Undo restores original position
+PASS Reject stale preview after target geometry changes
+PASS Closed planar curve extrudes into capped solid
+PASS Extrusion preserves source curve
+PASS Invalid later action rejects whole batch before execution
+PASS Rejected batch leaves object count unchanged
+PASS Locked geometry cannot be modified
+PASS Unit change invalidates pending preview
+PASS Three-point curve produces native editable geometry
+PASS Meter instructions convert correctly into millimeter document
+PASS Undo succeeds for box creation
+PASS Undo removes created geometry
+19 Rhino integration tests passed.
+PASS Building creates 46 editable components with exact dimensions
+PASS Semantic role and floor metadata
+PASS Fifth-floor objects remain identifiable
+PASS Transparent native glazing material
+4 architectural generation tests passed.

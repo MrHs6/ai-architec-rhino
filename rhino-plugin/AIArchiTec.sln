@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{61D19B58-2AEB-4EAB-9C27-A2A7082F08CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchiTec.Core", "src\ArchiTec.Core\ArchiTec.Core.csproj", "{DB1DA2B2-1AE0-48CB-8B0D-CA0A8F890E1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchiTec.Rhino", "src\ArchiTec.Rhino\ArchiTec.Rhino.csproj", "{A8B619B3-FEB7-48E1-806A-812047380D04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchiTec.McpBridge", "src\ArchiTec.McpBridge\ArchiTec.McpBridge.csproj", "{36A0605A-1B15-4BB5-981D-7FEEA31AFEFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7D2843EA-7F1A-442F-A695-AF0AA6325720}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchiTec.Tests", "tests\ArchiTec.Tests\ArchiTec.Tests.csproj", "{7D86A8D7-FD02-49F2-A80B-6EA5E9093D3E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB1DA2B2-1AE0-48CB-8B0D-CA0A8F890E1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB1DA2B2-1AE0-48CB-8B0D-CA0A8F890E1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB1DA2B2-1AE0-48CB-8B0D-CA0A8F890E1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1DA2B2-1AE0-48CB-8B0D-CA0A8F890E1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8B619B3-FEB7-48E1-806A-812047380D04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8B619B3-FEB7-48E1-806A-812047380D04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8B619B3-FEB7-48E1-806A-812047380D04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8B619B3-FEB7-48E1-806A-812047380D04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36A0605A-1B15-4BB5-981D-7FEEA31AFEFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36A0605A-1B15-4BB5-981D-7FEEA31AFEFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36A0605A-1B15-4BB5-981D-7FEEA31AFEFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36A0605A-1B15-4BB5-981D-7FEEA31AFEFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D86A8D7-FD02-49F2-A80B-6EA5E9093D3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D86A8D7-FD02-49F2-A80B-6EA5E9093D3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D86A8D7-FD02-49F2-A80B-6EA5E9093D3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D86A8D7-FD02-49F2-A80B-6EA5E9093D3E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DB1DA2B2-1AE0-48CB-8B0D-CA0A8F890E1F} = {61D19B58-2AEB-4EAB-9C27-A2A7082F08CE}
+		{A8B619B3-FEB7-48E1-806A-812047380D04} = {61D19B58-2AEB-4EAB-9C27-A2A7082F08CE}
+		{36A0605A-1B15-4BB5-981D-7FEEA31AFEFE} = {61D19B58-2AEB-4EAB-9C27-A2A7082F08CE}
+		{7D86A8D7-FD02-49F2-A80B-6EA5E9093D3E} = {7D2843EA-7F1A-442F-A695-AF0AA6325720}
+	EndGlobalSection
+EndGlobal

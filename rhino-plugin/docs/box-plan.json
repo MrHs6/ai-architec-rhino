@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "summary": "Create a 10 × 15 × 12 meter box on AI_Building.",
+  "length_unit": "meters",
+  "actions": [
+    {"tool": "create_box", "parameters": {"width": 10, "depth": 15, "height": 12, "layer": "AI_Building", "name": "ArchiTec Box"}}
+  ]
+}

@@ -1,0 +1,59 @@
+name: Rhino plugin build and package
+on:
+  push:
+    branches: ['**']
+    tags: ['rhino-v*']
+    paths: ['rhino-plugin/**', '.github/workflows/rhino-plugin.yml']
+  pull_request:
+    paths: ['rhino-plugin/**', '.github/workflows/rhino-plugin.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: rhino-plugin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build native plugin with pinned official SDK and run core checks
+        run: ./scripts/build.ps1 -UseNuGet
+      - name: Package Yak and Windows CMD installer
+        run: ./scripts/package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-architec-windows
+          path: rhino-plugin/artifacts/releases/*
+          if-no-files-found: error
+          retention-days: 30
+  draft-release:
+    if: startsWith(github.ref, 'refs/tags/rhino-v')
+    needs: package
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ai-architec-windows
+          path: dist
+      - name: Check tag matches package manifest
+        shell: pwsh
+        run: |
+          $manifest = Get-Content rhino-plugin/manifest.yml -Raw
+          $version = [regex]::Match($manifest, '(?m)^version:\s*(\S+)\s*$').Groups[1].Value
+          if ($env:GITHUB_REF_NAME -ne "rhino-v$version") { throw 'Release tag and manifest version differ.' }
+      - name: Create reviewable draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = @(Get-ChildItem dist -File | ForEach-Object FullName)
+          gh release create $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --verify-tag --draft --prerelease --title "AI Archi-Tec $env:GITHUB_REF_NAME" --notes-file rhino-plugin/docs/RELEASE-NOTES.md @assets
+          if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed.' }

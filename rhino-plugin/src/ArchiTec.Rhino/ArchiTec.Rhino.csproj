@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>AIArchiTec.Studio</AssemblyName>
+    <Version>0.2.0-beta.3</Version>
+    <Title>ai-architec-rhino</Title>
+    <RhinoSystemDir Condition="'$(RhinoSystemDir)' == ''">C:\Program Files\Rhino 8\System</RhinoSystemDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ArchiTec.Core/ArchiTec.Core.csproj" />
+    <EmbeddedResource Include="Assets/logo.png" LogicalName="AIArchiTec.Assets.logo.png" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildWithNuGet)' != 'true'">
+    <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\netcore\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Eto"><HintPath>$(RhinoSystemDir)\Eto.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Eto.Wpf"><HintPath>$(RhinoSystemDir)\Eto.Wpf.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <!-- Compile on hosted CI without installing Rhino. The host supplies these assemblies. -->
+  <ItemGroup Condition="'$(BuildWithNuGet)' == 'true'">
+    <PackageReference Include="RhinoCommon" Version="8.31.26126.13431" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <Target Name="RhinoPlugin" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)AIArchiTec.rhp" />
+  </Target>
+</Project>

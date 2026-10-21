@@ -1,0 +1,31 @@
+name: Bug report / گزارش خطا
+description: Report installation, connection or modeling problems.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: 'Include reproducible steps. Do not include API keys or local MCP tokens. نسخه‌ها و مراحل بازتولید را بنویسید؛ کلید و توکن را حذف کنید.'
+  - type: input
+    id: rhino-version
+    attributes:
+      label: Rhino version and .NET runtime
+      placeholder: 'Rhino 8.31, .NET 8'
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      placeholder: '0.2.0-beta.3'
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected behavior and actual result
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error text or screenshot with credentials removed
