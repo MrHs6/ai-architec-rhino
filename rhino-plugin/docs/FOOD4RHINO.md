@@ -3,7 +3,7 @@
 Product: **AI Archi-Tec for Rhino**
 Owner: **Hasan Sharif Askari**
 Website: https://ai-arch.ir
-Version: **0.4.0-beta.1**
+Version: **0.4.1-beta.2**
 Platform: Rhino 8.31+, Windows x64, .NET 8. Tested with Rhino 8.31.
 
 ## Listing text
@@ -26,7 +26,7 @@ Grasshopper graph authoring, photorealistic rendering, unrestricted image recons
 - Author: Hasan Sharif Askari. Website: https://ai-arch.ir
 - Project, installation and support: https://github.com/MrHs6/ai-architec-rhino
 - Categories to choose from the current form: Architecture, Artificial Intelligence and Modeling, where available.
-- Version: 0.4.0-beta.1; Rhino 8.31+; Windows x64; .NET 8.
+- Version: 0.4.1-beta.2; Rhino 8.31+; Windows x64; .NET 8.
 - License: proprietary / source available for inspection under the repository's actual LICENSE.md. Do not label it MIT or open source.
 - Attach the tested Yak or installer ZIP, SHA256SUMS, the original product logo, and genuine Generate/API/result screenshots from this build.
 - Include the API cost note, current beta limitations, installation tutorial and change log. Screenshots must not expose credentials or MCP session tokens.

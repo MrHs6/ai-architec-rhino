@@ -1,4 +1,15 @@
-AI Archi-Tec 0.4.0-beta.1 — reliable API profiles and conversational editing
+AI Archi-Tec 0.4.1-beta.2 — English connection guidance and verified MCP stages
+
+- Keep all fixed interface labels, in-panel guides and connection statuses in English. Persian user prompts and language-aware conversation feedback remain supported.
+- Distinguish a listening server from a client handshake, tool discovery, context read, message, preview, Apply and disconnect. Show the client's announced name and last contact without claiming account authentication.
+- Export Claude Desktop JSON and Codex TOML separately. The bridge reads the current session token from a Windows CurrentUser DPAPI descriptor; setup exports no longer contain tokens. Reload the client after restarting MCP.
+- Add a no-geometry post_message tool for client replies. The MCP chat route explicitly copies a request to the external client; direct panel chat continues to use a personal API. Opening ChatGPT does not configure an account connector.
+- Add an English workspace guide for Generate, Analyze, Move, Scale and Extrude, plus English/Persian setup documents explaining local clients and the separate web/tunnel route.
+- Correct the Assist classification of MCP extrusion plans.
+
+94 automated checks pass, including a real stdio bridge handshake and DPAPI discovery. Native installed-plugin acceptance verifies chat delivery, tracked client name, preview isolation and cancellation. No live Claude/ChatGPT account or paid API generation was tested.
+
+Previous 0.4.0 changes:
 
 - Save and activate the selected API profile before model discovery. A failed connection retains the profile, endpoint and selected model.
 - Show session-only credentials, encrypted saved credentials and network status separately. Remember-off keeps the key only until Rhino exits; switching providers preserves independent drafts and profiles.

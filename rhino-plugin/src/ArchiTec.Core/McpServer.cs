@@ -14,6 +14,7 @@ public sealed class McpServer : IDisposable
     private readonly Func<string,JsonElement,CancellationToken,Task<object>> call;
     public string Token {get;}=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     public string Endpoint {get;}
+    public McpConnectionMonitor Connection {get;}=new();
     public bool Running=>listener.IsListening;
     public McpServer(int port,Func<string,JsonElement,CancellationToken,Task<object>> handler)
     {
@@ -52,7 +53,10 @@ public sealed class McpServer : IDisposable
         var expected="Bearer "+Token;
         if(credential is null || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(credential),Encoding.UTF8.GetBytes(expected)))
         {response.StatusCode=401;response.Close();return;}
-        if(request.HttpMethod!="POST"){response.StatusCode=405;response.Headers["Allow"]="POST";response.Close();return;}
+        var session=request.Headers["Mcp-Session-Id"];
+        if(session is not null&&!Connection.Contains(session)){response.StatusCode=404;response.Close();return;}
+        if(request.HttpMethod=="DELETE"&&session is not null){Connection.Disconnect(session);response.StatusCode=204;response.Close();return;}
+        if(request.HttpMethod!="POST"){response.StatusCode=405;response.Headers["Allow"]="POST, DELETE";response.Close();return;}
         var protocol=request.Headers["MCP-Protocol-Version"];
         if(protocol is not null && protocol is not ("2025-11-25" or "2025-06-18" or "2025-03-26"))
         {response.StatusCode=400;response.Close();return;}
@@ -77,17 +81,19 @@ public sealed class McpServer : IDisposable
             var method=root.TryGetProperty("method",out var methodValue) ? methodValue.GetString() : null;
             if(id.ValueKind==JsonValueKind.Undefined)
             {
-                if(method is null || method.StartsWith("notifications/")){response.StatusCode=202;response.Close();return;}
+                if(method is null || method.StartsWith("notifications/")){Connection.Touch(session,"heartbeat","");response.StatusCode=202;response.Close();return;}
                 throw new RpcError(-32600,"A request ID is required.");
             }
             var args=root.TryGetProperty("params",out var p) ? p.Clone() : JsonSerializer.SerializeToElement(new {});
+            if(method=="initialize"){session=Connection.Initialize(args);response.Headers["Mcp-Session-Id"]=session;}
+            else Connection.Touch(session,method=="tools/list"?"tools_ready":"heartbeat",method??"request");
             result=method switch
             {
-                "initialize"=>new {protocolVersion=Negotiated(args),capabilities=new {tools=new {listChanged=false}},serverInfo=new {name="ai-architec-rhino",version="0.1.0"},
-                    instructions="Read get_context first. propose_plan only previews changes. A human must click Apply in Rhino. Poll get_plan_status for confirmed execution. No tool can bypass approval or run scripts."},
+                "initialize"=>new {protocolVersion=Negotiated(args),capabilities=new {tools=new {listChanged=false}},serverInfo=new {name="ai-architec-rhino",version="0.4.1-beta.2"},
+                    instructions="Use this ai-architec-rhino server, not a similarly named Rhino router. Read get_context first. For chat or analysis use post_message and the current document_id. propose_plan only previews changes; a human clicks Apply in Rhino. Poll get_plan_status for execution. create_box parameters: width, depth, height, optional origin/layer. create_building parameters: width, depth, floors (integer), floor_height, optional origin/layer/facade. move_object: object_id, vector [x,y,z]. scale_object: object_id, factor, optional center. Never execute scripts or bypass Apply."},
                 "ping"=>new {},
                 "tools/list"=>new {tools=ToolDefinitions},
-                "tools/call"=>await CallTool(args,deadline.Token),
+                "tools/call"=>await CallTool(args,session,deadline.Token),
                 _=>throw new RpcError(-32601,"Method not found.")
             };
             result=new {jsonrpc="2.0",id,result};
@@ -101,19 +107,22 @@ public sealed class McpServer : IDisposable
         await response.OutputStream.WriteAsync(bytes,deadline.Token);response.Close();
     }
     private static object Error(JsonElement id,int code,string message)=>new {jsonrpc="2.0",id=id.ValueKind==JsonValueKind.Undefined ? (object?)null : id,error=new {code,message}};
-    private async Task<object> CallTool(JsonElement p,CancellationToken cancel)
+    private async Task<object> CallTool(JsonElement p,string? session,CancellationToken cancel)
     {
         if(!p.TryGetProperty("name",out var n))throw new RpcError(-32602,"Tool name is required.");
         var name=n.GetString()??"";
-        if(name is not ("get_context" or "propose_plan" or "get_plan_status"))throw new RpcError(-32602,"Unknown tool.");
+        if(name is not ("get_context" or "propose_plan" or "get_plan_status" or "post_message"))throw new RpcError(-32602,"Unknown tool.");
         try
         {
+            Connection.Touch(session,name=="get_plan_status"?"heartbeat":"working",name);
             var args=p.TryGetProperty("arguments",out var a) ? a.Clone() : JsonSerializer.SerializeToElement(new {});
             var result=await call(name,args,cancel);
+            if(name=="get_context")Connection.Touch(session,"context_ready",name);
+            else if(name=="propose_plan")Connection.Touch(session,"preview","Waiting for Apply in Rhino");
             return new {content=new[]{new {type="text",text=JsonSerializer.Serialize(result,Wire.Json)}},isError=false};
         }
         catch(Exception ex) when(ex is ArgumentException or InvalidOperationException)
-        {return new {content=new[]{new {type="text",text=ex.Message}},isError=true};}
+        {Connection.Touch(session,"error","Tool request failed; review the client response");return new {content=new[]{new {type="text",text=ex.Message}},isError=true};}
     }
     private static string Negotiated(JsonElement p)
     {
@@ -124,6 +133,7 @@ public sealed class McpServer : IDisposable
     public static readonly JsonElement ToolDefinitions=JsonDocument.Parse("""
     [
       {"name":"get_context","description":"Read active Rhino units, document ID, layers, selected objects and recently created objects. No geometry changes.","inputSchema":{"type":"object","properties":{},"additionalProperties":false},"annotations":{"readOnlyHint":true}},
+      {"name":"post_message","description":"Display your conversational response or read-only analysis in the active Rhino Archi-Tec chat. Reads no API account and changes no geometry. Use the document_id from get_context; this does not Apply a plan.","inputSchema":{"type":"object","required":["document_id","message"],"additionalProperties":false,"properties":{"document_id":{"type":"integer"},"message":{"type":"string","minLength":1,"maxLength":8000},"workspace":{"type":"string","enum":["generate","analyze","assist"]}}},"annotations":{"readOnlyHint":false,"destructiveHint":false}},
       {"name":"propose_plan","description":"Validate and preview a plan in the Rhino panel. Requires the current document_id from get_context. A human must click Apply. Never assume execution; poll get_plan_status. Parameters use native plan actions (tool + parameters object), not scripts.","inputSchema":{"type":"object","required":["document_id","plan"],"additionalProperties":false,"properties":{"document_id":{"type":"integer"},"plan":{"type":"object","required":["version","summary","length_unit","actions"],"additionalProperties":false,"properties":{"version":{"type":"integer","enum":[1]},"summary":{"type":"string"},"length_unit":{"type":"string","enum":["meters","millimeters","centimeters","feet","inches","document"]},"actions":{"type":"array","maxItems":100,"items":{"type":"object","required":["tool","parameters"],"additionalProperties":false,"properties":{"tool":{"type":"string","enum":["create_building","create_box","create_line","create_polyline","create_curve","extrude_curve","move_object","scale_object","create_layer","select_objects","get_object_properties"]},"parameters":{"type":"object"}}}}}}}},"annotations":{"readOnlyHint":false,"destructiveHint":false}},
       {"name":"get_plan_status","description":"Read whether a proposed plan is awaiting_approval, applied, cancelled or failed, and the confirmed created/modified object IDs.","inputSchema":{"type":"object","required":["request_id"],"additionalProperties":false,"properties":{"request_id":{"type":"string"}}},"annotations":{"readOnlyHint":true}}
     ]

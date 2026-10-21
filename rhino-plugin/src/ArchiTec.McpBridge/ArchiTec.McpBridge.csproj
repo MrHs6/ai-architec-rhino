@@ -1,3 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>AIArchiTec.McpBridge</AssemblyName></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../ArchiTec.Core/ArchiTec.Core.csproj" /></ItemGroup>
 </Project>
