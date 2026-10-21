@@ -1,4 +1,15 @@
-AI Archi-Tec 0.3.0-beta.2 — repair legacy plugin registration
+AI Archi-Tec 0.4.0-beta.1 — reliable API profiles and conversational editing
+
+- Save and activate the selected API profile before model discovery. A failed connection retains the profile, endpoint and selected model.
+- Show session-only credentials, encrypted saved credentials and network status separately. Remember-off keeps the key only until Rhino exits; switching providers preserves independent drafts and profiles.
+- Add a no-key network diagnostic, cancellation and distinct socket/DNS/TLS failure messages. The plugin does not change firewall settings.
+- Use the OpenAI Responses API with strict action-plan output and `store: false` for direct OpenAI connections. Other providers retain their native protocols.
+- Report actual object counts, measured bounds and floor metadata after Apply, in the request language, without an additional paid request.
+- Refine the recent result using the same object GUIDs. Explicit edit follow-ups enter Assist; histories and recent targets stay separate for each open document during the current session.
+- Detect Undo, deletion and manual geometry changes and refresh the measured chat feedback.
+- Document the four reference workflows and provide an accurate Food4Rhino listing draft and a Persian step-by-step conversation tutorial.
+
+Includes the preceding startup repair:
 
 - Fix the gray, empty prototype panel returning after a Rhino restart: installers now repair this plugin's legacy manual registration after Yak installation, with a per-user registry backup.
 - Register the `archtec` command when upgrading the prototype. Existing load protection and personal API settings are preserved.
@@ -15,6 +26,6 @@ Includes the preceding workspace/provider improvements:
 - Independent OpenRouter, OpenAI, xAI/Grok, Google Gemini, Anthropic/Claude and compatible/local profiles, with native Gemini and Anthropic protocols, model discovery/pagination and image payloads.
 - Profile keys are optionally DPAPI-encrypted. Remember-off clears both saved copies; changing one profile preserves other providers.
 
-67 automated checks and native Rhino workspace/audit/geometry acceptance passed. Live paid-provider/vision testing and clean-start acceptance on a second licensed workstation remain outstanding.
+80 automated checks and 11 native profile synchronization checks passed. Native conversation acceptance and live-network results are recorded separately in VALIDATION.md. Paid-provider/vision testing and installation on a second licensed workstation remain outstanding.
 
 Save your work, close all Rhino windows, install the Windows ZIP, reopen Rhino and run archtec. Legacy prototype users should use the ZIP because Yak alone does not repair manual registration. Configure your own service under API profiles. This remains a concept-modeling beta; no shared key, BIM or automatic public-cloud connector is included.

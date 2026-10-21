@@ -13,15 +13,16 @@ public partial class StudioView:UserControl
 {
     public event Action? SendRequested,ApplyRequested,CancelRequested,AttachRequested,ImportRequested,ConnectRequested,OfflineRequested,McpStartRequested,CopyMcpRequested,OpenChatRequested;
     public event Action? InputChanged,SelectedModelChanged,SaveProfileRequested,SavePreferencesRequested,AuditRequested,QuickAssistRequested;
+    public event Action? TestNetworkRequested,RefineResultRequested,SelectResultRequested,ExplainResultRequested;
     public event Action<string>? ModeChanged;
     private readonly Dictionary<string,ConnectionSettings> profiles=[];
     private readonly Dictionary<string,List<ModelDescriptor>> modelLists=[];
     private string activeSource="",editingSource="OpenRouter",mode="generate";
-    private bool loading,compact;
+    private bool loading,compact,resultAvailable,isBusy;
     public string Prompt{get=>PromptInput.Text;set=>PromptInput.Text=value;}
     public string Source=>SourceSelector.SelectedItem as string??"OpenRouter";
     public string Endpoint=>ApiUrl.Text.Trim();
-    public string ApiCredential=>ApiKey.Password;
+    public string ApiCredential=>ApiKey.Password.Trim();
     public bool Remember=>RememberKey.IsChecked==true;
     public ModelDescriptor? SelectedModel=>ModelSelector.SelectedItem as ModelDescriptor;
     public string Facade=>FacadeSelector.SelectedIndex switch{1=>"solid",2=>"none",_=>"glazed"};
@@ -57,7 +58,19 @@ public partial class StudioView:UserControl
         ProfileModelSelector.ItemsSource=modelLists.TryGetValue(value.Source,out var models)?models:null;ProfileModelSelector.DisplayMemberPath="Name";
         ProfileModelSelector.Visibility=models is null?Visibility.Collapsed:Visibility.Visible;
         ProfileModelSelector.SelectedItem=models?.FirstOrDefault(m=>m.Id==value.Model);ApiStatus.Text=models is null?"Load this service's models to connect.":$"{models.Count} discovered models in this profile.";
+        ProfileSaveStatus.Text=value.ApiKey.Length==0?"No key in this session. Enter a key, then Save or Connect.":value.RememberKey?"Key loaded for this Windows user.":"Session key · not stored on disk. Enable Remember to retain it after restarting Rhino.";
+        NetworkStatus.Text="";
     }
+    public void ProfileSaved(ConnectionSettings value)
+    {
+        profiles[value.Source]=value;
+        ProfileSaveStatus.Text=$"Active profile saved · {value.Source}. "+(value.RememberKey&&value.ApiKey.Length>0?"Key encrypted for this Windows user.":value.ApiKey.Length>0?"Key kept for this Rhino session only; it will be cleared on exit.":"No key stored.");
+    }
+    public void ProfileSaveError(string message)=>ProfileSaveStatus.Text="Could not save profile: "+message;
+    public void NetworkMessage(string message)=>NetworkStatus.Text=message;
+    public void SetRecentResult(string? message,bool available=true){resultAvailable=message is not null&&available;RecentResultBar.Visibility=message is null?Visibility.Collapsed:Visibility.Visible;RecentResultLabel.Text=message??"";RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=resultAvailable&&!isBusy;}
+    public void UseRecentResult(){AssistScope.SelectedIndex=1;AnalysisScope.SelectedIndex=1;}
+    public void FocusPrompt()=>PromptInput.Focus();
     public void SetCatalog(List<ModelDescriptor> models,string selected,string source)
     {
         loading=true;activeSource=source;modelLists[source]=models;ModelSelector.ItemsSource=models;ModelSelector.DisplayMemberPath="Name";
@@ -68,8 +81,11 @@ public partial class StudioView:UserControl
     public void SetOffline(){activeSource="";ModelSelector.Visibility=Visibility.Collapsed;ConnectionLabel.Text="●  Offline tools";ConnectionLabel.Foreground=Brush("#D0B378");DashboardApiStatus.Text="Offline tools · no API connected";}
     public void SetBusy(bool value)
     {
+        isBusy=value;
         BusyOverlay.Visibility=value?Visibility.Visible:Visibility.Collapsed;
-        foreach(var button in new[]{SendButton,ConnectButton,GenerateNav,AnalyzeNav,AssistNav,QuickAssistButton,SaveProfileButton,AttachButton,ImportButton})button.IsEnabled=!value;
+        foreach(var button in new[]{SendButton,ConnectButton,TestNetworkButton,GenerateNav,AnalyzeNav,AssistNav,QuickAssistButton,SaveProfileButton,AttachButton,ImportButton,RefineResultButton,SelectResultButton,ExplainResultButton})button.IsEnabled=!value;
+        RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=!value&&resultAvailable;
+        ApiCancelButton.Visibility=value?Visibility.Visible:Visibility.Collapsed;
         SourceSelector.IsEnabled=!value;ApiUrl.IsEnabled=!value;ApiKey.IsEnabled=!value;RememberKey.IsEnabled=!value;ModelSelector.IsEnabled=!value;ProfileModelSelector.IsEnabled=!value;
         GenerateOptions.IsEnabled=!value;AnalyzeOptions.IsEnabled=!value;AssistOptions.IsEnabled=!value;
     }
@@ -130,6 +146,11 @@ public partial class StudioView:UserControl
     private void AttachClick(object s,RoutedEventArgs e)=>AttachRequested?.Invoke();
     private void ImportClick(object s,RoutedEventArgs e)=>ImportRequested?.Invoke();
     private void ConnectClick(object s,RoutedEventArgs e)=>ConnectRequested?.Invoke();
+    private void TestNetworkClick(object s,RoutedEventArgs e)=>TestNetworkRequested?.Invoke();
+    private void RefineResultClick(object s,RoutedEventArgs e)=>RefineResultRequested?.Invoke();
+    private void SelectResultClick(object s,RoutedEventArgs e)=>SelectResultRequested?.Invoke();
+    private void ExplainResultClick(object s,RoutedEventArgs e)=>ExplainResultRequested?.Invoke();
+    private void ProfileEdited(object s,RoutedEventArgs e){if(!loading&&ProfileSaveStatus is not null)ProfileSaveStatus.Text="Unsaved profile edits · Save or Connect to activate this service. Remember controls whether the key survives a restart.";}
     private void OfflineClick(object s,RoutedEventArgs e)=>OfflineRequested?.Invoke();
     private void McpStartClick(object s,RoutedEventArgs e)=>McpStartRequested?.Invoke();
     private void CopyMcpClick(object s,RoutedEventArgs e)=>CopyMcpRequested?.Invoke();

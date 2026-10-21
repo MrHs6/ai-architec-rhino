@@ -1,4 +1,4 @@
-# Validation — AI Archi-Tec 0.3.0-beta.2
+# Validation — AI Archi-Tec 0.4.0-beta.1
 
 ## Current revision
 
@@ -7,21 +7,21 @@
 - Connection overview, API profiles, MCP connection, Preferences and About are separate opaque pages. MCP starts explicitly. The supplied original logo is embedded and displayed at navigation, header and About sizes through layout clipping, without modifying the original artwork file.
 - Six independent provider profiles: OpenRouter, OpenAI, xAI/Grok, Google Gemini, Anthropic/Claude and compatible/local. Native Gemini/Anthropic protocols, model pagination, headers, image formats and structured outputs were implemented from the official references linked in docs/PROVIDERS.md.
 
-## Evidence
+## Evidence for 0.4.0-beta.1 (21 October 2026)
 
-- **beta.2 clean-start repair verified on the owner's workstation:** Rhino was closed with an empty, unmodified document; four obsolete Yak versions and the manually loaded prototype binary package were archived with per-file SHA256 verification, then removed at the owner's request. Only `0.3.0-beta.2` remains in the package directory.
-- On a genuinely new Rhino process, only `AIArchiTec.Studio` and `AIArchiTec.Contracts` from the installed beta.2 directory were loaded. The native `archtec` command had a nonempty command ID, opened the new panel, and the registered plugin owner was the same installed assembly. There was no legacy `AIArchiTec` assembly or duplicate-ID error.
-- **19 workspace/profile/audit checks and 19 geometry checks passed in that fresh process**, rather than a replacement panel hosted by the old plugin. About reports the actual installed file; the native Options page instantiates successfully.
-- The installer now refuses installation while Rhino is running. Both registration helpers are included; CMD uses native registry tooling, preserving operation when PowerShell script execution is restricted. Repeated registration repair after shutdown reports the already-correct target without creating another backup.
+- The Windows/.NET 8 solution builds with zero compiler errors and warnings. **80 automated core/provider/MCP/workspace checks passed**; provider requests use mocks, not paid credentials.
+- A fresh Rhino 8.31 process loaded the installed `0.4.0-beta.1` package and opened the native `archtec` panel. Only that package version remains in the active package directory.
+- **19 workspace/profile/audit checks passed**: independent modes and pages, six providers, original embedded logo, real dimensions/health/layer audits and encrypted credential isolation.
+- **19 geometry checks passed** in headless documents: preview isolation, exact dimensions and volume, stable GUIDs, unaffected targets, native Undo, stale targets/units, locked geometry, curves and capped extrusion.
+- **11 profile synchronization checks passed** in isolated temporary settings with fixture credentials. Saving OpenAI makes it active; Remember-off clears both disk copies but retains a session key; other providers remain intact; save and network statuses are independent. Personal profiles were not changed.
+- **9 conversational checks passed in the active empty document**, scheduled on Rhino Idle after the script command finished. The offline example creates 46 native parts; Apply reports measured 15 × 20 × 16 meter bounds. A Persian follow-up moves only 10 fifth-floor parts by +2 meters in world Y, preserves all GUIDs and leaves 36 parts unchanged. Undo restores positions and chat detects the change. The example remains available in `demo-building.3dm`.
+- **Live connectivity from Rhino was verified without a key**: OpenRouter `/models` returned HTTP 200; OpenAI `/models` returned HTTP 401. On the owner's workstation, one explicit outbound Windows Firewall block for Rhino.exe caused socket error 10013. The owner authorized disabling only that exact rule; Domain, Private and Public firewall profiles remain enabled. This workstation repair is not part of the installer or plugin.
+- The first diagnostic script incorrectly blocked Rhino's UI thread while awaiting network I/O; the empty test process was restarted, and the successful probe ran on a worker task. The production connection UI uses asynchronous event handlers and cancellation.
+- New captures are actual installed WPF views and the native Rhino viewport. The demo is a limited offline example, not proof of live AI model quality.
 
-- Full Windows/.NET 8 native solution builds with zero compiler errors and warnings.
-- **67 automated core/provider/MCP/workspace checks passed.** Provider requests and responses use mocks, not paid account credentials. Tests verify native request formats, image parts, pagination, exact catalog IDs, incomplete-output rejection, credential destinations, error redaction and mode/scope boundaries.
-- **19 Rhino geometry regression checks passed again** in headless documents inside the existing Rhino process: preview isolation, exact box dimensions/volume, layers, stable GUIDs, movement, unaffected geometry, Undo, stale targets/units, locked targets, curves and capped extrusion.
-- **20 native UI/audit/assist checks passed:** independent drafts/histories, different workspace controls, separate pages, provider-key/endpoint drafts, DPAPI roundtrip, actual dimensions/validity/layer audits and scoped Assist preview without native document changes.
-- Further checks confirmed six providers in Rhino's Options page, a real authenticated local MCP context/proposal under the revised workspace policy, and two isolated persistence checks: Remember-off removes both stored key copies; saving one provider retains another provider's encrypted credential/model.
-- Prior beta.1 UI acceptance used the user's original running panel while retaining its 46 demo objects and selection. That in-process replacement did not establish clean-start behavior; beta.2 acceptance above addresses the legacy startup conflict.
-- Prior beta evidence includes four semantic-building checks and actual MCP Apply/Undo, including a fifth-floor-only edit with stable GUIDs and exact restoration. These remain regression context, not a new live-model trial.
+## Earlier startup repair
 
+The preceding 0.3.0-beta.2 acceptance established that the empty gray panel and unknown `archtec` command came from legacy manual registration. Obsolete versions and the prototype package were archived and SHA256-verified before removal. A clean process loaded the installed Studio/Contracts assemblies, the native Options page and command worked, and 19 workspace plus 19 geometry checks passed. Installers now require Rhino to be closed and repair only this plugin's registration with a per-user backup. That repair is retained in 0.4; the evidence above is the new revision's test record.
 ## Remaining acceptance
 
 - No real provider key was supplied for this revision. Live Grok/Gemini/Anthropic/OpenRouter/OpenAI requests and image quality still require the user's account-based trial. Passing mocks does not establish live account/model compatibility.

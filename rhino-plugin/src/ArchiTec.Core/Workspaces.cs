@@ -14,6 +14,58 @@ public sealed class WorkspaceSessions
     private readonly Dictionary<string,WorkspaceState> states=new(){["generate"]=new(),["analyze"]=new(),["assist"]=new()};
     public WorkspaceState this[string mode]=>states.TryGetValue(mode,out var value)?value:throw new ArgumentException("Unknown workspace.");
 }
+/// <summary>Model history and recent targets belong to one open document, never another document.</summary>
+public sealed class DocumentWorkspaceState
+{
+    public WorkspaceSessions Sessions {get;}=new();
+    public List<Guid> RecentIds {get;}=[];
+    public Dictionary<Guid,uint> GeometrySignatures {get;}=[];
+    public string? LastReport {get;set;}
+    public bool Persian {get;set;}
+    public int Revision {get;set;}
+}
+public sealed class DocumentWorkspaces
+{
+    private readonly Dictionary<uint,DocumentWorkspaceState> documents=[];
+    public DocumentWorkspaceState For(uint documentId)
+    {
+        if(!documents.TryGetValue(documentId,out var state))
+        {
+            // Bound session memory; no prompts, keys or model data are written to disk here.
+            if(documents.Count>=16)documents.Remove(documents.Keys.First());
+            documents[documentId]=state=new();
+        }
+        return state;
+    }
+}
+public static class ConversationIntent
+{
+    public static bool IsPersian(string text)=>text.Any(c=>c>='\u0600'&&c<='\u06FF');
+    public static bool IsExplicitEdit(string text)
+    {
+        var value=text.Replace('\u200c',' ').ToLowerInvariant();
+        if(System.Text.RegularExpressions.Regex.IsMatch(value,@"\b(create|build|new)\b|ساختمان جدید|بساز|ایجاد کن"))return false;
+        return System.Text.RegularExpressions.Regex.IsMatch(value,@"\b(move|shift|scale|extrude|modify|edit|resize|change)\b|جا\s*به\s*جا|جابجا|تغییر|اصلاح|منتقل|بزرگ\s*تر|کوچک\s*تر");
+    }
+}
+public static class ExecutionFeedback
+{
+    public static string Describe(int revision,int created,int modified,IReadOnlyList<ObjectInfo> objects,string units,bool persian)
+    {
+        var lines=new List<string>{persian?$"نتیجهٔ ثبت‌شده در راینو · مرحلهٔ {revision}\n{created} جزء ساخته شد و {modified} جزء تغییر کرد.":$"CONFIRMED IN RHINO · revision {revision}\n{created} native objects created · {modified} modified."};
+        if(objects.Count>0)
+        {
+            var dimensions=Enumerable.Range(0,3).Select(axis=>objects.Max(o=>o.Max[axis])-objects.Min(o=>o.Min[axis])).Select(n=>n.ToString("0.###",System.Globalization.CultureInfo.InvariantCulture));
+            var size=string.Join(" × ",dimensions);
+            lines.Add(persian?$"ابعاد محدودهٔ نتیجه: {size} {units}.":$"Measured result bounds: {size} {units}.");
+            var floors=objects.Where(o=>o.Floor is not null).Select(o=>o.Floor!.Value).Distinct().Order().ToArray();
+            if(floors.Length>0)lines.Add(persian?"شمارهٔ طبقات موجود در نتیجه: "+string.Join(", ",floors):"Floor metadata in this result: "+string.Join(", ",floors));
+            foreach(var group in objects.GroupBy(o=>o.Role??o.Type).Take(8))lines.Add($"{group.Key}: {group.Count()}");
+        }
+        lines.Add(persian?"برای ادامه، تغییر بعدی را در چت بنویسید یا Refine result را بزنید. شناسهٔ اشیا برای ادامه حفظ می‌شود؛ Ctrl+Z این مرحله را برمی‌گرداند.":"Describe the next edit in chat, or choose Refine result. Existing target GUIDs are retained for follow-ups. Rhino Ctrl+Z undoes this operation.");
+        return string.Join("\n",lines);
+    }
+}
 public static class WorkspacePolicy
 {
     public static void Validate(string mode,ActionPlan? plan,ModelContext context)

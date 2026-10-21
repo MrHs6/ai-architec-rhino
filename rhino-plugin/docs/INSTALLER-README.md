@@ -1,4 +1,4 @@
-# AI Archi-Tec for Rhino 8 — 0.3.0-beta.2
+# AI Archi-Tec for Rhino 8 — 0.4.0-beta.1
 
 Project and complete guides / پروژه و راهنمای کامل:
 
