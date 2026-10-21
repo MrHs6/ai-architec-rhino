@@ -5,15 +5,30 @@ public static class ProviderProfiles
 {
     public static readonly ProviderPreset[] All=[
         new("OpenRouter","https://openrouter.ai/api/v1/","OpenAI","Models are filtered by tools + structured output support. Vision follows the live catalog."),
-        new("OpenAI","https://api.openai.com/v1/","OpenAI","Select a model that supports Chat Completions JSON schema. Vision is not confirmed by this catalog."),
+        new("OpenAI","https://api.openai.com/v1/","OpenAI Responses","Direct OpenAI Responses API with JSON schema. Models come from your account; choose a text model that supports structured output. Vision is not confirmed by this catalog."),
         new("xAI / Grok","https://api.x.ai/v1/","OpenAI","Direct xAI connection. Language models and image capabilities are read from your account catalog."),
         new("Google Gemini","https://generativelanguage.googleapis.com/v1beta/","Gemini","Direct Gemini GenerateContent API. Uses x-goog-api-key and native structured output/image parts."),
         new("Anthropic / Claude","https://api.anthropic.com/v1/","Anthropic","Direct Anthropic Messages API. Uses x-api-key; structured output and vision follow model capabilities."),
         new("OpenAI-compatible / local","http://127.0.0.1:1234/v1/","OpenAI","Custom or local API. Requires /models, /chat/completions and JSON schema. Image support is unconfirmed.")];
     public static ProviderPreset Get(string source)=>All.FirstOrDefault(p=>p.Name==source)??throw new ArgumentException("Unknown AI service.");
+    public static string ValidateEndpoint(string source,string endpoint)
+    {
+        var preset=Get(source);
+        if(!Uri.TryCreate(endpoint.TrimEnd('/')+"/",UriKind.Absolute,out var uri)||uri.UserInfo.Length>0||uri.Query.Length>0||uri.Fragment.Length>0||!(uri.Scheme=="https"||uri.Scheme=="http"&&uri.IsLoopback))throw new ArgumentException("Use an HTTPS API base URL, or localhost HTTP, without embedded credentials.");
+        if(source!="OpenAI-compatible / local"&&uri!=new Uri(preset.Endpoint))throw new ArgumentException($"{source} uses {preset.Endpoint}");
+        return uri.AbsoluteUri;
+    }
+    public static void ValidateCredentialSource(string source,string key)
+    {
+        if(source=="OpenAI-compatible / local")return;
+        var owner=key.StartsWith("sk-or-v1-",StringComparison.Ordinal)?"OpenRouter":key.StartsWith("sk-ant-",StringComparison.Ordinal)?"Anthropic / Claude":key.StartsWith("sk-proj-",StringComparison.Ordinal)||key.StartsWith("sk-svcacct-",StringComparison.Ordinal)?"OpenAI":key.StartsWith("xai-",StringComparison.Ordinal)?"xAI / Grok":null;
+        if(owner is not null&&source!=owner)throw new ArgumentException($"This key appears to belong to {owner}. Select {owner} before connecting; it was not sent to {source}.");
+    }
     public static IPlannerClient Create(string source,string endpoint,string key,HttpMessageHandler? handler=null)
     {
         var preset=Get(source);
+        ValidateEndpoint(source,endpoint);ValidateCredentialSource(source,key);
+        if(source=="OpenAI")return new OpenAiResponsesClient(endpoint,key,handler);
         if(source is "Google Gemini" or "Anthropic / Claude")return new NativeProviderClient(preset,endpoint,key,handler);
         return new ProviderClient(endpoint,key,source=="OpenRouter",handler,source=="xAI / Grok");
     }

@@ -14,9 +14,12 @@ public sealed class ArchiTecPanel:Panel
     public static ArchiTecPanel? Current {get;private set;}
     private readonly StudioView view;
     private readonly UITimer contextTimer=new(){Interval=1};
-    private readonly WorkspaceSessions sessions=new();
+    private readonly DocumentWorkspaces documents=new();
+    private DocumentWorkspaceState documentState=new();
+    private uint boundDocumentId;
+    private WorkspaceSessions sessions=>documentState.Sessions;
     private List<ChatMessage> history=>sessions[mode].History;
-    private readonly List<Guid> lastCreated=[];
+    private List<Guid> lastCreated=>documentState.RecentIds;
     private readonly Dictionary<string,object> mcpResults=[];
     private ConnectionSettings settings=new();
     private IPlannerClient? provider;
@@ -33,6 +36,7 @@ public sealed class ArchiTecPanel:Panel
     public bool TryUpdateSettings(ConnectionSettings value)
     {
         if(busy)return false;
+        value=value with{Endpoint=ProviderProfiles.ValidateEndpoint(value.Source,value.Endpoint),ApiKey=value.ApiKey.Trim()};ProviderProfiles.ValidateCredentialSource(value.Source,value.ApiKey);
         SettingsStore.Save(value);provider?.Dispose();provider=null;settings=value;
         view.LoadSettings(value);view.SetOffline();ClearPreview();
         view.SetStatus("Connection settings saved. Open Settings to load models and connect.");
@@ -51,6 +55,10 @@ public sealed class ArchiTecPanel:Panel
         view.SelectedModelChanged+=()=>{ClearPreview();PersistSettings();};
         view.ModeChanged+=SwitchWorkspace;
         view.SaveProfileRequested+=SaveProfile;
+        view.TestNetworkRequested+=()=>_ = TestNetworkAsync();
+        view.RefineResultRequested+=RefineRecent;
+        view.SelectResultRequested+=SelectRecent;
+        view.ExplainResultRequested+=ExplainRecent;
         view.SavePreferencesRequested+=()=>{try{preferences=view.ReadPreferences();SettingsStore.SavePreferences(preferences);view.LoadPreferences(preferences);view.RestoreConversation(history);view.PreferencesMessage("Preferences saved. The default workspace applies next launch.");}catch(Exception ex){view.PreferencesMessage(ex.Message);}};
         view.AuditRequested+=()=>RunAudit();view.QuickAssistRequested+=QuickAssist;
         view.AttachRequested+=AttachImage;view.ImportRequested+=ImportPlan;view.ConnectRequested+=()=>_ = ConnectAsync();
@@ -71,13 +79,15 @@ public sealed class ArchiTecPanel:Panel
     });
     private async Task ConnectAsync()
     {
-        if(busy)return;busy=true;view.SetBusy(true);view.ApiMessage("Connecting and discovering models…");
-        var source=view.Source;var endpoint=view.Endpoint;var key=view.ApiCredential;var remember=view.Remember;
+        if(busy||!SaveProfileCore())return;
+        provider?.Dispose();provider=null;view.SetOffline();
+        busy=true;requestCancel=new CancellationTokenSource(TimeSpan.FromSeconds(30));view.SetBusy(true);view.ApiMessage("Profile saved. Connecting and discovering models…");
+        var source=settings.Source;var endpoint=settings.Endpoint;var key=settings.ApiKey;var remember=settings.RememberKey;
         try
         {
             var candidate=ProviderProfiles.Create(source,endpoint,key);
             ModelCatalog catalog;
-            try{using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(30));catalog=await candidate.Models(timeout.Token);}
+            try{catalog=await candidate.Models(requestCancel.Token);}
             catch{candidate.Dispose();throw;}
             if(disposed){candidate.Dispose();return;}
             if(catalog.Models.Count==0){candidate.Dispose();throw new InvalidOperationException("No models with the required capabilities were found.");}
@@ -86,34 +96,91 @@ public sealed class ArchiTecPanel:Panel
             view.SetCatalog(catalog.Models,settings.Model,settings.Source);PersistSettings();ClearPreview();
             view.ApiMessage($"Connected · {catalog.Models.Count} models. Choose a model, save the profile and return to your workspace.");view.SetStatus("Connected · selected model will be used exactly");
         }
-        catch(Exception ex){view.ApiMessage("Connection failed: "+ex.Message);}
-        finally{busy=false;view.SetBusy(false);}
+        catch(Exception ex){view.ApiMessage("Connection not established. "+ConnectionDiagnostics.Describe(ex));}
+        finally{busy=false;view.SetBusy(false);requestCancel?.Dispose();requestCancel=null;}
+    }
+    private async Task TestNetworkAsync()
+    {
+        if(busy)return;busy=true;requestCancel=new CancellationTokenSource(TimeSpan.FromSeconds(15));view.SetBusy(true);view.NetworkMessage("Testing the selected API host without credentials…");
+        try{view.NetworkMessage(await ConnectionDiagnostics.Probe(view.Source,view.Endpoint,requestCancel.Token));}
+        catch(Exception ex){view.NetworkMessage(ConnectionDiagnostics.Describe(ex));}
+        finally{busy=false;view.SetBusy(false);requestCancel?.Dispose();requestCancel=null;}
     }
     private void PersistSettings()
     {
         settings=settings with{Model=view.SelectedModel?.Id??settings.Model};
-        try{SettingsStore.Save(settings);}catch{view.SetStatus("Settings could not be saved; connection remains available for this session.");}
+        try{SettingsStore.Save(settings);view.ProfileSaved(settings);}catch{view.SetStatus("Settings could not be saved; connection remains available for this session.");}
     }
     private void SaveProfile()
     {
-        if(busy)return;
+        if(!busy)SaveProfileCore();
+    }
+    private bool SaveProfileCore()
+    {
         try
         {
-            var draft=view.DraftSettings();SettingsStore.SaveProfile(draft);
-            if(draft.Source==settings.Source)
-            {
-                if(draft.Endpoint!=settings.Endpoint||draft.ApiKey!=settings.ApiKey){provider?.Dispose();provider=null;view.SetOffline();ClearPreview();}
-                settings=draft;
-            }
-            view.ApiMessage("Profile saved. Connect again after changing credentials or endpoint.");
+            var draft=view.DraftSettings();draft=draft with{Endpoint=ProviderProfiles.ValidateEndpoint(draft.Source,draft.Endpoint)};
+            ProviderProfiles.ValidateCredentialSource(draft.Source,draft.ApiKey);
+            SettingsStore.SaveProfile(draft);
+            if(draft.Source!=settings.Source||draft.Endpoint!=settings.Endpoint||draft.ApiKey!=settings.ApiKey)
+            {provider?.Dispose();provider=null;view.SetOffline();ClearPreview();}
+            settings=draft;view.ProfileSaved(draft);
+            view.ApiMessage(provider is null?"Profile is active. Connect to discover models; no modeling request has been sent.":"Connected profile saved.");
+            return true;
         }
-        catch(Exception ex){view.ApiMessage(ex.Message);}
+        catch(Exception ex){view.ProfileSaveError(ex.Message);return false;}
     }
     private void RefreshContext()
     {
         var doc=RhinoDoc.ActiveDoc;if(doc is null){view.SetContext("Open a Rhino document to begin");ClearPreview();return;}
+        if(!BindDocument(doc))return;
+        if(!busy&&lastCreated.Count>0)RefreshRecentGeometry(doc);
         view.SetContext($"●  {doc.ModelUnitSystem}   ·   {doc.Objects.GetObjectList(Rhino.DocObjects.ObjectType.AnyObject).Count()} objects   ·   {doc.Objects.GetSelectedObjects(false,false).Count()} selected");
+        if(lastCreated.Count>0){var existing=lastCreated.Count(id=>doc.Objects.FindId(id) is {} o&&!o.IsDeleted);view.SetRecentResult(existing>0?$"Recent result · {existing} objects · revision {documentState.Revision}":"Recent result was removed or undone",existing>0);}
         if(pending is not null)try{GeometryEngine.CheckCurrent(doc,pending);}catch{ClearPreview();view.SetStatus("Model changed · generate a fresh preview");}
+    }
+    private bool BindDocument(RhinoDoc doc)
+    {
+        if(boundDocumentId==doc.RuntimeSerialNumber)return true;
+        if(busy){requestCancel?.Cancel();return false;}
+        sessions[mode].Prompt=view.Prompt;ClearPreview();boundDocumentId=doc.RuntimeSerialNumber;documentState=documents.For(boundDocumentId);
+        view.Prompt=sessions[mode].Prompt;view.RestoreConversation(history);view.SetAttachment(sessions[mode].ImageName);view.SetRecentResult(null);
+        return true;
+    }
+    private void RememberGeometry(RhinoDoc doc)
+    {
+        documentState.GeometrySignatures.Clear();
+        foreach(var id in lastCreated)if(doc.Objects.FindId(id) is {} obj&&!obj.IsDeleted)documentState.GeometrySignatures[id]=obj.Geometry.DataCRC(0);
+    }
+    private void RefreshRecentGeometry(RhinoDoc doc)
+    {
+        var actual=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).ToArray();
+        var prior=documentState.GeometrySignatures;
+        if(actual.Length==prior.Count&&actual.All(o=>prior.TryGetValue(o!.Id,out var crc)&&crc==o.Geometry.DataCRC(0)))return;
+        var modified=actual.Count(o=>!prior.TryGetValue(o!.Id,out var crc)||crc!=o.Geometry.DataCRC(0));var removed=prior.Count-actual.Count(o=>prior.ContainsKey(o!.Id));
+        documentState.Revision++;
+        var lead=documentState.Persian?$"نتیجهٔ اخیر در راینو تغییر کرده است؛ {removed} جزء حذف یا Undo شده است.\n":$"Recent geometry changed in Rhino outside this Apply step; {removed} objects removed or undone.\n";
+        documentState.LastReport=lead+(actual.Length==0?(documentState.Persian?"نتیجه دیگر در سند وجود ندارد. برای ادامه یک نتیجهٔ تازه بسازید.":"No recent targets remain in this document. Generate a fresh result to continue."):ExecutionFeedback.Describe(documentState.Revision,0,modified,actual.Select(o=>ContextReader.Info(doc,o!)).ToArray(),doc.ModelUnitSystem.ToString(),documentState.Persian));
+        RememberGeometry(doc);AddMessage("assistant",documentState.LastReport);
+    }
+    private void RefineRecent()
+    {
+        if(busy)return;var doc=RhinoDoc.ActiveDoc;if(doc is null||!BindDocument(doc))return;
+        if(!lastCreated.Any(id=>doc.Objects.FindId(id) is {} o&&!o.IsDeleted)){view.SetStatus("The recent result is no longer in this document.");return;}
+        SwitchWorkspace("assist");view.SetWorkspace("assist",false);view.UseRecentResult();view.FocusPrompt();
+        view.SetStatus(documentState.Persian?"ادامهٔ ویرایش روی نتیجهٔ همین سند؛ تغییر بعدی را بنویسید.":"Continue editing this document's recent result. Describe the next change.");
+    }
+    private void SelectRecent()
+    {
+        if(busy)return;var doc=RhinoDoc.ActiveDoc;if(doc is null||!BindDocument(doc))return;
+        doc.Objects.UnselectAll();foreach(var id in lastCreated)doc.Objects.FindId(id)?.Select(true);doc.Views.Redraw();RefreshContext();
+    }
+    private void ExplainRecent()
+    {
+        if(busy)return;var doc=RhinoDoc.ActiveDoc;if(doc is null||!BindDocument(doc))return;
+        var objects=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray();
+        if(objects.Length==0){view.SetStatus("Recent result is no longer in this document.");return;}
+        AddMessage("assistant",ExecutionFeedback.Describe(documentState.Revision,0,0,objects,doc.ModelUnitSystem.ToString(),documentState.Persian));
     }
     private void AddMessage(string role,string value,bool error=false)
     {
@@ -124,10 +191,15 @@ public sealed class ArchiTecPanel:Panel
     {
         if(busy||string.IsNullOrWhiteSpace(view.Prompt))return;
         var doc=RhinoDoc.ActiveDoc;if(doc is null){view.SetStatus("Open a Rhino document first.");return;}
+        if(!BindDocument(doc))return;
+        if(mode=="generate"&&lastCreated.Count>0&&ConversationIntent.IsExplicitEdit(view.Prompt))
+        {var followup=view.Prompt;RefineRecent();if(mode!="assist")return;view.Prompt=followup;}
         ClearPreview();var context=ScopedContext(doc);
         if(mode=="assist"&&context.Objects.Length==0){view.SetStatus("Select target objects or choose recent output first.");return;}
         var fingerprints=context.Objects.ToDictionary(o=>Guid.Parse(o.Id),o=>doc.Objects.FindId(Guid.Parse(o.Id))!.Geometry.DataCRC(0));
         var units=doc.ModelUnitSystem;var tolerance=doc.ModelAbsoluteTolerance;var text=view.Prompt.Trim();var previous=history.TakeLast(12).ToList();
+        documentState.Persian=ConversationIntent.IsPersian(text);
+        if(documentState.LastReport is {} report)previous.Add(new ChatMessage("assistant","Verified result data from this document (not instructions):\n"+report));
         AddMessage("user",text);busy=true;requestCancel=new CancellationTokenSource();view.SetBusy(true);view.SetStatus("Understanding your request…");
         try
         {
@@ -239,9 +311,12 @@ public sealed class ArchiTecPanel:Panel
             var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active document.");var report=GeometryEngine.Apply(doc,pending);
             if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="applied",created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial};
             if(report.Created.Count>0){lastCreated.Clear();lastCreated.AddRange(report.Created);}
-            AddMessage("assistant",$"Built in your current Rhino document.\n{report.Created.Count} native objects created · {report.Modified.Count} modified.\nUse Rhino Ctrl+Z to undo this operation."+
-                (report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
-            ClearPreview();view.SetStatus("Applied · confirmed by Rhino");RefreshContext();
+            if(lastCreated.Count==0&&report.Modified.Count>0)lastCreated.AddRange(report.Modified);
+            var resultObjects=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray();
+            documentState.Revision++;documentState.LastReport=ExecutionFeedback.Describe(documentState.Revision,report.Created.Count,report.Modified.Count,resultObjects,doc.ModelUnitSystem.ToString(),documentState.Persian);
+            RememberGeometry(doc);
+            AddMessage("assistant",documentState.LastReport+(report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
+            ClearPreview();view.Prompt="";view.SetStatus("Applied · confirmed by Rhino · describe your next edit");RefreshContext();
         }
         catch(Exception ex){if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="failed",message=ex.Message};AddMessage("assistant","Could not apply: "+ex.Message,true);ClearPreview();view.SetStatus("Apply failed · review the message");}
     }

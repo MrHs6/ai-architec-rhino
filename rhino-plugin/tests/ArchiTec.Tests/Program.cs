@@ -64,6 +64,7 @@ using(var server=new McpServer(port,(name,args,token)=>{calls++;return Task.From
     using(var r=await Post(init))Test("MCP rejects unknown protocol headers",()=>Assert(r.StatusCode==HttpStatusCode.BadRequest));
 }
 passed+=await ProviderProtocolTests.Run();
+passed+=await ConnectionWorkflowTests.Run();
 Console.WriteLine($"{passed} tests passed.");
 return 0;
 

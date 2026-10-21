@@ -1,6 +1,6 @@
 # AI Archi-Tec for Rhino 8
 
-نسخهٔ 0.3.0-beta.1 با سه فضای کاری مستقل، پروفایل مستقل سرویس‌ها و لوگوی اصلی پروژه.
+نسخهٔ 0.4.0-beta.1 با سه فضای کاری مستقل، پروفایل مستقل سرویس‌ها و لوگوی اصلی پروژه.
 
 **[صفحهٔ عمومی و دانلود](https://github.com/MrHs6/ai-architec-rhino)** · [نصب فارسی](https://github.com/MrHs6/ai-architec-rhino/blob/main/docs/INSTALLATION.fa.md) · [English](https://github.com/MrHs6/ai-architec-rhino/blob/main/docs/README.en.md)
 

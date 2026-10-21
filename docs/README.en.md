@@ -4,25 +4,25 @@
 
 An architectural modeling assistant that runs inside Rhino. Open Studio with **`archtec`**, describe a concept, inspect the proposed geometry in the current document, then **Apply to Rhino**. Use your own API account or connect a compatible desktop AI client through localhost MCP.
 
-**Current release: 0.3.0-beta.1. Windows x64, licensed Rhino 8.31+ within Rhino 8, .NET 8 runtime.** This is a concept-modeling beta; live paid-provider/vision trials and clean installation on a second licensed workstation remain outstanding.
+**Current release: 0.4.0-beta.1. Windows x64, licensed Rhino 8.31+ within Rhino 8, .NET 8 runtime.** This is a concept-modeling beta; live paid-provider/vision trials and clean installation on a second licensed workstation remain outstanding.
 
 ## Install
 
-1. Download the [Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/ai-architec-rhino-0.3.0-beta.1-windows-installer.zip) from the [release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.3.0-beta.1).
-2. Extract all files, keeping `install.cmd` next to the `.yak` package. Run `install.cmd`; it invokes Rhino's installed Yak tool for the current Windows user.
-3. Save your work and restart Rhino.
+1. Download the [Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.0-beta.1/ai-architec-rhino-0.4.0-beta.1-windows-installer.zip) from the [release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.0-beta.1).
+2. Extract all files, keeping `install.cmd` next to the `.yak` package. Save your work and close all Rhino windows before running `install.cmd`; it invokes Rhino's installed Yak tool for the current Windows user.
+3. Reopen Rhino.
 4. Type **`archtec`** and press Enter.
 5. Open **API profiles**, choose your API source, enter your personal key, load compatible models and select a model. Alternatively start **MCP** and configure a compatible local desktop client.
 
 No Visual Studio, Node or SDK is needed for the ready-made installer. API access and billing belong to each user's provider account; no shared key or AI credit is included.
 
-Alternatively [download the Yak directly](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak), drag it onto Rhino, or run:
+Alternatively [download the Yak directly](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.0-beta.1/ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak), drag it onto Rhino, or run:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak"
 ```
 
-Adjust the path. Restart after installation. CMD calls Yak directly without altering PowerShell execution policy. For a custom Rhino installation, set `ARCHITEC_RHINO_SYSTEM` to its System folder before running `install.cmd`. `install.cmd /check` only verifies local paths. `install.ps1 -CheckOnly` also checks Rhino version, package identity and the accompanying checksum when PowerShell scripts are allowed by your device policy.
+Adjust the path. Restart after installation. CMD calls Yak and its native registration-repair helper without altering PowerShell execution policy. Legacy prototype users should use the ZIP installer because Yak alone does not repair manual registration. For a custom Rhino installation, set `ARCHITEC_RHINO_SYSTEM` to its System folder before running `install.cmd`. `install.cmd /check` only verifies local paths. `install.ps1 -CheckOnly` also checks Rhino version, package identity and the accompanying checksum when PowerShell scripts are allowed by your device policy.
 
 Preferences: **Tools > Options > AI Archi-Tec**. Plugin management: **Tools > Options > Plug-ins**. `AIArchitect` is an alternative command; `AIArchitectFloat` opens a floating panel. To uninstall, use PackageManager or `Yak.exe uninstall ai-architec-rhino`, then restart. Optional per-user API preferences are retained.
 
@@ -32,7 +32,7 @@ Preferences: **Tools > Options > AI Archi-Tec**. Plugin management: **Tools > Op
 
 ![Editable native building geometry](../rhino-plugin/docs/building-output.png)
 
-The screenshots show the real limited offline building example, not an unverified online-AI result. [Download the editable 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.3.0-beta.1/demo-building.3dm): 46 native parts for a five-floor concept building.
+The screenshots show the real limited offline building example, not an unverified online-AI result. [Download the editable 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.0-beta.1/demo-building.3dm): 46 native parts for a five-floor concept building.
 
 ## Features and workflow
 

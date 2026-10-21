@@ -10,10 +10,10 @@
 
 ## روش پیشنهادی: نصب‌کنندهٔ ویندوز
 
-1. [نسخهٔ بتا](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.3.0-beta.1) را باز کنید و از **Assets** فایل `ai-architec-rhino-0.3.0-beta.1-windows-installer.zip` را بگیرید. گزینهٔ **Source code** نصب‌کننده نیست.
+1. [نسخهٔ بتا](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.0-beta.1) را باز کنید و از **Assets** فایل `ai-architec-rhino-0.4.0-beta.1-windows-installer.zip` را بگیرید. گزینهٔ **Source code** نصب‌کننده نیست.
 2. ZIP را با **Extract All** استخراج کنید؛ `install.cmd` و فایل `.yak` باید کنار هم باشند.
-3. `install.cmd` را اجرا کنید. نصب برای همان حساب ویندوز با Yak همراه راینو انجام می‌شود.
-4. پس از پیام موفقیت، فایل راینو را ذخیره کنید و راینو را ببندید و مجدداً باز کنید.
+3. سندتان را ذخیره کنید و تمام پنجره‌های راینو را ببندید؛ سپس `install.cmd` را اجرا کنید. نصب برای همان حساب ویندوز با Yak همراه راینو انجام می‌شود.
+4. پس از پیام موفقیت، راینو را دوباره باز کنید.
 5. در صفحهٔ فرمان بنویسید `archtec` و Enter بزنید.
 6. در Settings سرویس، کلید و مدل را انتخاب کنید. [راهنمای اتصال](CONNECTIONS.fa.md)
 
@@ -30,7 +30,7 @@ install.cmd
 یا مسیر یک بستهٔ محلی را بدهید:
 
 ```cmd
-install.cmd "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
+install.cmd "D:\Downloads\ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak"
 ```
 
 اگر راینو در مسیر دیگری نصب است:
@@ -47,7 +47,7 @@ install.cmd
 فایل `.yak` نسخه را دانلود و روی پنجرهٔ Rhino بکشید، یا این فرمان را اجرا کنید:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak"
 ```
 
 مسیر را مطابق دستگاه خود اصلاح کنید. سپس راینو را مجدداً اجرا کنید. نصب از جست‌وجوی عمومی **PackageManager** فقط پس از انتشار بسته در کاتالوگ مربوط در دسترس خواهد بود؛ فعلاً فایل این مخزن را نصب کنید.
@@ -64,7 +64,7 @@ install.cmd
 PowerShell نسخهٔ راینو، هویت بسته و SHA256 همراه ZIP را بررسی می‌کند. فایل مستقل `SHA256SUMS.txt` نیز در Assets همان نسخه منتشر می‌شود. برای مشاهدهٔ hash دانلود:
 
 ```powershell
-Get-FileHash .\ai-architec-rhino-0.3.0-beta.1-rh8_31-win.yak -Algorithm SHA256
+Get-FileHash .\ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak -Algorithm SHA256
 ```
 
 برای نصب خودکار از URL مستقیم، `-PackageUrl` و `-Sha256` واقعی همان نسخه را به `install.ps1` بدهید. برای نصب بدون تغییر سند/بسته از `-WhatIf` استفاده کنید. جزئیات در [راهنمای توزیع](../rhino-plugin/docs/DISTRIBUTION.md) آمده است.
@@ -104,6 +104,26 @@ Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights and a 
 سپس راینو را دوباره باز کنید. حذف بسته به‌تنهایی فایل تنظیمات شخصی `%LOCALAPPDATA%\AIArchiTec\Rhino8\connection.json` را پاک نمی‌کند.
 
 ## رفع خطا
+
+### پنل خاکستری با کادرهای خالی یا بازگشت ظاهر قدیمی
+
+پیش از نصب، سندتان را ذخیره و **تمام پنجره‌های راینو را ببندید**. ثبت مسیر درحالی‌که نمونهٔ قدیمی باز است کافی نیست، چون راینو می‌تواند هنگام خروج مسیر ذخیره‌شدهٔ قبلی را دوباره بنویسد. نصب‌کننده و ابزار ترمیم اکنون این وضعیت را متوقف و پیام روشن نمایش می‌دهند.
+
+اگر قبلاً نمونهٔ آزمایشی را با کشیدن فایل `.rhp` داخل راینو نصب کرده‌اید، ممکن است ثبت دستی نسخهٔ `0.1` بر بستهٔ جدید Yak مقدم باشد. نصب ZIP نسخهٔ `0.4.0-beta.1` ابتدا Yak را نصب می‌کند، سپس فقط ثبت همین پلاگین را در حساب ویندوز اصلاح می‌کند و فرمان `archtec` را اضافه می‌کند. از ثبت قبلی در `%LOCALAPPDATA%\AIArchiTec\InstallationBackups` فایل `.reg` پشتیبان گرفته می‌شود. پس از نصب، سند را ذخیره و راینو را دوباره اجرا کنید؛ اسمبلی بارگذاری‌شده در همان اجرای قبلی قابل تعویض نیست.
+
+در **About** نسخه و مسیر فایل بارگذاری‌شده را بررسی کنید. مسیر نصب Yak معمولاً چنین است:
+
+```text
+%APPDATA%\McNeel\Rhinoceros\packages\8.0\ai-architec-rhino\0.4.0-beta.1\AIArchiTec.rhp
+```
+
+برای بررسی بدون تغییر، از پوشهٔ ZIP استخراج‌شده اجرا کنید:
+
+```powershell
+.\repair-registration.ps1 -PackagePath .\ai-architec-rhino-0.4.0-beta.1-rh8_31-win.yak -CheckOnly
+```
+
+اگر اجرای PowerShell طبق سیاست دستگاه محدود است، `install.cmd` از ابزار بومی `repair-registration.cmd` استفاده می‌کند و تغییر سیاست لازم نیست. اگر ترمیم ثبت شکست بخورد، نصب‌کننده نتیجه را خطا اعلام می‌کند. نصب مستقیم Yak به‌تنهایی ثبت دستی قدیمی را ترمیم نمی‌کند. فایل‌ها و تنظیمات شخصی قبلی حذف نمی‌شوند.
 
 | مشکل | بررسی |
 |---|---|

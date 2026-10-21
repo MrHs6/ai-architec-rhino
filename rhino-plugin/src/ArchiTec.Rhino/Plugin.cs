@@ -15,6 +15,10 @@ public sealed class ArchiTecPlugin : PlugIn
     protected override LoadReturnCode OnLoad(ref string errorMessage)
     {
         Panels.RegisterPanel(this, typeof(ArchiTecPanel), "AI Archi-Tec", (System.Drawing.Icon?)null);
+        var assembly=typeof(ArchiTecPlugin).Assembly;
+        var version=assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute),false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion.Split('+')[0];
+        RhinoApp.WriteLine($"AI Archi-Tec {version} · {assembly.Location}");
         RhinoApp.WriteLine("AI Archi-Tec loaded. Type archtec to open the modeling assistant. Settings: Tools > Options > AI Archi-Tec.");
         return LoadReturnCode.Success;
     }

@@ -1,11 +1,11 @@
 # Provider protocols and independent profiles
 
-Each service has its own endpoint, credential, remembered-key choice and selected model. Switching services preserves unsaved profile drafts in memory. **Save this profile** persists that provider's preferences; keys are persisted only when Remember is enabled, using Windows DPAPI. Connect explicitly fetches the provider's model catalog. Saving does not send a modeling request.
+Each service has its own endpoint, credential, remembered-key choice and selected model. Switching services preserves unsaved profile drafts in memory. **Save this profile** persists preferences and makes the selected provider active. Keys are persisted only when Remember is enabled, using Windows DPAPI; otherwise the key remains available in this Rhino session, including the native Options page, and is cleared at exit. Connect saves first, then fetches the catalog. A failed network request does not discard the saved profile. Settings files are replaced atomically. Saving does not send a modeling request.
 
 | Service | Discovery | Generation | Authentication |
 |---|---|---|---|
 | OpenRouter | `/api/v1/models`, filter tools/structured_outputs | OpenAI Chat Completions + JSON schema | Bearer header |
-| OpenAI | `/v1/models` | Chat Completions + JSON schema | Bearer header |
+| OpenAI | `/v1/models`, exclude known non-text modalities | Responses + `text.format` JSON schema, `store:false` | Bearer header |
 | xAI / Grok | `/v1/language-models`, text output + image metadata | Chat Completions + JSON schema | Bearer header |
 | Google Gemini | `/v1beta/models`, paginated; Gemini text generation | Native `models/<id>:generateContent`, structured generation config | `x-goog-api-key` header |
 | Anthropic / Claude | `/v1/models`, paginated; capability metadata | Native `/v1/messages`, `output_config.format` | `x-api-key`, `anthropic-version` headers |
@@ -16,6 +16,9 @@ Gemini sends reference images as inline image parts. Anthropic sends base64 imag
 The local transport tests use simulated official response shapes: credentials in headers, native payloads, model filtering/pagination, images, incomplete output and errors. **Live account-based acceptance still requires the user's own API keys.** These tests do not establish live provider availability or image interpretation quality.
 
 ## Official references used for implementation
+
+- [OpenAI model discovery](https://developers.openai.com/api/reference/resources/models/methods/list)
+- [OpenAI Responses migration / structured output](https://developers.openai.com/api/docs/guides/migrate-to-responses)
 
 - [Gemini Models API](https://ai.google.dev/api/models)
 - [Gemini GenerateContent structured output](https://ai.google.dev/gemini-api/docs/generate-content/structured-output)

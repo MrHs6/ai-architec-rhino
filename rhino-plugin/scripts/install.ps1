@@ -56,10 +56,12 @@ try{
         if($manifest -notmatch '(?m)^name:\s*ai-architec-rhino\s*$'){throw 'Unexpected package identity.'}
     }finally{$archive.Dispose()}
     if($CheckOnly){Write-Output 'Installation prerequisites, package identity and supplied checksum verified.';return}
+    if(!$WhatIfPreference -and (Get-Process -Name Rhino -ErrorAction SilentlyContinue)){throw 'Save your work and close every Rhino window before installing. A running prototype can overwrite its registration again at shutdown.'}
     if($PSCmdlet.ShouldProcess($PackagePath,'Install AI Archi-Tec for the current Windows user')){
         & $yak install $PackagePath
         if($LASTEXITCODE -ne 0){throw "Yak installation failed with exit code $LASTEXITCODE."}
-        Write-Output 'Installed. Save your work, restart Rhino, then run AIArchitect. Configure your own API key or localhost MCP in Settings.'
+        & (Join-Path $PSScriptRoot 'repair-registration.ps1') -PackagePath $PackagePath
+        Write-Output 'Installed. Save your work, restart Rhino, then run archtec. Configure your own API key or localhost MCP in Settings.'
     }
 }finally{
     # Remove only the single download created here, never a user-provided file.
