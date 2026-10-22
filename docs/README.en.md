@@ -30,6 +30,10 @@ Preferences: **Tools > Options > AI Archi-Tec**. Plugin management: **Tools > Op
 
 ## Screenshots and example
 
+![Actual Codex MCP box and confirmed reconnect in 0.4.2](../rhino-plugin/docs/codex-box-042.png)
+
+This Codex chat proposed the box; the user clicked Apply. MCP readback confirmed one native Brep with exact 1 × 2 × 3 meter bounds. Another off/on preserved its GUID without a duplicate.
+
 <img src="../rhino-plugin/docs/studio-panel.png" width="500" alt="Actual AI Archi-Tec panel with the offline building example">
 
 ![Editable native building geometry](../rhino-plugin/docs/building-output.png)

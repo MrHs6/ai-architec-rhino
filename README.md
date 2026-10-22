@@ -43,6 +43,10 @@
 
 ## محیط واقعی پلاگین
 
+![آزمون واقعی Codex، باکس و اتصال مجدد در نسخهٔ 0.4.2](rhino-plugin/docs/codex-box-042.png)
+
+در آزمون نسخهٔ 0.4.2، همین چت Codex طرح باکس را فرستاد؛ کاربر Apply را زد و کدکس یک Brep با ابعاد دقیق ۱ × ۲ × ۳ متر را خواند. قطع‌و‌وصل مجدد همان GUID را حفظ کرد و مدل تکراری ساخته نشد. این تصویر خروجی واقعی آزمون است.
+
 <p align="center"><img src="rhino-plugin/docs/studio-panel.png" width="500" alt="English AI Archi-Tec workspace in Rhino with an explicitly labeled local MCP protocol test"></p>
 
 تصویر بالا رابط انگلیسی واقعی و آزمون پروتکل MCP محلی را نشان می‌دهد؛ این آزمون حساب آنلاین نیست. نمونهٔ ساختمان پایین با حالت محدود **Offline examples** ساخته شده است.
