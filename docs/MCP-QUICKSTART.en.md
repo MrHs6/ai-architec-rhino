@@ -1,5 +1,7 @@
 # Chat there. Build here.
 
+[Product overview](../README.md) · [Installation tutorial](INSTALLATION.en.md) · [Architecture](ARCHITECTURE.en.md)
+
 AI Archi-Tec 0.4.2 has two independent conversation routes. The interface and built-in help are English; your prompts can be Persian.
 
 ## Use Codex or Claude Desktop
