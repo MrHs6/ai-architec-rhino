@@ -69,7 +69,7 @@ A cloud service cannot reach your Windows localhost directly. A compatible local
 
 ## Beta status
 
-122 automated checks pass, including three server/credential rotations with one real STDIO process. Installed Codex acceptance confirms automatic registration, a native disconnect/reconnect without client reload and a real box preview. Apply acceptance and historical geometry checks are recorded separately in the [validation report](../rhino-plugin/docs/VALIDATION.md).
+122 automated checks pass, including three server/credential rotations with one real STDIO process. Installed Codex acceptance confirms automatic registration, a native disconnect/reconnect without client reload and a real proposal/Apply/readback for one native 1 × 2 × 3 meter box. Exact GUID/bounds and historical geometry checks are recorded in the [validation report](../rhino-plugin/docs/VALIDATION.md).
 
 Live paid-provider responses, vision interpretation quality and clean startup on a second licensed machine still require validation. Concept geometry is not BIM or construction documentation. Arbitrary image reconstruction, unrestricted building generation, Grasshopper, persistent project memory and cloud hosting are not implemented. Food4Rhino/Yak catalog publication is separate from this GitHub release.
 
