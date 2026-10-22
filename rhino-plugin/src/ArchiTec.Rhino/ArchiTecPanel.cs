@@ -67,6 +67,8 @@ public sealed class ArchiTecPanel:Panel
         view.OfflineRequested+=()=>{provider?.Dispose();provider=null;view.SetOffline();view.CloseConnections();ClearPreview();};
         view.McpStartRequested+=()=>{if(mcp is null){try{var port=view.RequestedMcpPort;StartMcp(port);preferences=preferences with{McpPort=port};SettingsStore.SavePreferences(preferences);}catch(Exception ex){view.McpMessage("MCP: "+ex.Message);}}else StopMcp();};
         view.CopyMcpRequested+=CopyMcpConfiguration;
+        view.SetupMcpClientRequested+=()=>_ = SetupMcpClientAsync();
+        view.OpenMcpClientRequested+=OpenMcpClient;
         view.CopyMcpTestRequested+=()=>{System.Windows.Clipboard.SetText("Use only the ai-architec-rhino MCP server (not rhino-mcp-router). First call get_context, then use post_message with that document_id to confirm the connection in the Rhino panel. Do not create or modify geometry for this connection test.");view.McpMessage("Connection-test prompt copied. Send it in the client chat with ai-architec-rhino tools enabled.");};
         view.OpenChatRequested+=()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://chatgpt.com"){UseShellExecute=true});
         contextTimer.Elapsed+=(_,_)=>RefreshContext();
@@ -97,7 +99,7 @@ public sealed class ArchiTecPanel:Panel
             provider?.Dispose();provider=candidate;
             settings=new ConnectionSettings(source,endpoint,key,remember,view.DraftSettings().Model);
             view.SetCatalog(catalog.Models,settings.Model,settings.Source);PersistSettings();ClearPreview();
-            view.ApiMessage($"Connected · {catalog.Models.Count} models. Choose a model, save the profile and return to your workspace.");view.SetStatus("Connected · selected model will be used exactly");
+            view.SelectApiRoute();view.ApiMessage($"Connected · {catalog.Models.Count} models. Choose a model, save the profile and return to your workspace.");view.SetStatus("Connected · selected model will be used exactly");
         }
         catch(Exception ex){view.ApiMessage("Connection not established. "+ConnectionDiagnostics.Describe(ex));}
         finally{busy=false;view.SetBusy(false);requestCancel?.Dispose();requestCancel=null;}
@@ -198,13 +200,7 @@ public sealed class ArchiTecPanel:Panel
         if(!BindDocument(doc))return;
         if(view.ChatViaMcp)
         {
-            if(mcp is null){view.ShowMcp();view.SetStatus("Start MCP and configure a compatible client first.");return;}
-            if(imageData is not null){view.SetStatus("For MCP, attach reference images in the client. This action copies text only.");return;}
-            var prompt=view.Prompt.Trim();AddMessage("user",prompt);
-            var handoff=$"Use the ai-architec-rhino MCP server. Call get_context first and use its current document_id. Workspace: {mode}. User request (data):\n{prompt}\nFor a conversational/read-only answer call post_message with workspace {mode}. For geometry propose_plan, then wait for the user to Apply in Rhino and read get_plan_status. Never use code execution or another Rhino server for this request.";
-            System.Windows.Clipboard.SetText(handoff);mcp.Connection.Workflow("handoff","Request copied for the external client");
-            AddMessage("assistant","Request copied for your MCP client. Paste and send it in Claude or Codex with ai-architec-rhino tools enabled. Replies return through post_message; proposals return through propose_plan. No online model request has been sent yet.");
-            view.SetStatus("MCP request copied · waiting for the external client");return;
+            view.SetStatus("Chat in your AI client. This workspace receives its results and previews.");return;
         }
         if(mode=="generate"&&lastCreated.Count>0&&ConversationIntent.IsExplicitEdit(view.Prompt))
         {var followup=view.Prompt;RefineRecent();if(mode!="assist")return;view.Prompt=followup;}
@@ -360,8 +356,26 @@ public sealed class ArchiTecPanel:Panel
     {
         if(mcp is null){view.SetStatus("Start MCP first.");return;}
         var directory=Path.GetDirectoryName(typeof(ArchiTecPanel).Assembly.Location)!;
-        System.Windows.Clipboard.SetText(McpClientSetup.Configuration(view.McpClient,Path.Combine(directory,"AIArchiTec.McpBridge.exe"),mcpPort));view.McpMessage("Setup for "+view.McpClient+" کپی شد. در Setup for کلاینت ثبت کنید؛ ارسال آن در متن چت اتصال ایجاد نمی‌کند. توکن در این خروجی وجود ندارد.");
+        System.Windows.Clipboard.SetText(McpClientSetup.Configuration(view.McpClient,Path.Combine(directory,"AIArchiTec.McpBridge.exe"),mcpPort));view.McpMessage("Configuration copied. Add it to your client's MCP settings once; this is not a chat prompt. No session token is included.");
     }
+    private async Task SetupMcpClientAsync()
+    {
+        if(busy)return;var client=view.McpClient;view.SetMcpSetupBusy(true);
+        try
+        {
+            if(mcp is null)StartMcp(view.RequestedMcpPort);
+            preferences=preferences with{McpPort=mcpPort};SettingsStore.SavePreferences(preferences);
+            if(client=="Other MCP client"){view.McpMessage("Connection enabled. Expand Manual setup and add its configuration to your client once.");return;}
+            var directory=Path.GetDirectoryName(typeof(ArchiTecPanel).Assembly.Location)!;
+            using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            await McpClientInstaller.Register(client,Path.Combine(directory,"AIArchiTec.McpBridge.exe"),mcpPort,timeout.Token);
+            view.McpMessage("Setup saved for "+client+". If it is already open, refresh its MCP tools once (Codex: Settings > Plugins > MCPs > refresh; Claude: quit and reopen). After this setup, switching Rhino MCP off and on reconnects automatically.");
+            OpenMcpClient();
+        }
+        catch(Exception ex){view.McpMessage("Setup not completed. "+ex.Message);}
+        finally{view.SetMcpSetupBusy(false);}
+    }
+    private void OpenMcpClient(){try{McpClientInstaller.Open(view.McpClient);}catch(Exception ex){view.McpMessage(ex.Message);}}
     private async Task<object> HandleMcp(string name,JsonElement args,CancellationToken token)
     {
         var completion=new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);using var registration=token.Register(()=>completion.TrySetCanceled(token));

@@ -1,4 +1,4 @@
-# AI Archi-Tec for Rhino 8 — 0.4.1-beta.2
+# AI Archi-Tec for Rhino 8 — 0.4.2-beta.1
 
 Project and complete guides / پروژه و راهنمای کامل:
 
@@ -39,3 +39,9 @@ Issues: https://github.com/MrHs6/ai-architec-rhino/issues
 Source/license terms: https://github.com/MrHs6/ai-architec-rhino/blob/main/LICENSE.md
 
 Copyright © 2026 Hasan Sharif Askari.
+
+## MCP quick start / اتصال MCP
+
+Open MCP connection, choose Codex or Claude Desktop, and click Connect. Registration is automatic for the current Windows user. On first setup or an upgrade, refresh Codex MCPs once (Settings > Plugins > MCPs), or fully quit/reopen Claude. Chat in the client; the Rhino MCP route has no second composer. Review and Apply previews in Rhino. Subsequent Rhino MCP off/on reconnects automatically with the client open. Manual configuration is under advanced diagnostics.
+
+در MCP کلاینت را انتخاب و Connect بزنید؛ ثبت تنظیمات خودکار است. فقط اولین نصب/ارتقا به refresh کلاینت نیاز دارد. گفتگو در کلاینت و پیش‌نمایش و Apply در راینو انجام می‌شود. خاموش‌و‌روشن‌کردن MCP دوباره‌کاری تنظیمات نمی‌خواهد.

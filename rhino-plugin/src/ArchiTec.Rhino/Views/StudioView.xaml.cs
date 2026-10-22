@@ -14,7 +14,7 @@ public partial class StudioView:UserControl
     public event Action? SendRequested,ApplyRequested,CancelRequested,AttachRequested,ImportRequested,ConnectRequested,OfflineRequested,McpStartRequested,CopyMcpRequested,OpenChatRequested;
     public event Action? InputChanged,SelectedModelChanged,SaveProfileRequested,SavePreferencesRequested,AuditRequested,QuickAssistRequested;
     public event Action? TestNetworkRequested,RefineResultRequested,SelectResultRequested,ExplainResultRequested;
-    public event Action? CopyMcpTestRequested;
+    public event Action? CopyMcpTestRequested,SetupMcpClientRequested,OpenMcpClientRequested;
     public event Action<string>? ModeChanged;
     private readonly Dictionary<string,ConnectionSettings> profiles=[];
     private readonly Dictionary<string,List<ModelDescriptor>> modelLists=[];
@@ -22,7 +22,7 @@ public partial class StudioView:UserControl
     private bool loading,compact,resultAvailable,isBusy;
     public string Prompt{get=>PromptInput.Text;set=>PromptInput.Text=value;}
     public bool ChatViaMcp=>ChatRouteSelector.SelectedIndex==1;
-    public string McpClient=>McpClientSelector.SelectedIndex switch{1=>"Codex",2=>"ChatGPT web",_=>"Claude Desktop"};
+    public string McpClient=>McpClientSelector.SelectedIndex switch{1=>"Codex",2=>"Other MCP client",_=>"Claude Desktop"};
     public string Source=>SourceSelector.SelectedItem as string??"OpenRouter";
     public string Endpoint=>ApiUrl.Text.Trim();
     public string ApiCredential=>ApiKey.Password.Trim();
@@ -45,7 +45,7 @@ public partial class StudioView:UserControl
         RailLogoBrush.ImageSource=bitmap;BrandLogoBrush.ImageSource=bitmap;AboutLogoBrush.ImageSource=bitmap;
         AboutVersion.Text="Version "+(typeof(StudioView).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]??"beta");
         AboutInstallPath.Text=typeof(StudioView).Assembly.Location;
-        loading=false;SetWorkspace("generate",false);UpdateMcpGuide();
+        loading=false;SetMcp(false);SetWorkspace("generate",false);UpdateMcpGuide();
     }
     public void LoadProfiles(Dictionary<string,ConnectionSettings> values){foreach(var p in values)profiles[p.Key]=p.Value;}
     public ConnectionSettings DraftSettings()=>new(Source,Endpoint,ApiCredential,Remember,(ProfileModelSelector.SelectedItem as ModelDescriptor)?.Id??(profiles.TryGetValue(Source,out var draft)?draft.Model:""));
@@ -114,26 +114,34 @@ public partial class StudioView:UserControl
     public void HidePreview()=>PreviewCard.Visibility=Visibility.Collapsed;
     public void SetMcp(bool running,string? url=null,string? token=null)
     {
-        McpChip.Content=running?"MCP · waiting":"MCP ↗";McpStartButton.Content=running?"Stop MCP":"Start localhost MCP →";McpStatus.Text=running?"Server running · waiting for a client":"Server stopped";
-        McpClientStatus.Text="No client has initialized this connection yet.";McpStage.Text="";McpLastSeen.Text="";McpActivityLog.Text="";
+        if(running)ChatRouteSelector.SelectedIndex=1;
+        McpChip.Content=running?"MCP · waiting":"MCP · off";McpStartButton.Content="Disconnect";McpStartButton.Visibility=running?Visibility.Visible:Visibility.Collapsed;McpStatus.Text=running?"Waiting for your AI client":"Connection disabled";
+        McpStage.Visibility=McpLastSeen.Visibility=Visibility.Collapsed;
+        McpClientStatus.Text=running?"Keep the client open. An existing bridge reconnects automatically.":"Click Connect to set up your client, or Enable connection if it is already configured.";McpStage.Text="";McpLastSeen.Text="";McpActivityLog.Text="";
         DashboardMcpStatus.Text=running?"Running\n"+url:"Stopped";McpPort.IsEnabled=!running;McpToken.Password=token??"";if(url is not null)McpUrl.Text=url;
+        McpWorkspaceStatus.Text=running?"Waiting for "+McpClient+". Enable its Archi-Tec tools if this is your first connection.":"Connection is off. Enable it to receive requests; your AI client can stay open.";UpdateChatRoute();
     }
     public void SetMcpConnection(McpConnectionSnapshot state)
     {
         var recent=state.LastSeenUtc is {} seen&&DateTimeOffset.UtcNow-seen<TimeSpan.FromSeconds(45);
-        McpStatus.Text=state.ClientName is null?"Server running · waiting for a client":"Server running · "+state.Clients+" initialized session(s)";
-        McpChip.Content=state.ClientName is null?"MCP · waiting":recent?"MCP · "+state.ClientName:"MCP · idle";
-        McpClientStatus.Text=state.ClientName is null?"No client has initialized this connection yet.":"Client (announced): "+state.ClientName+(recent?" · recent contact confirmed":" · no recent contact");
-        McpStage.Text=state.Stage switch{"initialized"=>"Step 3 · Handshake received; waiting for tool discovery","tools_ready"=>"Step 3 · Tools shared with the client","context_ready"=>"Step 4 · Document context returned to the client","working"=>"Step 4 · Processing a client request","preview"=>"Step 5 · Preview ready; Apply or Cancel in Rhino","applied"=>"Step 6 · Changes confirmed in the Rhino document","cancelled"=>"Preview cancelled; no new changes applied","error"=>"Request failed; review the client response and document","message"=>"Client message delivered to the workspace conversation","handoff"=>"Request copied; paste and send it in the client chat","disconnected"=>"Client session closed; the server is still running",_=>"Step 2 · Register the setup in your client and reload the connection"};
-        McpLastSeen.Text=state.LastSeenUtc is {} at?"Last contact: "+at.ToLocalTime().ToString("HH:mm:ss")+" · The client name does not verify account identity or sign-in.":"A running server is not a confirmed ChatGPT or Claude connection.";
+        var name=state.ClientName?.Contains("codex",StringComparison.OrdinalIgnoreCase)==true?"Codex":state.ClientName?.Contains("claude",StringComparison.OrdinalIgnoreCase)==true?"Claude Desktop":state.ClientName;
+        McpStage.Visibility=McpLastSeen.Visibility=Visibility.Visible;
+        McpStatus.Text=state.ClientName is null?"Waiting for your AI client":recent?"Connected · "+name:"Reconnecting · waiting for client contact";
+        McpChip.Content=state.ClientName is null?"MCP · waiting":recent?"MCP · "+name:"MCP · idle";
+        McpClientStatus.Text=state.ClientName is null?"No client has initialized this connection yet.":recent?"Chat in "+name+". Review and Apply its previews in Rhino.":"No recent client contact. The bridge reconnects when your client is open.";
+        McpStage.Text=state.Stage switch{"initialized"=>"Finishing connection…","tools_ready"=>"Ready · describe your model in the AI client","context_ready"=>"Rhino document shared with your client","working"=>"Processing your client request…","preview"=>"Preview ready · Apply or Cancel below","applied"=>"Applied · native geometry confirmed","cancelled"=>"Preview cancelled; no new changes applied","error"=>"Request failed; review the client response and document","message"=>"Client message delivered to the workspace conversation","handoff"=>"Request copied; paste and send it in the client chat","disconnected"=>"Client session closed; the server is still running",_=>"Open your client and enable its Archi-Tec tools"};
+        McpLastSeen.Text=state.LastSeenUtc is {} at?"Last contact: "+at.ToLocalTime().ToString("HH:mm:ss"):"A running server is not a confirmed ChatGPT or Claude connection.";
         McpActivityLog.Text=string.Join("\n",state.Activity.Select(e=>e.At.ToLocalTime().ToString("HH:mm:ss")+" · "+e.Stage+" · "+e.Detail));
         DashboardMcpStatus.Text=McpClientStatus.Text+"\n"+McpStage.Text;
+        McpWorkspaceStatus.Text=state.ClientName is null?"Open "+McpClient+" and enable its Archi-Tec tools.":recent?"Connected to "+name+" · chat in your client; review and Apply here.":"The last client has no recent contact. Keep it open; the bridge reconnects automatically.";
     }
     private void UpdateMcpGuide()
     {
         if(McpSetupGuide is null)return;McpSetupGuide.Text=McpClientSetup.Guide(McpClient);
-        CopyMcpSetupButton.Content=McpClient=="Codex"?"Copy Codex TOML":McpClient=="ChatGPT web"?"Web setup requires a separate connector":"Copy Claude Desktop JSON";
-        CopyMcpSetupButton.IsEnabled=McpClient!="ChatGPT web";
+        CopyMcpSetupButton.Content=McpClient=="Codex"?"Copy Codex configuration (TOML)":"Copy MCP configuration (JSON)";
+        SetupMcpClientButton.Content=McpClient=="Other MCP client"?"Enable connection →":"Connect to "+McpClient+" →";
+        SetupMcpClientButton.IsEnabled=true;
+        McpWorkspaceTitle.Text="Chat in "+McpClient;OpenMcpClientButton.Content="Open "+McpClient+" ↗";OpenMcpClientButton.IsEnabled=McpClient!="Other MCP client";
     }
     public void LoadPreferences(StudioPreferences value){DefaultWorkspace.SelectedIndex=value.DefaultWorkspace switch{"analyze"=>1,"assist"=>2,_=>0};ZoomPreview.IsChecked=value.ZoomPreview;CompactMode.IsChecked=value.Compact;McpPort.Text=value.McpPort.ToString();compact=value.Compact;}
     public StudioPreferences ReadPreferences()=>new(DefaultWorkspace.SelectedIndex switch{1=>"analyze",2=>"assist",_=>"generate"},ZoomPreview.IsChecked==true,CompactMode.IsChecked==true,RequestedMcpPort);
@@ -155,7 +163,7 @@ public partial class StudioView:UserControl
         ExampleButton.Content=value switch{"analyze"=>"Show a focused analysis prompt","assist"=>"Try a target-specific editing prompt",_=>"Try a five-floor building example"};
         PromptPlaceholder.Text=value switch{"analyze"=>"Ask about dimensions, geometry health or layers…","assist"=>"Describe how to edit your selected or recent targets…",_=>"Describe the new space or building you want to create…"};
         UpdateChatRoute();
-        ImportButton.Visibility=value=="analyze"?Visibility.Collapsed:Visibility.Visible;
+        ImportButton.Visibility=ChatViaMcp||value=="analyze"?Visibility.Collapsed:Visibility.Visible;
         WorkspaceHelp.Text=value switch{"analyze"=>"Analyze never changes geometry. Select objects in Rhino or choose Recent output. Dimensions measures bounds, Health checks geometry validity and closure, and Layers summarizes scoped objects. Run local audit works without an API. Conversational interpretation needs a connected API or an external MCP client.","assist"=>"Assist edits Selection or Recent output. Move uses a distance and axis. Scale uses a factor: 2 doubles size; 0.5 halves it. Extrude uses a height on a suitable curve. Preview first, then Apply. Ctrl+Z undoes the operation. Free-form instructions require an API or external MCP client.",_=>"Generate creates new geometry. With an API connected, chat here. For MCP, send your request in Claude or Codex; replies and proposals return through the MCP tools. Starting MCP alone does not connect this input to an online model. Offline tools support limited geometry examples. Review the preview, then Apply in Rhino."};
         GenerateNav.Background=Brush(value=="generate"?"#38265D":"#101222");AnalyzeNav.Background=Brush(value=="analyze"?"#38265D":"#101222");AssistNav.Background=Brush(value=="assist"?"#38265D":"#101222");
         if(notify)ModeChanged?.Invoke(value);
@@ -182,9 +190,23 @@ public partial class StudioView:UserControl
     private void UpdateChatRoute()
     {
         if(SendButton is null)return;
-        SendButton.Content=ChatViaMcp?"Copy for MCP ↗":mode switch{"analyze"=>"Analyze ↗","assist"=>"Assist ↗",_=>"Generate ↗"};
-        ModeLabel.Text=ChatViaMcp?"MCP REQUEST":mode=="assist"?"MODEL ASSIST":mode.ToUpperInvariant();
+        ApiConnectionButton.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;McpRouteLabel.Visibility=ChatViaMcp?Visibility.Visible:Visibility.Collapsed;
+        ImportButton.Visibility=ChatViaMcp||mode=="analyze"?Visibility.Collapsed:Visibility.Visible;
+        ComposerCard.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
+        McpWorkspaceCard.Visibility=ChatViaMcp?Visibility.Visible:Visibility.Collapsed;
+        ModelSelector.Visibility=!ChatViaMcp&&ModelSelector.Items.Count>0?Visibility.Visible:Visibility.Collapsed;
+        GenerateOptions.Visibility=!ChatViaMcp&&mode=="generate"?Visibility.Visible:Visibility.Collapsed;
+        AssistOptions.Visibility=!ChatViaMcp&&mode=="assist"?Visibility.Visible:Visibility.Collapsed;
+        ExampleButton.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
+        SendButton.Content=mode switch{"analyze"=>"Analyze ↗","assist"=>"Assist ↗",_=>"Generate ↗"};
+        ModeLabel.Text=mode=="assist"?"MODEL ASSIST":mode.ToUpperInvariant();
+        if(ChatViaMcp){HeroTitle.Text="Your Rhino execution workspace";HeroDescription.Text="Chat in your AI client. Its replies and previews arrive here. Review the result and Apply in this document.";}
+        else{HeroTitle.Text=mode switch{"analyze"=>"Understand your model.","assist"=>"Refine the geometry you have.",_=>"Start a new architectural concept."};HeroDescription.Text="Describe your request here using your connected API service, or try the limited offline tools.";}
     }
+    public void SelectApiRoute()=>ChatRouteSelector.SelectedIndex=0;
+    public void SetMcpSetupBusy(bool value){SetupMcpClientButton.IsEnabled=!value;McpClientSelector.IsEnabled=!value;McpStartButton.IsEnabled=!value;}
+    private void SetupMcpClientClick(object s,RoutedEventArgs e)=>SetupMcpClientRequested?.Invoke();
+    private void OpenMcpClientClick(object s,RoutedEventArgs e)=>OpenMcpClientRequested?.Invoke();
     private void OpenChatClick(object s,RoutedEventArgs e)=>OpenChatRequested?.Invoke();
     private void SettingsClick(object s,RoutedEventArgs e)=>ShowApi();
     private void McpClick(object s,RoutedEventArgs e)=>ShowMcp();

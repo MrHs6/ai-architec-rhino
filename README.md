@@ -10,7 +10,7 @@
 
 ایدهٔ معماری را در پنل **AI Archi-Tec** وارد کنید، طرح پیشنهادی را در همان سند راینو ببینید و با **Apply to Rhino** به هندسهٔ قابل ویرایش تبدیل کنید. برای استفاده از هوش مصنوعی، سرویس و کلید شخصی خودتان را تنظیم کنید؛ یا کلاینت دسکتاپ سازگار را به MCP محلی پلاگین وصل کنید.
 
-**Beta: `0.4.1-beta.2` · Windows x64 · Rhino 8.31+ (.NET 8)**
+**Beta: `0.4.2-beta.1` · Windows x64 · Rhino 8.31+ (.NET 8)**
 
 نیازمند راینو ۸.۳۱ یا جدیدتر از شاخهٔ Rhino 8. این یک نسخهٔ آزمایشی برای مدل‌سازی مفهومی است؛ محدودیت‌ها و وضعیت آزمون‌ها پایین همین صفحه آمده‌اند.
 
@@ -18,9 +18,12 @@
 
 نسخهٔ 0.4.1 رابط و راهنمای داخل پلاگین را کاملاً انگلیسی ارائه می‌کند. وضعیت سرور، نام اعلام‌شدهٔ کلاینت، آخرین تماس و مراحل درخواست/پیش‌نمایش/اجرا جدا دیده می‌شوند. خروجی تنظیمات Claude و Codex متفاوت و بدون توکن است. [MCP setup and chat guide — English](docs/MCP-QUICKSTART.en.md) · [راهنمای فارسی](docs/MCP-QUICKSTART.fa.md)
 
+
+در نسخهٔ **0.4.2** اتصال Codex/Claude Desktop با دکمهٔ **Connect** خودکار ثبت می‌شود. در حالت MCP گفتگو داخل کلاینت است و راینو فقط نتیجه و پیش‌نمایش را نمایش می‌دهد. قطع‌و‌وصل MCP با همان کلاینت باز بازیابی می‌شود؛ فقط اولین نصب یا ارتقای مسیر پل به یک refresh کلاینت نیاز دارد. [آموزش سادهٔ اتصال](docs/MCP-QUICKSTART.fa.md)
+
 ## دانلود و نصب سریع
 
-**[دانلود نصب‌کنندهٔ ویندوز ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/ai-architec-rhino-0.4.1-beta.2-windows-installer.zip)** · [دانلود مستقیم Yak](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/ai-architec-rhino-0.4.1-beta.2-rh8_31-win.yak) · [صفحهٔ نسخه و فایل‌ها](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.1-beta.2)
+**[دانلود نصب‌کنندهٔ ویندوز ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.2-beta.1/ai-architec-rhino-0.4.2-beta.1-windows-installer.zip)** · [دانلود مستقیم Yak](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.2-beta.1/ai-architec-rhino-0.4.2-beta.1-rh8_31-win.yak) · [صفحهٔ نسخه و فایل‌ها](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.2-beta.1)
 
 1. نصب‌کنندهٔ ZIP را دانلود و **Extract All** کنید؛ فایل‌ها را کنار هم نگه دارید.
 2. سندتان را ذخیره و **تمام پنجره‌های راینو را ببندید**؛ سپس فایل **`install.cmd`** را اجرا کنید. این فایل ابزار رسمی **Yak** همراه راینو را فراخوانی می‌کند.
@@ -33,12 +36,16 @@
 نصب مستقیم در CMD نیز ممکن است:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.1-beta.2-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.2-beta.1-rh8_31-win.yak"
 ```
 
 مسیر فایل را با محل دانلود خودتان جایگزین کنید. راه‌های دیگر نصب، مسیر سفارشی راینو، به‌روزرسانی، حذف و رفع خطا در **[راهنمای نصب فارسی](docs/INSTALLATION.fa.md)** توضیح داده شده‌اند.
 
 ## محیط واقعی پلاگین
+
+![آزمون واقعی Codex، باکس و اتصال مجدد در نسخهٔ 0.4.2](rhino-plugin/docs/codex-box-042.png)
+
+در آزمون نسخهٔ 0.4.2، همین چت Codex طرح باکس را فرستاد؛ کاربر Apply را زد و کدکس یک Brep با ابعاد دقیق ۱ × ۲ × ۳ متر را خواند. قطع‌و‌وصل مجدد همان GUID را حفظ کرد و مدل تکراری ساخته نشد. این تصویر خروجی واقعی آزمون است.
 
 <p align="center"><img src="rhino-plugin/docs/studio-panel.png" width="500" alt="English AI Archi-Tec workspace in Rhino with an explicitly labeled local MCP protocol test"></p>
 
@@ -94,7 +101,7 @@ Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights and a 
 
 آیکون کره، **MCP connection** را باز می‌کند؛ آیکون چرخ‌دنده، **Preferences** را برای فضای کاری پیش‌فرض، تراکم مکالمه و Zoom پیش‌نمایش باز می‌کند. دکمهٔ دوطرفهٔ بالای پنل، نمای کلی اتصال را نشان می‌دهد. بخش **About the creator** سازنده و روند کار پروژه را معرفی می‌کند.
 
-دکمهٔ **MCP** سرور `http://127.0.0.1:5188/mcp` را روی همان کامپیوتر روشن می‌کند. **Copy desktop client configuration** تنظیمات پل محلی را آماده می‌کند. کلاینت می‌تواند زمینهٔ سند را بخواند و طرح پیشنهاد کند؛ اجرای طرح همچنان با Apply در راینو است. **یک سرویس ابری به localhost ویندوز دسترسی مستقیم ندارد** و به کلاینت/پل سازگار روی کامپیوتر نیاز دارد. بازکردن سایت ChatGPT اتصال MCP را خودکار تنظیم نمی‌کند.
+در **MCP connection** کلاینت را انتخاب و **Connect to Codex/Claude Desktop** بزنید؛ ثبت پل برای همین کاربر خودکار است. گفتگو در کلاینت و نتیجه، پیش‌نمایش و Apply در راینو است. فقط اولین نصب یا ارتقای پل به یک refresh کلاینت نیاز دارد؛ قطع‌و‌وصل MCP راینو با همان کلاینت باز خودکار بازیابی می‌شود. تنظیمات دستی در بخش پیشرفته‌اند. بازکردن سایت ChatGPT اتصال محلی را ثبت نمی‌کند؛ مسیر ابری به connector یا تونل پشتیبانی‌شده نیاز دارد. [آموزش ساده](docs/MCP-QUICKSTART.fa.md)
 
 **[راهنمای کامل اتصال و نمونهٔ تنظیمات](docs/CONNECTIONS.fa.md)** · [نحوهٔ استفاده از داده‌ها](rhino-plugin/PRIVACY.md)
 

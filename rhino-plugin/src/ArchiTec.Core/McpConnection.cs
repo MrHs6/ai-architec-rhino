@@ -19,11 +19,12 @@ public sealed class McpConnectionMonitor
         name=new string((name??"MCP client").Where(c=>!char.IsControl(c)).Take(64).ToArray());
         lock(gate)
         {
+            Prune();
             if(clients.Count>=16)clients.Remove(clients.OrderBy(p=>p.Value.Seen).First().Key);
             var id=Guid.NewGuid().ToString("N");clients[id]=new(name,DateTimeOffset.UtcNow);Add("initialized",name);return id;
         }
     }
-    public bool Contains(string? id){lock(gate)return id is not null&&clients.ContainsKey(id);}
+    public bool Contains(string? id){lock(gate){Prune();return id is not null&&clients.ContainsKey(id);}}
     public void Touch(string? id,string next,string detail)
     {
         lock(gate)
@@ -39,10 +40,12 @@ public sealed class McpConnectionMonitor
     {
         stage=next;activity.Add(new(DateTimeOffset.UtcNow,next,detail));if(activity.Count>12)activity.RemoveAt(0);
     }
+    private void Prune(){foreach(var stale in clients.Where(c=>DateTimeOffset.UtcNow-c.Value.Seen>TimeSpan.FromMinutes(2)).Select(c=>c.Key).ToArray())clients.Remove(stale);}
     public McpConnectionSnapshot Snapshot()
     {
         lock(gate)
         {
+            Prune();
             var latest=clients.Values.OrderByDescending(c=>c.Seen).FirstOrDefault();
             return new(stage,latest?.Name,latest?.Seen,clients.Count,activity.ToArray());
         }
@@ -59,8 +62,10 @@ public static class McpClientSetup
     }
     public static string Guide(string client)=>client switch
     {
-        "Codex"=>"1. In the client's MCP settings, add a STDIO server named ai-architec-rhino, or merge the copied TOML into config.toml.\n2. Use the bridge command and ARCHITEC_MCP_PORT from the copied setup. Keep your other server entries.\n3. Reload the connection. In the CLI, codex mcp list shows configuration and /mcp shows active tools.\n4. Ask the client to call get_context through ai-architec-rhino. Its announced name appears here after the handshake.\nPasting setup text into a chat does not register the server.",
-        "ChatGPT web"=>"This button only opens the website. Localhost and a STDIO configuration alone do not connect web chat. A remote connection or Secure MCP Tunnel, account setup and supported account capabilities are required. This version does not configure a tunnel or sign into your account. Use a compatible local Claude Desktop or Codex client for this connection, or connect API profiles to chat directly in this panel.",
-        _=>"1. In Claude Desktop, open Settings → Developer → Edit Config.\n2. Merge the ai-architec-rhino entry from the copied JSON into mcpServers in claude_desktop_config.json. Keep other entries.\n3. Fully quit and reopen Claude Desktop. Keep Rhino and MCP running.\n4. Enable the ai-architec-rhino tools in Claude and ask it to call get_context first.\n5. This panel shows the announced client name after the handshake. Geometry proposals appear as previews for your Apply."
+        "Codex"=>"1. Click Connect to Codex: enable the local connection and save its MCP entry automatically.\n2. If Codex is already open, refresh once in Settings > Plugins > MCPs. Allow the Archi-Tec tools in the client.\n3. Chat in Codex. Review and Apply its previews here. Future Rhino MCP restarts reconnect automatically.\nNo manual copy is needed when automatic setup succeeds.",
+        "ChatGPT web"=>"A browser chat requires separate connector setup or Secure MCP Tunnel. This release does not configure a web connector or sign into your account. Use Codex or Claude Desktop here, or API mode for direct chat in Rhino.",
+        "Other MCP client"=>"Enable connection, then expand Manual setup. Add the copied JSON configuration to your desktop client's MCP settings once. Chat in that client and allow Archi-Tec tools. The native bridge reconnects after Rhino MCP restarts.",
+        _=>"1. Click Connect to Claude Desktop to save the MCP entry for this Windows user. Other server entries are preserved.\n2. Fully quit and reopen Claude once after first-time setup. Allow the Archi-Tec tools.\n3. Chat in Claude. Review and Apply its previews in Rhino. Future Rhino MCP restarts reconnect automatically."
+
     };
 }
