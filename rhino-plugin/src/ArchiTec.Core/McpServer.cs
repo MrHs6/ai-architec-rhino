@@ -89,8 +89,7 @@ public sealed class McpServer : IDisposable
             else Connection.Touch(session,method=="tools/list"?"tools_ready":"heartbeat",method??"request");
             result=method switch
             {
-                "initialize"=>new {protocolVersion=Negotiated(args),capabilities=new {tools=new {listChanged=false}},serverInfo=new {name="ai-architec-rhino",version="0.4.1-beta.2"},
-                    instructions="Use this ai-architec-rhino server, not a similarly named Rhino router. Read get_context first. For chat or analysis use post_message and the current document_id. propose_plan only previews changes; a human clicks Apply in Rhino. Poll get_plan_status for execution. create_box parameters: width, depth, height, optional origin/layer. create_building parameters: width, depth, floors (integer), floor_height, optional origin/layer/facade. move_object: object_id, vector [x,y,z]. scale_object: object_id, factor, optional center. Never execute scripts or bypass Apply."},
+                "initialize"=>InitializationResult(args),
                 "ping"=>new {},
                 "tools/list"=>new {tools=ToolDefinitions},
                 "tools/call"=>await CallTool(args,session,deadline.Token),
@@ -124,6 +123,8 @@ public sealed class McpServer : IDisposable
         catch(Exception ex) when(ex is ArgumentException or InvalidOperationException)
         {Connection.Touch(session,"error","Tool request failed; review the client response");return new {content=new[]{new {type="text",text=ex.Message}},isError=true};}
     }
+    public static object InitializationResult(JsonElement args)=>new {protocolVersion=Negotiated(args),capabilities=new {tools=new {listChanged=false}},serverInfo=new {name="ai-architec-rhino",version="0.4.2-beta.1"},
+        instructions="Use this ai-architec-rhino server, not another Rhino router. Read get_context first. If Rhino MCP is off, enable it in the Rhino panel and retry get_context; the bridge reconnects automatically. For replies use post_message with the current document_id. propose_plan only previews changes; Apply in Rhino confirms execution. Poll get_plan_status before claiming success or repeating a request. create_box parameters: width, depth, height, optional origin/layer. create_building: width, depth, floors, floor_height, optional origin/layer/facade. move_object: object_id, vector [x,y,z]. scale_object: object_id, factor, optional center. Never execute scripts or bypass Apply."};
     private static string Negotiated(JsonElement p)
     {
         var v=p.TryGetProperty("protocolVersion",out var version) ? version.GetString() : "";

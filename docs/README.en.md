@@ -1,27 +1,27 @@
 # AI Archi-Tec for Rhino 8
 
-Version 0.4.1 adds an English MCP onboarding interface, client-announced connection stages and token-free Claude/Codex setup exports. Read the [MCP setup and chat guide](MCP-QUICKSTART.en.md) before connecting a client. A running server or an open ChatGPT website is not a confirmed AI account connection.
+Version 0.4.2 adds automatic Codex/Claude Desktop registration, reconnects after Rhino MCP off/on without reloading the client, and removes the second chat composer in MCP mode. Click Connect, chat in your client, then review and Apply in Rhino. [Setup and troubleshooting](MCP-QUICKSTART.en.md). First setup or a plugin upgrade may require one client refresh; opening a website is not a confirmed account connection.
 
 [فارسی](../README.md) · [Downloads](https://github.com/MrHs6/ai-architec-rhino/releases) · [Report an issue](https://github.com/MrHs6/ai-architec-rhino/issues)
 
 An architectural modeling assistant that runs inside Rhino. Open Studio with **`archtec`**, describe a concept, inspect the proposed geometry in the current document, then **Apply to Rhino**. Use your own API account or connect a compatible desktop AI client through localhost MCP.
 
-**Current release: 0.4.1-beta.2. Windows x64, licensed Rhino 8.31+ within Rhino 8, .NET 8 runtime.** This is a concept-modeling beta; live paid-provider/vision trials and clean installation on a second licensed workstation remain outstanding.
+**Current release: 0.4.2-beta.1. Windows x64, licensed Rhino 8.31+ within Rhino 8, .NET 8 runtime.** This is a concept-modeling beta; live paid-provider/vision trials and clean installation on a second licensed workstation remain outstanding.
 
 ## Install
 
-1. Download the [Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/ai-architec-rhino-0.4.1-beta.2-windows-installer.zip) from the [release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.1-beta.2).
+1. Download the [Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.2-beta.1/ai-architec-rhino-0.4.2-beta.1-windows-installer.zip) from the [release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.2-beta.1).
 2. Extract all files, keeping `install.cmd` next to the `.yak` package. Save your work and close all Rhino windows before running `install.cmd`; it invokes Rhino's installed Yak tool for the current Windows user.
 3. Reopen Rhino.
 4. Type **`archtec`** and press Enter.
-5. Open **API profiles**, choose your API source, enter your personal key, load compatible models and select a model. Alternatively start **MCP** and configure a compatible local desktop client.
+5. Open **API profiles**, choose your API source, enter your personal key, load compatible models and select a model. Alternatively open **MCP connection**, choose Codex/Claude Desktop and click **Connect**. Chat in the client; review and Apply in Rhino.
 
 No Visual Studio, Node or SDK is needed for the ready-made installer. API access and billing belong to each user's provider account; no shared key or AI credit is included.
 
-Alternatively [download the Yak directly](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.1-beta.2/ai-architec-rhino-0.4.1-beta.2-rh8_31-win.yak), drag it onto Rhino, or run:
+Alternatively [download the Yak directly](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.2-beta.1/ai-architec-rhino-0.4.2-beta.1-rh8_31-win.yak), drag it onto Rhino, or run:
 
 ```cmd
-"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.1-beta.2-rh8_31-win.yak"
+"%ProgramFiles%\Rhino 8\System\Yak.exe" install "D:\Downloads\ai-architec-rhino-0.4.2-beta.1-rh8_31-win.yak"
 ```
 
 Adjust the path. Restart after installation. CMD calls Yak and its native registration-repair helper without altering PowerShell execution policy. Legacy prototype users should use the ZIP installer because Yak alone does not repair manual registration. For a custom Rhino installation, set `ARCHITEC_RHINO_SYSTEM` to its System folder before running `install.cmd`. `install.cmd /check` only verifies local paths. `install.ps1 -CheckOnly` also checks Rhino version, package identity and the accompanying checksum when PowerShell scripts are allowed by your device policy.
@@ -61,7 +61,7 @@ The offline parser is limited to numeric building/box/move examples. Free-form n
 
 ## Local MCP
 
-Start MCP in Studio. Default endpoint: `http://127.0.0.1:5188/mcp`. Use **Copy desktop client configuration** for the installed stdio bridge path and current local bearer token. Configure that JSON in your compatible desktop client's MCP settings; reload the client as required.
+In MCP connection, choose Codex or Claude Desktop and click **Connect**. Registration is automatic for the current Windows user. Chat in the AI client; Rhino's MCP route shows results and previews with no second composer. Refresh the client once after first setup or an upgrade. Subsequent Rhino MCP off/on reconnects automatically. Advanced manual configuration exports the installed bridge path and port without a token. [Quick start](MCP-QUICKSTART.en.md)
 
 Tools: `get_context`, `propose_plan`, `get_plan_status`. Read the current `document_id` before proposing a plan. Proposals only preview; Apply in Rhino executes. Tokens rotate when the server restarts. Do not publish the copied client configuration.
 
@@ -69,7 +69,7 @@ A cloud service cannot reach your Windows localhost directly. A compatible local
 
 ## Beta status
 
-67 automated checks, a rerun of 19 native Rhino geometry checks, and 20 native workspace/profile/audit/assist checks passed. Four building checks were recorded in the prior beta. A real MCP proposal/Apply, fifth-floor-only edit, stable GUIDs and exact Undo restoration were verified. The complete native solution and release packaging also passed on a hosted Windows runner. [Validation report](../rhino-plugin/docs/VALIDATION.md)
+122 automated checks pass, including three server/credential rotations with one real STDIO process. Installed Codex acceptance confirms automatic registration, a native disconnect/reconnect without client reload and a real box preview. Apply acceptance and historical geometry checks are recorded separately in the [validation report](../rhino-plugin/docs/VALIDATION.md).
 
 Live paid-provider responses, vision interpretation quality and clean startup on a second licensed machine still require validation. Concept geometry is not BIM or construction documentation. Arbitrary image reconstruction, unrestricted building generation, Grasshopper, persistent project memory and cloud hosting are not implemented. Food4Rhino/Yak catalog publication is separate from this GitHub release.
 

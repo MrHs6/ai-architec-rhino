@@ -1,3 +1,16 @@
+AI Archi-Tec 0.4.2-beta.1 — simpler MCP setup and automatic reconnect
+
+- Connect to Codex/Claude Desktop enables localhost MCP, registers the installed bridge for the current Windows user, and opens the client when available. Other clients retain manual setup under advanced diagnostics.
+- Chat in your AI client. The MCP workspace hides the Rhino composer and API modeling options; it displays replies, previews, results and Open client. API chat remains a separate route.
+- Keep the client open when Rhino MCP is switched off/on. The bridge stays alive, discovers the new credential/session and reconnects automatically. First setup or an upgrade still needs one client refresh when the old executable is already loaded.
+- Return a useful error while Rhino is offline. Reconnect pre-dispatch authentication/session rejections once, but never replay timeouts, ambiguous failures or tool errors.
+- Preserve UTF-8 prompts and responses, including Persian and multiplication symbols. Prune stale client status and show actual authenticated client contact rather than assuming account login.
+- Add 28 checks to the existing 94: isolated configuration merging, real STDIO discovery while offline, passive recovery, three credential rotations with one open process, exactly-once messages and rejected plans, and clean shutdown.
+
+122 automated checks pass. Native installed Codex acceptance and remaining limitations are recorded in VALIDATION.md. No paid API/vision account, live Claude account or second Windows workstation was used to validate this revision. Food4Rhino/Yak catalog submission remains separate from the GitHub release.
+
+Previous release record:
+
 AI Archi-Tec 0.4.1-beta.2 — English connection guidance and verified MCP stages
 
 - Keep all fixed interface labels, in-panel guides and connection statuses in English. Persian user prompts and language-aware conversation feedback remain supported.

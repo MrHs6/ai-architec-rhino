@@ -66,6 +66,7 @@ using(var server=new McpServer(port,(name,args,token)=>{calls++;return Task.From
 passed+=await ProviderProtocolTests.Run();
 passed+=await ConnectionWorkflowTests.Run();
 passed+=await McpConnectionTests.Run();
+passed+=await BridgeReconnectTests.Run();
 Console.WriteLine($"{passed} tests passed.");
 return 0;
 

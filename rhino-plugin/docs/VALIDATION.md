@@ -1,3 +1,16 @@
+# Validation — AI Archi-Tec 0.4.2-beta.1
+
+## Evidence for 0.4.2-beta.1 (22 October 2026)
+
+- Build: zero warnings/errors, 122 automated checks passed. Added real-process STDIO tests initialize/discover tools before Rhino starts, recover passively, survive three server/token rotations, preserve UTF-8, deliver messages once, avoid replaying rejected plans and close the authenticated session on EOF. Claude configuration merging preserves unrelated settings and rejects malformed roots.
+- Installed all 10 package files and verified their SHA256 against the final Yak. Fresh Rhino 8.31 loaded the 0.4.2 RHP from its installed package path.
+- Clicked the actual Connect to Codex button. It registered the new installed bridge using the official CLI and opened the client. Its Settings showed the correct 0.4.2 path and port, with other servers preserved. One initial desktop MCP refresh loaded the upgrade into this existing chat.
+- Actual Codex tools read the empty Meters document, then Rhino's Disconnect button stopped the listener. get_context returned the new actionable offline tool error. Clicking Connect in Rhino restored get_context without any client reload or configuration copy. Both bridge process IDs (16784 and 21636) remained unchanged through that cycle.
+- post_message returned to the panel. A real propose_plan from this chat produced request 87f0ca3d-8dad-46a1-b462-bba95e028722 for one 1 × 2 × 3 meter box in document 268435457. Status is awaiting_approval; final human Apply and measured readback remain pending. Do not count this preview as a created box.
+- The installed MCP workspace has no PromptInput composer, API connection label or Generate/Assist API option controls in its visible UI. It shows Chat in Codex, actual connection contact, Open Codex and the native preview/Apply card. Fixed labels and guides are English.
+- Live Claude account, paid API/vision, second-workstation installation and Food4Rhino/Yak catalog submission remain untested or unpublished. Codex's live local tools are verified; this is not a claim that browser ChatGPT is automatically connected.
+
+## Historical revision evidence
 # Validation — AI Archi-Tec 0.4.1-beta.2
 
 ## Evidence for 0.4.1-beta.2 (22 October 2026)

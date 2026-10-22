@@ -1,58 +1,51 @@
-# MCP connection and chat
+# Chat there. Build here.
 
-The product interface and in-panel guidance are English. Persian prompts remain supported.
+AI Archi-Tec 0.4.2 has two independent conversation routes. The interface and built-in help are English; your prompts can be Persian.
 
-## Choose where you chat
+## Use Codex or Claude Desktop
 
-- **Chat here · API / offline tools:** connect your provider, key and model under API profiles. Without a connected API, this route offers limited geometry examples and local audits. Starting MCP does not connect this input to a paid AI account.
-- **MCP client · copy request to Claude / Codex:** chat in a configured local client. The panel's **Copy for MCP** button copies your request; paste and send it in that client. Replies can return through `post_message`; geometry proposals return through `propose_plan`. Images must be attached in the client. Sending to a browser tab is not automatic.
+1. In Rhino, run **archtec**, open **MCP connection**, and choose **Codex** or **Claude Desktop**.
+2. Click **Connect to Codex** or **Connect to Claude Desktop**. This enables the local server, registers this user's installed bridge, and opens the client when it can be found. No configuration or test-prompt copy is needed in the normal flow.
+3. **First setup or plugin upgrade only:** if Codex was already running, refresh its MCP tools in **Settings → Plugins → MCPs** (refresh icon beside Servers). Alternatively restart the client. Claude Desktop needs a complete quit and reopen after its configuration changes. Permit the tools when your client asks.
+4. Chat in that client. Ask it to use **ai-architec-rhino** and read `get_context`. Rhino changes from waiting to **Connected · Codex/Claude Desktop** after actual authenticated protocol contact.
+5. Ask for a model, inspect its preview in Rhino, then click **Apply to Rhino**. Ask the client to read `get_plan_status` and explain the confirmed result.
 
-## Connect a client
+In **MCP · chat in your AI client** mode, Rhino has no second chat composer. It shows client replies, previews, results and an **Open Codex/Claude** button. Generate/Assist API options are hidden; the client supplies its plan. Local Analyze remains available. For direct chat in Rhino, switch to **Chat here · API / offline tools**, and configure your own API profile separately.
 
-1. Open Rhino, run `archtec`, open **MCP connection**, and start the server. It initially says **waiting for a client**.
-2. Select **Claude Desktop** or **Codex**, then copy its setup. The setup contains the installed bridge path and port, without a token. Add it to the application's MCP configuration, preserving other entries. Pasting configuration into a chat does not register a server.
-3. Claude Desktop: **Settings → Developer → Edit Config**, then merge the `ai-architec-rhino` entry into `mcpServers` in `%APPDATA%\Claude\claude_desktop_config.json`. Fully quit and reopen Claude. [Official local-client instructions](https://modelcontextprotocol.io/docs/develop/connect-local-servers)
-4. Codex: add a **STDIO** server in the client's MCP settings using the copied command and `ARCHITEC_MCP_PORT`, or merge the TOML into `~/.codex/config.toml`. Reload the connection. CLI users can check configuration with `codex mcp list` and active tools with `/mcp`. Menu labels depend on client version. [Official MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli)
-5. Copy and send the **connection-test prompt** in the configured client. It must use **ai-architec-rhino**, rather than another server such as `rhino-mcp-router`.
-6. Watch the panel for the announced client name, handshake, tool discovery, context, proposal and execution stages. Client names are declared protocol metadata; they do not verify a user's account identity.
+<img src="../rhino-plugin/docs/mcp-workspace-042.png" width="440" alt="Installed 0.4.2 MCP workspace with a real Codex box proposal awaiting human Apply">
 
-The bridge reads the current session credential through Windows CurrentUser DPAPI discovery. After restarting the server, **reload the client connection** to start a new bridge; no fresh token needs to be pasted. Replace legacy `ARCHITEC_MCP_TOKEN` configurations with the new setup. If an upgrade changes the installed bridge path, copy the new version's setup again.
+Actual installed 0.4.2 workspace after a Codex proposal. This screenshot shows a preview awaiting Apply, not completed geometry.
 
-## Check conversation and geometry
+### After disconnecting
 
-Start with:
+Keep the AI client open. Click **Connect to Codex/Claude Desktop** again in Rhino. The bridge discovers the rotated session credential and reconnects automatically; **no client reload or configuration copy is required for Rhino MCP off/on**. A request made while disconnected returns an actionable error and does not terminate the bridge. Retry `get_context` after reconnecting. A timed-out modeling request is never automatically replayed: inspect the preview or request status before sending another model request.
 
-> Use only ai-architec-rhino. Call get_context, then post_message with that document_id to confirm the connection in the generate workspace. Do not change geometry.
+The panel reports disabled, waiting, connected, current workflow stage and last contact. A client name is announced protocol metadata, not proof of account login. Heartbeats check the local connection every three seconds. A plugin upgrade changes the bridge path: run Connect again and refresh the client once to load the new executable.
 
-Then request a small preview:
+### A first request
 
-> Propose a 1 x 2 x 3 meter box. Wait for me to Apply in Rhino, then read get_plan_status and use post_message to explain the confirmed result.
+> Use ai-architec-rhino. Read get_context, then post_message with that document_id to confirm the connection. Propose one 1 x 2 x 3 meter box. Wait for my Apply in Rhino, then check get_plan_status and report the confirmed dimensions.
 
-`post_message` displays a response without changing geometry. `propose_plan` validates and previews. **Apply in Rhino** performs the native operation; **Cancel** leaves the proposed geometry unbuilt. `get_plan_status` returns the result for that request. Existing selection/recent-result scope checks remain enforced.
+`post_message` displays a reply without changing geometry. `propose_plan` validates and previews. **Apply** executes native operations; **Cancel** leaves them unbuilt. **Ctrl+Z** in Rhino undoes an applied batch. The MCP server cannot execute arbitrary scripts or bypass Apply.
 
-| Display | Meaning |
-|---|---|
-| Server stopped | Start the local server |
-| Waiting for a client | No initialize handshake received |
-| Handshake / tools shared | A client initialized and discovered tools |
-| Document context returned | get_context completed |
-| Processing / message delivered | An actual tool request or chat reply arrived |
-| Preview ready | Awaiting Apply or Cancel in Rhino |
-| Changes confirmed | Native Rhino execution completed |
-| No recent contact / session closed | Last observed activity or explicit bridge shutdown; continuous connection is not assumed |
+## Manual setup and diagnostics
 
-The local bridge sends a heartbeat every 15 seconds. A native HTTP client without heartbeats may remain open while the panel reports no recent contact. Session activity contains stages and tool names, not model prompts, keys or geometry.
+Use the collapsed advanced section only when automatic registration is unavailable or you use another MCP client. **Copy configuration** is for the client's settings; **Copy connection-test prompt** is a message to send after the client has loaded the server. Pasting configuration into chat does not register it.
 
-## Workspace guide
+Codex registration uses the installed `codex mcp add` CLI and preserves other server entries. Claude setup merges only `mcpServers.ai-architec-rhino` into `%APPDATA%\Claude\claude_desktop_config.json`, preserving other settings and making a sibling `.architec-backup`. Invalid JSON is reported without overwriting it. No key or session token is exported. Both applications must be installed and signed in by their user; the plugin does not create accounts or log in.
 
-- **Generate:** creates new geometry using the facade and layer options; review the preview and Apply.
-- **Analyze:** select objects or Recent output. Dimensions, Health and Layers report scoped geometry. **Run local audit** needs no API and never modifies geometry. This is not an engineering simulation.
-- **Assist:** edits selection or recent output. Move uses distance and axis; Scale uses a factor (2 doubles size, 0.5 halves it); Extrude uses height on suitable curves. Preview, Apply, and use Rhino Ctrl+Z to undo.
+For another compatible local STDIO client, use the installed `AIArchiTec.McpBridge.exe` and `ARCHITEC_MCP_PORT` from the panel's configuration. The executable uses the current Windows user's encrypted session descriptor. Replace old configurations containing `ARCHITEC_MCP_TOKEN`. Default port is 5188; a second Rhino session needs a different free port and a separate client entry. Port and endpoint are under advanced settings.
 
-## ChatGPT web
+Official references: [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli), [Claude local MCP setup](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
 
-Opening ChatGPT does not connect localhost or import a STDIO configuration. Supported products can use a remote MCP connection or **Secure MCP Tunnel**, with the required account configuration and capabilities. This release does not provision that tunnel, OAuth, or automatic browser-chat sending. Use the local client route above, or a personal API key for direct chat in the Rhino panel. [Official remote/private MCP guidance](https://developers.openai.com/api/docs/guides/tools-connectors-mcp)
+## ChatGPT in a browser
 
-## API acceptance
+Opening a website does not register a local STDIO server. Browser/cloud ChatGPT requires a supported remote connector or Secure MCP Tunnel and account setup. This release does not provision a public tunnel, OAuth or browser-chat automation. Use the local Codex/Claude route above, or your personal API key for in-panel chat. [Official remote/private MCP guidance](https://developers.openai.com/api/docs/guides/tools-connectors-mcp)
 
-**Save this profile** confirms local storage and activation. **Remember** controls encrypted persistence across Rhino restarts. **Test network** sends no key: HTTP 401 means the host answered, not that your key works. **Connect and discover models** checks authenticated access and discovers models. Select a model and test a small request. Live generation and image quality depend on that account and selected model; mocked tests or no-key probes cannot establish them.
+## Workspaces and API profiles
+
+- **Generate:** preview new geometry, then Apply. With the API route, set facade/layer options and attach supported references in Rhino. With MCP, describe and attach references in your AI client.
+- **Analyze:** select objects or Recent output. Dimensions, Health and Layers are local read-only reports; **Run local audit** requires no API. This is not an engineering simulation.
+- **Assist:** use selected/recent targets for Move, Scale or Extrude. In MCP, the client proposes the operation; in the API route, the panel has distance/axis/factor/height controls. Review, Apply and Undo work in Rhino.
+
+**Save this profile** stores and activates an API profile. **Remember** controls encrypted persistence across Rhino restarts. **Test network** sends no key: HTTP 401 means the host answered, not that your key works. **Connect and discover models** checks authenticated access. Select a model and try a small request; live generation and vision quality depend on that account and model.
