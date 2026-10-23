@@ -22,7 +22,7 @@ public sealed class ArchiTecPlugin : PlugIn
         RhinoApp.WriteLine("AI Archi-Tec loaded. Type archtec to open the modeling assistant. Settings: Tools > Options > AI Archi-Tec.");
         return LoadReturnCode.Success;
     }
-    protected override void OnShutdown() {ArchiTecPanel.Current?.StopMcp();ArchiTecPanel.Current?.ClearPreview();}
+    protected override void OnShutdown() {ArchiTecPanel.Current?.Dispose();}
 }
 
 public sealed class ArchtecCommand : Command

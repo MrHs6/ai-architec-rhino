@@ -1,3 +1,26 @@
+# Validation — AI Archi-Tec 0.5.0-beta.6
+
+## Automated and installed-plugin evidence (23 October 2026)
+
+- Solution build: zero warnings/errors; **144 automated checks passed**. Coverage includes real HTTP and STDIO cancellation, continued input processing during Stop, request recovery, three server/credential rotations, UUID deduplication/conflicts, typed geometry boundaries and provider/workspace regressions.
+- The official Yak installer installs the versioned package and repairs only this plugin's per-user registration, preserving other plugins and credentials. Rhino's startup identifies the loaded version and package path.
+- MCP executes client-authorized native batches without a local Apply click or a second chatbot. API chat remains independent. No paid model API was called by the MCP modeling test.
+- A verified document backup preceded explicit user-authorized replacement of 515 old objects. The first deletion trial exposed a hidden-object bug, which was fixed. Six native deletion batches then removed the old model successfully.
+- The corrected tower was built through native lofts, extrusions, booleans, copy/scale, pipe details and explicit visibility/deletion. An offset trial was correctly reported as open and was not used as the finished lining.
+- The saved/reopened tower has **339 visible Breps, all valid and closed**, with no hidden construction or landscape. The body spans 63 × 42 meters in plan and rises to Z 43.8; its upturned crown reaches Z 45.0. These are selected reconstruction dimensions, not survey results.
+- **84 read-only containment samples** across both central paths, Z 0.5–19.5, lie outside the main stone and upper lining. Four positive controls lie inside the four piers. Sampling is not continuous clearance certification.
+- Front, three-quarter and close vault captures come from the actual Rhino viewport. Explicit camera/target framing was corrected after inspection revealed the old method retained the preceding direction.
+- Installed beta.6 rollback acceptance deliberately hid a temporary test solid and then tried to select it. The batch failed, restored visibility with native Undo, and the next move operation succeeded. The fixture was removed and the count returned to 339. This reproduced and verified the modeless Undo-scope fix.
+- The initial GUI registration failure was resolved by preferring the desktop-managed Codex CLI over the inherited PATH launcher. In installed beta.6, clicking **Connect to Codex** in Rhino saved the MCP setup and opened Codex; the panel displayed **Setup saved for Codex** and authenticated client contact. The exact same registered bridge passed the geometry and rollback acceptance. A live Disconnect returned the expected offline response; clicking the now-visible Enable connection restored this same client without Reload or repeated registration. The final count remained 339.
+
+![Actual tower created through MCP](azadi-mcp-050.png)
+
+[Modeling details and accuracy limits](../../docs/AZADI-MCP-DEMO.en.md) · [MCP workflow](../../docs/MCP-QUICKSTART.en.md)
+
+Live paid API/vision generation, a real Claude account and a second licensed workstation remain unverified. API transport tests use mocks. Native acceptance of these operands does not establish every possible kernel case, exact image reconstruction, engineering correctness or construction readiness. Receipts are session memory, not a persistent operation database.
+
+## Historical records — earlier workflows below used local Apply
+
 # Validation — AI Archi-Tec 0.4.2-beta.1
 
 ## Evidence for 0.4.2-beta.1 (22 October 2026)

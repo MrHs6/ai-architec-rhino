@@ -17,7 +17,7 @@ public static class ContextReader
         var scope = selected.Concat(recent!).DistinctBy(o => o.Id).Take(100).ToArray();
         return new ModelContext(doc.RuntimeSerialNumber, doc.ModelUnitSystem.ToString(),
             doc.Layers.CurrentLayer.FullPath, doc.Layers.Where(l => !l.IsDeleted).Take(200).Select(l => l.FullPath).ToArray(),
-            doc.Objects.GetObjectList(ObjectType.AnyObject).Count(), scope.Select(o => Info(doc, o)).ToArray(), selected.Take(100).Select(o => o.Id.ToString()).ToArray(),
+            doc.Objects.GetObjectList(new ObjectEnumeratorSettings{NormalObjects=true,LockedObjects=true,HiddenObjects=true,ReferenceObjects=true,ObjectTypeFilter=ObjectType.AnyObject}).Count(), scope.Select(o => Info(doc, o)).ToArray(), selected.Take(100).Select(o => o.Id.ToString()).ToArray(),
             recent.Select(o => o!.Id.ToString()).ToArray(), selected.Length + recent.Length > 100);
     }
     public static ObjectInfo Info(RhinoDoc doc, RhinoObject o)
@@ -66,7 +66,8 @@ public static class GeometryEngine
                 RhinoObject? source = null;
                 if (id != Guid.Empty)
                 {
-                    source = Reference(doc, id, a.Tool != "get_object_properties");
+                    source = Reference(doc, id, MutatesTarget(a.Tool));
+                    if(a.Tool=="set_visibility"&&(source.IsLocked||source.IsReference||doc.Layers[source.Attributes.LayerIndex].IsLocked))throw new ArgumentException("Visibility targets must be editable.");
                     prepared.Fingerprints.TryAdd(id, (source.Geometry.DataCRC(0), source.Attributes.LayerIndex));
                     if (!shadow.ContainsKey(id)) shadow[id] = source.Geometry.Duplicate();
                 }
@@ -89,6 +90,14 @@ public static class GeometryEngine
                         break;
                     case "create_line":
                         geometry = new LineCurve(Pt(p.GetProperty("start"),factor),Pt(p.GetProperty("end"),factor)); break;
+                    case "create_loft": case "create_mesh": case "create_extrusion":
+                        geometry=SurfaceTools.Create(a.Tool,p,factor,doc.ModelAbsoluteTolerance);break;
+                    case "create_boolean":case "create_sweep":case "create_revolve":case "create_pipe":case "create_offset":case "create_geometry":
+                        geometry=SolidOperations.Create(a.Tool,p,factor,doc.ModelAbsoluteTolerance,reference=>
+                        {
+                            var obj=Reference(doc,reference,false);prepared.Fingerprints.TryAdd(reference,(obj.Geometry.DataCRC(0),obj.Attributes.LayerIndex));
+                            return shadow.TryGetValue(reference,out var current)?current:obj.Geometry;
+                        });break;
                     case "create_polyline": case "create_curve":
                         var points = p.GetProperty("points").EnumerateArray().Select(v=>Pt(v,factor)).ToList();
                         if (p.TryGetProperty("closed",out var closed) && closed.GetBoolean() && points[0] != points[^1]) points.Add(points[0]);
@@ -111,20 +120,25 @@ public static class GeometryEngine
                         geometry = brep;
                         layer ??= doc.Layers[source!.Attributes.LayerIndex].FullPath;
                         break;
-                    case "move_object":
+                    case "move_object":case "copy_object":
                         var v = PlanValidator.Point(p,"vector");
                         geometry = shadow[id].Duplicate();
                         if (!geometry.Transform(Transform.Translation(v[0]*factor,v[1]*factor,v[2]*factor))) throw new ArgumentException("Move failed.");
-                        shadow[id].Dispose(); shadow[id] = geometry.Duplicate(); break;
+                        if(a.Tool!="copy_object"){shadow[id].Dispose(); shadow[id] = geometry.Duplicate();} break;
+                    case "rotate_object":
+                        var axis=PlanValidator.Point(p,"axis_direction");var direction=new Vector3d(axis[0],axis[1],axis[2]);if(!direction.Unitize())throw new ArgumentException("Rotation axis cannot be zero.");
+                        geometry=shadow[id].Duplicate();if(!geometry.Transform(Transform.Rotation(PlanValidator.Number(p,"angle_degrees")*Math.PI/180,direction,Pt(p.GetProperty("axis_origin"),factor))))throw new ArgumentException("Rotation failed.");
+                        shadow[id].Dispose();shadow[id]=geometry.Duplicate();break;
                     case "scale_object":
                         geometry = shadow[id].Duplicate();
                         if (!geometry.Transform(Transform.Scale(Pt(p.GetProperty("center"),factor),PlanValidator.Number(p,"factor")))) throw new ArgumentException("Scale failed.");
                         shadow[id].Dispose(); shadow[id] = geometry.Duplicate(); break;
                     case "create_layer": layer = PlanValidator.Text(p,"name"); break;
-                    case "select_objects":
+                    case "select_objects":case "delete_objects":
                         foreach (var elem in p.GetProperty("object_ids").EnumerateArray())
                         {
-                            var obj = Reference(doc,Guid.Parse(elem.GetString()!),true);
+                            var obj = Reference(doc,Guid.Parse(elem.GetString()!),a.Tool!="delete_objects");
+                            if(a.Tool=="delete_objects"&&(obj.IsLocked||obj.IsReference||doc.Layers[obj.Attributes.LayerIndex].IsLocked))throw new ArgumentException("Deletion targets must be editable.");
                             prepared.Fingerprints.TryAdd(obj.Id,(obj.Geometry.DataCRC(0),obj.Attributes.LayerIndex));
                         }
                         break;
@@ -148,10 +162,12 @@ public static class GeometryEngine
         catch { prepared.Dispose(); throw; }
         finally { foreach (var g in shadow.Values) g.Dispose(); }
     }
-    public static ExecutionReport Apply(RhinoDoc doc, PreparedPlan prepared)
+    public static ExecutionReport Apply(RhinoDoc doc,PreparedPlan prepared)=>ApplyCancellable(doc,prepared,default);
+    public static ExecutionReport ApplyCancellable(RhinoDoc doc, PreparedPlan prepared,CancellationToken cancellation)
     {
         CheckCurrent(doc,prepared);
-        if (doc.UndoRecordingIsActive) throw new InvalidOperationException("Finish the current Rhino command before applying this plan.");
+        if (doc.CurrentUndoRecordSerialNumber != 0)
+            throw new InvalidOperationException($"Rhino is recording another operation (Undo {doc.CurrentUndoRecordSerialNumber}). Finish the active command before applying this plan.");
         // Validate layers again, including locks changed since preview.
         foreach (var s in prepared.Steps.Where(s=>s.Layer is not null))
         {
@@ -159,7 +175,7 @@ public static class GeometryEngine
             if (l is not null && (l.IsLocked || !l.IsVisible)) throw new InvalidOperationException("A destination layer changed. Generate a new preview.");
         }
         var serial = doc.BeginUndoRecord("AI Archi-Tec: " + prepared.Plan.Summary);
-        if (serial == 0) throw new InvalidOperationException("Rhino could not create an undo record.");
+        if (serial == 0) throw new InvalidOperationException("Rhino could not create an undo record. Finish any active command and ensure document Undo is enabled.");
         var created = new List<Guid>(); var modified = new List<Guid>(); var properties = new List<ObjectInfo>();
         var layerCountBefore=doc.Layers.Count;var materialCountBefore=doc.Materials.Count;
         Exception? failure = null;
@@ -167,7 +183,8 @@ public static class GeometryEngine
         {
             foreach (var s in prepared.Steps)
             {
-                if (s.Tool.StartsWith("create_") && s.Tool != "create_layer" || s.Tool == "extrude_curve")
+                cancellation.ThrowIfCancellationRequested();
+                if (s.Tool.StartsWith("create_") && s.Tool != "create_layer" || s.Tool is "extrude_curve" or "copy_object")
                 {
                     var attributes = new ObjectAttributes { LayerIndex = s.Layer is null ? doc.Layers.CurrentLayerIndex : EnsureLayer(doc,s.Layer),
                         Name = s.Parameters.TryGetProperty("name",out var n) ? n.GetString() : "AI Archi-Tec" };
@@ -180,11 +197,42 @@ public static class GeometryEngine
                 }
                 else switch (s.Tool)
                 {
-                    case "create_layer": EnsureLayer(doc,s.Layer!); break;
-                    case "move_object": case "scale_object":
+                    case "create_layer":
+                        var layerIndex=EnsureLayer(doc,s.Layer!);var layer=doc.Layers[layerIndex];
+                        if(s.Parameters.TryGetProperty("color",out var rgb)){var c=PlanValidator.Coordinates(rgb);layer.Color=System.Drawing.Color.FromArgb((int)c[0],(int)c[1],(int)c[2]);}
+                        if(s.Parameters.TryGetProperty("color",out _)||s.Parameters.TryGetProperty("transparency",out _))
+                        {
+                            var mat=new Material{Name=s.Layer+" material",DiffuseColor=layer.Color,Transparency=s.Parameters.TryGetProperty("transparency",out var t)?t.GetDouble():0};
+                            layer.RenderMaterialIndex=doc.Materials.Add(mat);doc.Layers.Modify(layer,layerIndex,true);
+                        }
+                        break;
+                    case "set_visibility":
+                        var visible=s.Parameters.GetProperty("visible").GetBoolean();
+                        var target=Reference(doc,s.Id,false);
+                        if(target.IsLocked||target.IsReference||doc.Layers[target.Attributes.LayerIndex].IsLocked)throw new InvalidOperationException("Visibility target became read-only.");
+                        if(target.IsHidden==visible)
+                        {
+                            if(visible?!doc.Objects.Show(s.Id,true):!doc.Objects.Hide(s.Id,true))throw new InvalidOperationException("Rhino could not change visibility.");
+                            modified.Add(s.Id);
+                        }
+                        break;
+                    case "move_object": case "scale_object":case "rotate_object":
                         if (!doc.Objects.Replace(s.Id,s.Geometry!,false)) throw new InvalidOperationException("Rhino rejected the geometry replacement.");
                         modified.Add(s.Id); break;
                     case "get_object_properties": properties.Add(ContextReader.Info(doc,Reference(doc,s.Id,false))); break;
+                    case "delete_objects":
+                        foreach(var e in s.Parameters.GetProperty("object_ids").EnumerateArray())
+                        {
+                            var deletedId=Guid.Parse(e.GetString()!);
+                            var deleted=Reference(doc,deletedId,false);
+                            if(deleted.IsLocked||deleted.IsReference||doc.Layers[deleted.Attributes.LayerIndex].IsLocked)throw new InvalidOperationException("Deletion target became read-only.");
+                            // Hidden construction is still an explicitly addressed editable target.
+                            // The Guid overload respects hidden mode and silently refuses deletion.
+                            // Locks and reference objects are rejected above, before ignoring modes.
+                            if(!doc.Objects.Delete(deleted,true,true))throw new InvalidOperationException("Rhino could not delete the explicitly requested target.");
+                            modified.Add(deletedId);
+                        }
+                        break;
                     case "select_objects":
                         foreach(var e in s.Parameters.GetProperty("object_ids").EnumerateArray())
                             if (!doc.Objects.Select(Guid.Parse(e.GetString()!))) throw new InvalidOperationException("Rhino could not select the object.");
@@ -193,14 +241,22 @@ public static class GeometryEngine
             }
         }
         catch (Exception ex) { failure = ex; }
-        finally { doc.EndUndoRecord(serial); doc.Views.Redraw(); }
+        finally { doc.EndUndoRecord(serial); }
         if (failure is not null)
         {
             if(created.Count==0&&modified.Count==0&&doc.Layers.Count==layerCountBefore&&doc.Materials.Count==materialCountBefore)
                 throw new InvalidOperationException("Execution failed before any geometry or layer changes. "+failure.Message,failure);
+            // Modeless Undo opens a redo-recording scope in Rhino 8. Close only
+            // the scope created by this synchronous rollback: there was no active
+            // record after EndUndoRecord above, and this runs on the UI thread.
             if (!doc.Undo()) throw new InvalidOperationException("Execution failed and rollback failed. Inspect the document before continuing.",failure);
+            var rollbackRecord=doc.CurrentUndoRecordSerialNumber;
+            if(rollbackRecord!=0&&!doc.EndUndoRecord(rollbackRecord))
+                throw new InvalidOperationException("Geometry rollback completed, but Rhino could not finish its Undo scope. Save and reopen the document before continuing.",failure);
+            doc.Views.Redraw();
             throw new InvalidOperationException("Execution failed; the action batch was undone. " + failure.Message,failure);
         }
+        doc.Views.Redraw();
         return new ExecutionReport(created,modified.Distinct().ToList(),properties,serial);
     }
     public static void CheckCurrent(RhinoDoc doc, PreparedPlan prepared)
@@ -209,11 +265,12 @@ public static class GeometryEngine
             throw new InvalidOperationException("The active document, units or tolerance changed. Generate a new preview.");
         foreach (var pair in prepared.Fingerprints)
         {
-            var obj = Reference(doc,pair.Key,true);
+            var obj = Reference(doc,pair.Key,prepared.Steps.Any(s=>s.Id==pair.Key&&MutatesTarget(s.Tool)));
             if (obj.Geometry.DataCRC(0) != pair.Value.Crc || obj.Attributes.LayerIndex != pair.Value.Layer)
                 throw new InvalidOperationException("A referenced object changed after preview. Generate a new preview.");
         }
     }
+    private static bool MutatesTarget(string tool)=>tool is "move_object" or "scale_object" or "rotate_object";
     private static RhinoObject Reference(RhinoDoc doc, Guid id, bool editable)
     {
         var obj = doc.Objects.FindId(id);

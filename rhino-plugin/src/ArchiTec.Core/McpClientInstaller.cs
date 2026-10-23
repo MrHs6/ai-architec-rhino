@@ -9,11 +9,16 @@ public static class McpClientInstaller
 {
     public static string? FindCodex()
     {
+        // Prefer the desktop-managed CLI over PATH shims inherited by a CAD host.
+        var root=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"OpenAI","Codex","bin");
+        if(Directory.Exists(root))
+        {
+            var installed=Directory.EnumerateDirectories(root).OrderByDescending(Directory.GetLastWriteTimeUtc).Select(d=>Path.Combine(d,"codex.exe")).FirstOrDefault(File.Exists);
+            if(installed is not null)return installed;
+        }
         foreach(var directory in (Environment.GetEnvironmentVariable("PATH")??"").Split(Path.PathSeparator))
         {try{var path=Path.Combine(directory.Trim('"'),"codex.exe");if(File.Exists(path))return path;}catch{}}
-        var root=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"OpenAI","Codex","bin");
-        if(!Directory.Exists(root))return null;
-        return Directory.EnumerateDirectories(root).OrderByDescending(Directory.GetLastWriteTimeUtc).Select(d=>Path.Combine(d,"codex.exe")).FirstOrDefault(File.Exists);
+        return null;
     }
 
     public static async Task Register(string client,string bridge,int port,CancellationToken cancel)
@@ -22,13 +27,27 @@ public static class McpClientInstaller
         if(client=="Codex")
         {
             var cli=FindCodex()??throw new InvalidOperationException("Codex was not found. Install Codex first, or expand Manual setup and add the copied configuration in your client.");
-            var start=new ProcessStartInfo(cli){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+            // Rhino is a GUI process with no console input handle. Give the CLI a
+            // complete redirected stream set and a writable user working directory.
+            var start=new ProcessStartInfo(cli){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true,
+                WorkingDirectory=Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)};
             foreach(var arg in new[]{"mcp","add","ai-architec-rhino","--env","ARCHITEC_MCP_PORT="+port,"--",bridge})start.ArgumentList.Add(arg);
             using var process=Process.Start(start)??throw new InvalidOperationException("Codex setup could not start.");
+            process.StandardInput.Close();
             var stdout=process.StandardOutput.ReadToEndAsync(cancel);var stderr=process.StandardError.ReadToEndAsync(cancel);
             try{await process.WaitForExitAsync(cancel);await Task.WhenAll(stdout,stderr);}
             catch{if(!process.HasExited)process.Kill();throw;}
-            if(process.ExitCode!=0)throw new InvalidOperationException("Codex could not save the MCP entry. Use Manual setup; keep your other servers. No credentials were copied.");
+            if(process.ExitCode!=0)
+            {
+                // Never echo arbitrary configuration lines, which may contain keys.
+                var error=(await stderr).ToLowerInvariant();
+                var reason=error.Contains("access is denied")||error.Contains("permission denied")?"Configuration access was denied."
+                    :error.Contains("invalid handle")?"The client rejected a Windows input/output handle."
+                    :error.Contains("parse")||error.Contains("toml")?"The client reported a configuration parsing error."
+                    :error.Contains("unrecognized")||error.Contains("unexpected argument")?"This Codex CLI does not support the setup arguments."
+                    :"The client did not accept the setup request. "+SafeSetupDiagnostic(await stderr);
+                throw new InvalidOperationException($"Codex setup failed (exit {process.ExitCode}). {reason} Use Manual setup; existing servers and credentials were preserved.");
+            }
             return;
         }
         if(client!="Claude Desktop")throw new InvalidOperationException("Use Manual setup for this MCP client.");
@@ -42,6 +61,16 @@ public static class McpClientInstaller
         var temp=path+"."+Guid.NewGuid().ToString("N")+".tmp";
         try{await File.WriteAllTextAsync(temp,after,cancel);File.Move(temp,path,true);}
         finally{if(File.Exists(temp))File.Delete(temp);}
+    }
+
+    public static string SafeSetupDiagnostic(string error)
+    {
+        // Configuration parser output may include the offending source line.
+        // Suppress assignments and credential-like lines before showing diagnostics.
+        var lines=error.Split(['\r','\n'],StringSplitOptions.RemoveEmptyEntries)
+            .Where(line=>!line.Contains('=')&&!new[]{"token","secret","password","authorization","api key","api_key","sk-","bearer"}.Any(word=>line.Contains(word,StringComparison.OrdinalIgnoreCase)))
+            .Take(5);
+        var text=string.Join(" ",lines).Trim();return text.Length>500?text[..500]:text;
     }
 
     public static string MergeClaude(string existing,string bridge,int port)

@@ -1,15 +1,27 @@
 # Data and credentials
 
-The API-key workflow is bring-your-own-key, as requested by the project owner. Requests go directly from the plugin to the explicitly configured API source. The earlier server-only credential architecture in the handover was superseded by this requirement.
+AI Archi-Tec 0.5.0 has two separate conversation routes. No API key, shared model credit or analytics endpoint is bundled.
 
-No API credential is bundled. Optional persistence uses Windows DPAPI CurrentUser in `%LOCALAPPDATA%\AIArchiTec\Rhino8\profiles.json` and the active-profile compatibility file `connection.json`. Each provider has independent preferences. Turning Remember off and saving removes that profile's saved key from both copies. Without Remember enabled, the key stays in process memory. General preferences are stored separately in `preferences.json`. There is no plugin analytics or telemetry endpoint.
+## API route
 
-An AI request includes the user's prompt, recent conversation, document units/layer summary, and selected or recently panel-created object IDs/types/layers/bounding boxes. It does not upload the entire Rhino file or viewport screenshot. An explicitly attached reference image is sent only when the user submits an AI request to a supported vision model. Provider handling and billing follow the user's chosen service.
+Studio sends the user's submitted prompt, scoped recent conversation, document units/layer summary and selected/recent object metadata directly to the configured provider. Explicitly attached supported reference images are included only on submission. It does not automatically upload the entire 3DM or a viewport screenshot. Provider processing and billing follow the user's chosen account.
 
-The local MCP server binds only to 127.0.0.1, rejects browser Origin headers, requires a random bearer token, and starts only when requested. The token rotates on restart. Its tools can read limited document context or propose validated actions. Only the Rhino panel's Apply executes a plan. No MCP tool runs arbitrary scripts or bypasses approval.
+Optional key persistence uses Windows DPAPI CurrentUser in `%LOCALAPPDATA%\AIArchiTec\Rhino8\profiles.json` and the active-profile compatibility file `connection.json`. Each provider has independent preferences. Turning Remember off and saving removes that profile's saved key from both files; session-only keys stay in process memory. General preferences are in `preferences.json`.
 
-The current MCP setup export contains the bridge path and port, without a token. The bridge discovers the active session through a CurrentUser DPAPI-encrypted descriptor in %LOCALAPPDATA%/AIArchiTec/Rhino8/mcp-session-<port>.json. It is removed when that server stops normally; stale descriptors fail when the owner process has exited. The bridge rereads the descriptor and reconnects after server restarts while the client stays open. A plugin upgrade requires one client refresh to load the new executable path. Legacy exports containing a token should be replaced with the new setup. No public listener or tunnel is created by this plugin.
+## MCP route
 
-The panel reports client-announced names, last activity and workflow stages from actual authenticated MCP traffic. These names do not verify account identity. The local bridge sends a heartbeat every three seconds and closes its session on normal shutdown. post_message adds a client response to the workspace conversation without changing geometry. The MCP route has no chat composer; users send messages and references from their chosen client.
+The plugin is an execution bridge, not an AI service. The external client owns conversation, account access, model choice and tool approval. MCP requests do not call the plugin's API provider or enter its API conversation history. The local MCP workspace shows connection state and an execution log, with no second chat composer.
 
-Connect to Codex uses the installed official CLI to add or replace only the ai-architec-rhino MCP entry. Connect to Claude Desktop merges that entry into the current user's Claude configuration while preserving other entries and saves a sibling .architec-backup. That backup can contain the user's pre-existing settings and must stay private. No account authentication, public tunnel or automatic browser message submission is performed. The plugin opens the selected client when available. Offline or uncertain tool failures are reported; potentially dispatched modeling requests are never automatically replayed.
+The server binds to `127.0.0.1`, rejects browser Origin headers, and requires a random bearer credential that rotates when restarted. Setup exports only the installed bridge path and port. Discovery uses `%LOCALAPPDATA%\AIArchiTec\Rhino8\mcp-session-<port>.json`, encrypted for the current Windows user. Normal shutdown removes the owned descriptor; stale owners fail discovery. No public listener, tunnel, OAuth flow or browser automation is provisioned.
+
+Basic context contains units/layers and selected/recent object IDs, types and bounds. An explicit **get_objects** call may inspect other objects by ID or layer prefix, including hidden objects when requested, and returns validity, closure, area and volume. An explicit **get_viewport_image** call returns a PNG of the active viewport to the requesting AI client. The user's client/provider data policies apply to what that client receives.
+
+**execute_plan** and **apply_plan** are write tools authorized using the external client's normal controls. They validate bounded native actions, modify the active document and record Undo. There is no additional mandatory Apply click in Rhino for MCP. No tool executes arbitrary code or shell commands. Native geometry payloads are decoded only as supported geometry types.
+
+Operation receipts and conversation/execution logs are session memory. Receipts survive listener reconnects in the same panel, up to 2,000 requests, but not Rhino/panel restart. A stopped/uncertain request must be inspected before retrying. Completed batches remain in the document and can be undone in Rhino.
+
+## Setup and status
+
+Codex registration uses its installed CLI to add/replace only `ai-architec-rhino`. Claude setup merges that entry into the current user's configuration, preserves unrelated settings and creates a private sibling `.architec-backup`; that backup can contain existing settings and should remain private. No account login is automated. A plugin upgrade requires one client refresh for the new executable path.
+
+Client names, last contact and stages come from authenticated protocol traffic; an announced name is not verification of an account identity. Local heartbeats monitor connection only and do not start AI/modeling work. Closing the client normally closes its tracked session; an idle listener may remain available until disconnected.

@@ -14,6 +14,7 @@ static class BridgeReconnectTests
         if(!OperatingSystem.IsWindows())return passed;
         var probe=new System.Net.Sockets.TcpListener(IPAddress.Loopback,0);probe.Start();var port=((IPEndPoint)probe.LocalEndpoint).Port;probe.Stop();
         var owner=Guid.NewGuid().ToString("N");var messages=0;var rejectedPlans=0;McpServer? server=null;
+        var delayedStarted=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);var delayedCancelled=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var bridge=Path.GetFullPath("../../../../../src/ArchiTec.McpBridge/bin/Release/net8.0/AIArchiTec.McpBridge.exe",AppContext.BaseDirectory);
         var start=new ProcessStartInfo(bridge){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true};
         start.Environment.Remove("ARCHITEC_MCP_TOKEN");start.Environment.Remove("ARCHITEC_MCP_URL");start.Environment["ARCHITEC_MCP_PORT"]=port.ToString();
@@ -30,11 +31,13 @@ static class BridgeReconnectTests
         async Task<JsonElement> Tool(string name,object args)=>await Send("tools/call",new{name,arguments=args});
         void Start()
         {
-            server=new McpServer(port,(name,args,cancel)=>
+            server=new McpServer(port,async(name,args,cancel)=>
             {
+                if(name=="execute_plan")
+                {delayedStarted.TrySetResult();try{await Task.Delay(10000,cancel);}catch(OperationCanceledException){delayedCancelled.TrySetResult();throw;}}
                 if(name=="propose_plan"){rejectedPlans++;throw new InvalidOperationException("Fixture plan rejected");}
                 if(name=="post_message")messages++;
-                return Task.FromResult<object>(new{ok=true,message=args.TryGetProperty("message",out var text)?text.GetString():"context"});
+                return new{ok=true,message=args.TryGetProperty("message",out var text)?text.GetString():"context"};
             });server.Start();McpSessionFile.Publish(port,server.Endpoint,server.Token,owner);
         }
         void Stop(){McpSessionFile.Remove(port,owner);server?.Dispose();server=null;}
@@ -42,7 +45,7 @@ static class BridgeReconnectTests
         {
             var hello=await Send("initialize",new{protocolVersion="2025-11-25",capabilities=new{},clientInfo=new{name="reconnect fixture",version="1"}});
             Check(hello.GetProperty("serverInfo").GetProperty("name").GetString()=="ai-architec-rhino","A client can initialize its stable bridge before Rhino MCP starts");
-            var catalog=await Send("tools/list",new{});Check(catalog.GetProperty("tools").GetArrayLength()==4,"Tools remain discoverable while Rhino MCP is off");
+            var catalog=await Send("tools/list",new{});Check(catalog.GetProperty("tools").GetArrayLength()==McpCatalog.Definitions.GetArrayLength(),"Tools remain discoverable while Rhino MCP is off");
             var offline=await Tool("get_context",new{});Check(offline.GetProperty("isError").GetBoolean()&&!process.HasExited,"Offline requests return actionable tool errors without killing the bridge");
             for(var cycle=0;cycle<3;cycle++)
             {
@@ -58,6 +61,12 @@ static class BridgeReconnectTests
                 if(cycle<2){Stop();var stopped=await Tool("get_context",new{});Check(stopped.GetProperty("isError").GetBoolean(),"Stopping MCP produces an honest offline error without a client reload");}
             }
             var rejected=await Tool("propose_plan",new{});Check(rejected.GetProperty("isError").GetBoolean()&&rejectedPlans==1,"A rejected modeling request is never replayed automatically");
+            var stopId=++serial;
+            await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new{jsonrpc="2.0",id=stopId,method="tools/call",@params=new{name="execute_plan",arguments=new{}}}));await process.StandardInput.FlushAsync();
+            await delayedStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new{jsonrpc="2.0",method="notifications/cancelled",@params=new{requestId=stopId}}));await process.StandardInput.FlushAsync();
+            await delayedCancelled.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var resumed=await Tool("get_context",new{});Check(!resumed.GetProperty("isError").GetBoolean(),"Real STDIO Stop reaches HTTP cancellation while input remains responsive, then the same client resumes");
             process.StandardInput.Close();await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Check(process.ExitCode==0&&server!.Connection.Snapshot().Clients==0,"The reconnecting bridge closes its last authenticated session on EOF");
         }
