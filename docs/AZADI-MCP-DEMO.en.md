@@ -2,7 +2,7 @@
 
 [Project](../README.md) · [Client workflow](MCP-QUICKSTART.en.md) · [Validation](../rhino-plugin/docs/VALIDATION.md)
 
-![Actual native Rhino model](../rhino-plugin/docs/azadi-mcp-050.png)
+![Normal rendered Rhino view of the final MCP-built model](../rhino-plugin/docs/azadi-tower-render.png)
 
 This is actual geometry built through AI Archi-Tec's MCP tools and captured in Rhino. It is not a generated promotional image, an imported finished model or a wireframe standing in for a building. Codex supplied the modeling operations; the installed plugin validated and executed them. The conversation stayed in Codex throughout.
 

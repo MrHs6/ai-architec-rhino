@@ -21,6 +21,16 @@ Open **`archtec`** inside Rhino to generate concept geometry, inspect your model
 
 **Concept-modeling beta · Windows x64 · Licensed Rhino 8.31+ within Rhino 8 · .NET 8 runtime.** No shared API key or model credit is included. The ready-made installer needs no developer tools.
 
+## Built with AI Archi-Tec: Azadi Tower
+
+![Azadi Tower — normal Rhino rendered view of the final MCP-built model](rhino-plugin/docs/azadi-tower-render.png)
+
+**Modeled in Rhino through AI Archi-Tec MCP, with Codex directing the native modeling tools.** This normal rendered viewport capture shows the final editable model: four flared stone piers, open crossing passages, a curved turquoise vault, stone lattice and crown details. The plugin executed and validated the operations; the conversation and follow-up edits stayed in Codex.
+
+**339 valid closed native Breps · tower only · 45 m overall model height.** This is a photo-based architectural reconstruction with assumed fine dimensions. The image records the actual model delivered below.
+
+**[Download the editable tower (.3dm)](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/Azadi-Tower-Reference-Rebuild.3dm)** · [See the modeling workflow and checks](docs/AZADI-MCP-DEMO.en.md) · [View the full-size render](rhino-plugin/docs/azadi-tower-render.png)
+
 ## Three workspaces, distinct purposes
 
 | Generate | Analyze | Model Assist |
@@ -67,12 +77,6 @@ Both routes use native geometry validation and Undo. API uses local preview/Appl
 ![API and desktop MCP connection architecture](docs/assets/connection-architecture.png)
 
 **[Technical architecture →](docs/ARCHITECTURE.en.md)** · [MCP setup and recovery](docs/MCP-QUICKSTART.en.md) · [Provider protocols and reference support](docs/PROVIDERS.md) · [Data and credentials](rhino-plugin/PRIVACY.md)
-
-## Native modeling through MCP
-
-![Azadi Tower built through AI Archi-Tec MCP](rhino-plugin/docs/azadi-mcp-050.png)
-
-Actual Rhino viewport capture, not an AI-generated promotional render. **339 valid closed native Breps**, built and inspected through this plugin. The tower is a photo-based architectural approximation with explicit design dimensions; it is not a surveyed/as-built reconstruction. [Workflow, geometry checks and limitations](docs/AZADI-MCP-DEMO.en.md) · [Editable tower 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/Azadi-Tower-Reference-Rebuild.3dm)
 
 ## Earlier interface captures
 
