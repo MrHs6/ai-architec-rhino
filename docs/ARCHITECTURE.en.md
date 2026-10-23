@@ -1,51 +1,52 @@
-# Architecture and execution model
+# Architecture and client-controlled execution
 
-[Overview](../README.md) · [Installation](INSTALLATION.en.md) · [MCP setup](MCP-QUICKSTART.en.md) · [Provider protocols](PROVIDERS.md)
+[Overview](../README.md) · [Install](INSTALLATION.en.md) · [MCP workflow](MCP-QUICKSTART.en.md)
 
 ![Connection architecture](assets/connection-architecture.png)
 
-## Conversation routes
-
-| Route | Conversation host | Connection | Result path |
-|---|---|---|---|
-| API | Rhino Studio | Personal provider endpoint, key and selected model | Structured response → validation → viewport preview → explicit Apply |
-| MCP | Codex, Claude Desktop or compatible local client | STDIO bridge → authenticated loopback HTTP | Client tool call → validation → viewport preview → explicit Apply |
-| Offline example | Rhino Studio | Limited deterministic local planner | Supported numeric example → the same preview/Apply path |
-
-API profiles and MCP are independent. Starting MCP does not bind the Rhino composer to an online account. In MCP mode the composer is hidden; the AI client supplies requests and references. Analyze's local geometry audit is available without an AI connection.
-
-## Repository modules
-
-| Module | Responsibility | Relevant sources |
+| Route | Conversation and planning | Native execution |
 |---|---|---|
-| `ArchiTec.Rhino` | Plugin registration, commands, WPF/Eto host, document binding, preview and native geometry execution | [Panel](../rhino-plugin/src/ArchiTec.Rhino/ArchiTecPanel.cs), [Studio](../rhino-plugin/src/ArchiTec.Rhino/Views/StudioView.xaml), [geometry engine](../rhino-plugin/src/ArchiTec.Rhino/GeometryEngine.cs) |
-| `ArchiTec.Core` | Action contracts, workspace rules, provider adapters, MCP HTTP protocol, connection tracking and encrypted session discovery | [Contracts](../rhino-plugin/src/ArchiTec.Core/Contracts.cs), [MCP server](../rhino-plugin/src/ArchiTec.Core/McpServer.cs), [provider profiles](../rhino-plugin/src/ArchiTec.Core/ProviderProfiles.cs) |
-| `ArchiTec.McpBridge` | Stable local STDIO surface, UTF-8 JSON-RPC, current-user credential discovery and reconnection | [Reconnecting bridge](../rhino-plugin/src/ArchiTec.McpBridge/ReconnectingBridge.cs) |
-| `ArchiTec.Tests` | Core/provider/protocol/workspace checks and a real bridge-process reconnect fixture | [Tests](../rhino-plugin/tests/ArchiTec.Tests), [reconnect fixture](../rhino-plugin/tests/ArchiTec.Tests/BridgeReconnectTests.cs) |
-| Packaging | Per-user Yak payload, Windows installers, registration repair and release checksums | [Scripts](../rhino-plugin/scripts), [distribution](../rhino-plugin/docs/DISTRIBUTION.md) |
+| API | Studio calls the user's selected provider/model with its own scoped conversation | Structured plan → validation → viewport preview → user Apply → measured result |
+| MCP | The external AI client owns prompts, references, reasoning, tool approval and follow-ups | execute_plan → validation → undoable native batch → receipt → client inspection |
+| Offline | Limited deterministic numeric examples in Studio | The API/offline preview and Apply path |
 
-## MCP tool contract
+MCP does not invoke a provider, run an autonomous agent, reinterpret the prompt or use the API workspace policy to downgrade a client plan. The local composer, workspace controls and commit buttons are hidden. Its log is separate from API conversation histories. Optional MCP previews are committed/cancelled using client tools.
 
-| Tool | Purpose | Geometry effect |
-|---|---|---|
-| `get_context` | Active document ID, units, layers and limited selected/recent object metadata | Read-only |
-| `post_message` | Show a conversational answer or analysis in the selected workspace | No geometry change |
-| `propose_plan` | Validate supported actions for the current document and display a preview | Preview only |
-| `get_plan_status` | Read awaiting/applied/cancelled/failed status and confirmed output IDs | Read-only |
+## Modules
 
-The client reads the current `document_id` first. Supported plans contain declared native operations such as building/box/curve creation, extrusion, scoped transformations and layer operations. No tool executes arbitrary model-generated code. The user clicks Apply in Rhino. Native operations run on the Rhino UI thread, report actual object IDs/bounds and participate in batch Undo. Stale document, unit or target changes require a fresh plan.
+| Module | Responsibility |
+|---|---|
+| ArchiTec.Core | Typed action validation, provider adapters/profiles, MCP catalog/protocol, cancellation, session receipt ledger and DPAPI discovery |
+| ArchiTec.Rhino | Document/target checks, native geometry engine, viewport preview, actual measurements/capture, panel and commands |
+| ArchiTec.McpBridge | UTF-8 STDIO client surface, authenticated loopback transport, concurrent input/cancellation and automatic reconnection |
+| ArchiTec.Tests | Provider/workspace/validation checks, real HTTP cancellation and a real STDIO reconnect/cancellation fixture |
+| Packaging | Versioned Yak, per-user installers, registration backup/repair and release checksums |
 
-## Reconnection lifecycle
+## MCP surface
 
-The client initializes a persistent STDIO bridge. Tool discovery stays available even before Rhino's listener starts. Each request and background heartbeat checks the current user's encrypted session descriptor. When Rhino MCP restarts, the descriptor carries the new token and the bridge performs a new authenticated handshake using the client's announced metadata.
+| Tool | Role |
+|---|---|
+| get_context | Active document ID/units/layers and selected/recent metadata |
+| get_capabilities | Exact native action parameters and limits |
+| get_objects | Explicit object IDs or layer-prefix inspection; validity, closure, bounds, area, volume and bounded point probes |
+| execute_plan | Client-authorized native execution with a stable UUID request ID; no local Apply |
+| propose_plan / apply_plan / cancel_plan | Optional client-managed viewport preview lifecycle |
+| get_plan_status | Processing/applied/cancelled/failed receipt or unknown |
+| post_message | Optional status log; no local AI response generation |
+| set_view / get_viewport_image | Frame the native result and inspect its actual PNG capture |
 
-Pre-dispatch HTTP 401/404 rejections can reinitialize and retry once. Timeouts, uncertain network failures, HTTP 500 and application tool errors are **not replayed**. When a request's outcome is uncertain, inspect the existing preview or `get_plan_status` before sending another model request. Normal bridge shutdown closes its authenticated session. Client status is based on observed contact, not proof of account authentication.
+The 24 action names and parameter contracts live in [McpCatalog.cs](../rhino-plugin/src/ArchiTec.Core/McpCatalog.cs) and [Contracts.cs](../rhino-plugin/src/ArchiTec.Core/Contracts.cs). Native geometry is implemented in [SurfaceTools.cs](../rhino-plugin/src/ArchiTec.Rhino/SurfaceTools.cs), [SolidOperations.cs](../rhino-plugin/src/ArchiTec.Rhino/SolidOperations.cs) and [GeometryEngine.cs](../rhino-plugin/src/ArchiTec.Rhino/GeometryEngine.cs). No tool executes arbitrary scripts or shell commands.
 
-## Data boundaries
+## Execution, cancellation and receipts
 
-- Local MCP binds to loopback, requires a rotating bearer credential and rejects browser Origin headers. This release does not create a public listener or cloud tunnel.
-- Setup exports the installed bridge path and port, without a token. Discovery uses Windows CurrentUser DPAPI. Remembered API keys are also per-user encrypted; session-only keys are not persisted.
-- AI requests use prompts, recent conversation and limited unit/layer/selected-or-recent object context. The entire 3DM and viewport image are not automatically uploaded. Explicitly attached supported reference images are sent with the submitted AI request.
-- Codex registration uses its installed CLI; Claude configuration merges preserve other entries and create a private sibling backup. The plugin does not log into external accounts.
+The client reads the document context, supplies explicit units and operands, and sends a unique UUID. Validation precedes geometry preparation. Native operations run on Rhino's UI thread, check target fingerprints/units/tolerance, record one batch Undo, and return actual created/modified IDs. Failed execution rolls back the batch when changes have begun; a rollback failure is reported for inspection.
 
-Read [PRIVACY.md](../rhino-plugin/PRIVACY.md) for storage details and [VALIDATION.md](../rhino-plugin/docs/VALIDATION.md) for measured acceptance and remaining limits.
+The bridge keeps reading STDIO while a tool runs. MCP cancellation reaches the HTTP request and operation token. Cancellation is checked before and between native steps; it cannot interrupt every Rhino kernel call or retroactively remove a completed batch. Stopping AI generation when no tool is active simply leaves the bridge idle.
+
+The in-memory receipt ledger binds each execute_plan UUID to the document and plan fingerprint. Repeated identical requests return the receipt. Conflicting reuse is rejected. Receipts survive listener off/on but not panel/Rhino restart. An unknown status after restart requires document inspection. Timeouts and ambiguous failures are never automatically replayed.
+
+## Reconnection and data
+
+Local MCP binds only to loopback with a rotating bearer credential and rejects browser Origin headers. The stable STDIO bridge rereads the current user's DPAPI-protected session descriptor. Tool discovery remains available while Rhino is offline. Pre-dispatch authentication/session rejection may reconnect once; uncertain writes are not replayed. A plugin upgrade changes the executable path and requires one client refresh.
+
+Basic context does not serialize the entire 3DM. An explicit get_objects request can inspect a wider object scope, including hidden objects when requested; an explicit capture returns the active viewport image to that client. The MCP route sends no provider request itself. [Privacy/storage details](../rhino-plugin/PRIVACY.md) · [Validation and remaining limits](../rhino-plugin/docs/VALIDATION.md)

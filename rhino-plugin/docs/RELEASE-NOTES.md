@@ -1,3 +1,21 @@
+AI Archi-Tec 0.5.0-beta.6 — client-controlled MCP and native CAD execution
+
+- Keep MCP conversation, planning, tool approval, execution, inspection and follow-ups in the external AI client. Hide local API/chat/commit controls on the MCP route. API mode remains a separate in-Rhino conversation with preview and Apply.
+- Add execute_plan with UUID receipts and client-managed optional previews. No mandatory Apply click in Rhino. Identical retries return the recorded receipt within the running panel session; conflicting request IDs are rejected.
+- Expose 24 bounded native actions: capped lofts, booleans/join, sweep, revolution, pipe, offset, extrusion, manifold mesh, validated native geometry payloads, transforms, layers, visibility, selection and explicit object deletion. No arbitrary script or command execution.
+- Add object validity/closure/mass properties, bounded point-containment probes, correct camera/target framing and actual viewport PNG capture.
+- Keep **Enable connection** visible while disconnected, so restarting an existing connection does not repeat client registration. Prefer the desktop-managed Codex CLI over inherited PATH shims and show filtered, actionable setup diagnostics.
+- Keep STDIO input responsive to Stop; forward MCP cancellation and check between native operations. Reconnect without replaying uncertain writes. Completed batches remain undoable.
+- Fix explicit deletion of hidden construction, distinguish source reads from target mutations, and close Rhino's modeless rollback Undo scope so a failed batch does not block the next operation.
+- Separate MCP execution logs from API histories. Dispose native panel resources on shutdown. Give Codex setup complete redirected input/output streams when launched from Rhino's GUI process.
+- Replace the rejected Azadi development trial with a tower-only reference reconstruction: 339 valid closed Breps, a curved open cross vault, fitted stone lattice, pointed crown details and facade inlays. No landscape or hidden construction remains in the clean 3DM.
+
+144 automated checks pass. See VALIDATION.md for installed-plugin acceptance and remaining limits. Paid-provider/vision accounts, a real Claude account and a second licensed workstation remain unverified. There is no unrestricted RhinoCommon, BIM or public-cloud connector in this beta.
+
+Save documents, close Rhino, install the Windows ZIP, reopen Rhino and run archtec. After an upgrade, run Connect and refresh the AI client's MCP tools once for the new bridge path. Subsequent listener off/on reconnects do not require repeated copying.
+
+Previous release record:
+
 AI Archi-Tec 0.4.2-beta.1 — simpler MCP setup and automatic reconnect
 
 - Connect to Codex/Claude Desktop enables localhost MCP, registers the installed bridge for the current Windows user, and opens the client when available. Other clients retain manual setup under advanced diagnostics.

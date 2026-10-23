@@ -1,4 +1,4 @@
-# AI Archi-Tec for Rhino 8 — 0.4.2-beta.1
+# AI Archi-Tec for Rhino 8 — 0.5.0-beta.6
 
 Project and complete guides / پروژه و راهنمای کامل:
 
@@ -12,7 +12,7 @@ https://github.com/MrHs6/ai-architec-rhino
 4. فرمان `archtec` را تایپ و Enter بزنید.
 5. در Settings سرویس، کلید API و مدل شخصی را انتخاب کنید، یا MCP محلی را روشن کنید.
 
-Generate فقط پیش‌نمایش می‌سازد. پس از بررسی Apply to Rhino بزنید؛ Ctrl+Z در راینو عملیات را برمی‌گرداند.
+در مسیر API پیش‌نمایش را بررسی و Apply کنید. در MCP تمام گفتگو و مجوز اجرای ابزار در کلاینت است؛ Apply محلی لازم نیست. Ctrl+Z راینو مرحلهٔ اجراشده را برمی‌گرداند.
 
 ## Quick start
 
@@ -42,6 +42,6 @@ Copyright © 2026 Hasan Sharif Askari.
 
 ## MCP quick start / اتصال MCP
 
-Open MCP connection, choose Codex or Claude Desktop, and click Connect. Registration is automatic for the current Windows user. On first setup or an upgrade, refresh Codex MCPs once (Settings > Plugins > MCPs), or fully quit/reopen Claude. Chat in the client; the Rhino MCP route has no second composer. Review and Apply previews in Rhino. Subsequent Rhino MCP off/on reconnects automatically with the client open. Manual configuration is under advanced diagnostics.
+Open MCP connection, choose Codex or Claude Desktop, and click Connect. Registration is automatic for the current Windows user. On first setup or an upgrade, refresh Codex MCPs once (Settings > Plugins > MCPs), or fully quit/reopen Claude. Chat in the client; the Rhino MCP route has no second composer. Authorize native modeling tools and inspect results in that client; no local Apply click is needed. Subsequent Rhino MCP off/on reconnects automatically with the client open. Manual configuration is under advanced diagnostics.
 
-در MCP کلاینت را انتخاب و Connect بزنید؛ ثبت تنظیمات خودکار است. فقط اولین نصب/ارتقا به refresh کلاینت نیاز دارد. گفتگو در کلاینت و پیش‌نمایش و Apply در راینو انجام می‌شود. خاموش‌و‌روشن‌کردن MCP دوباره‌کاری تنظیمات نمی‌خواهد.
+در MCP کلاینت را انتخاب و Connect بزنید؛ ثبت تنظیمات خودکار است. فقط اولین نصب/ارتقا به refresh کلاینت نیاز دارد. گفتگو، اجرای ابزار و بررسی نتیجه در همان کلاینت انجام می‌شود؛ Apply محلی لازم نیست. خاموش‌و‌روشن‌کردن MCP دوباره‌کاری تنظیمات نمی‌خواهد.

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
 using ArchiTec.Core;
 
 // The client's stdio server survives a stopped/restarted Rhino listener. Credentials
@@ -9,7 +10,8 @@ using ArchiTec.Core;
 internal sealed class ReconnectingBridge : IAsyncDisposable
 {
     private readonly int port;
-    private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(35) };
+    private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(125) };
+    private readonly ConcurrentDictionary<string,CancellationTokenSource> pending=new();
     private readonly SemaphoreSlim gate = new(1);
     private readonly CancellationTokenSource lifetime = new();
     private readonly Task heartbeat;
@@ -23,11 +25,23 @@ internal sealed class ReconnectingBridge : IAsyncDisposable
     public async Task<object?> Handle(JsonElement request)
     {
         var method = request.GetProperty("method").GetString() ?? "";
+        if(method=="notifications/cancelled")
+        {
+            if(request.TryGetProperty("params",out var notification)&&notification.TryGetProperty("requestId",out var cancelled)&&pending.TryGetValue(cancelled.GetRawText(),out var active))
+            {
+                active.Cancel();
+                if(session is not null)try{using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(2));using var response=await Send(request.GetRawText(),timeout.Token);}catch{}
+            }
+            return null;
+        }
         if (!request.TryGetProperty("id", out var id)) return null;
         var args = request.TryGetProperty("params", out var value) ? value.Clone() : JsonSerializer.SerializeToElement(new { });
-        await gate.WaitAsync();
+        using var cancellation=CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        var key=id.GetRawText();if(!pending.TryAdd(key,cancellation))return new{jsonrpc="2.0",id,error=new{code=-32600,message="Duplicate active request ID."}};
+        var entered=false;
         try
         {
+            await gate.WaitAsync(cancellation.Token);entered=true;
             if (method == "initialize")
             {
                 initialization = args; initialized = true; session = null;
@@ -43,15 +57,15 @@ internal sealed class ReconnectingBridge : IAsyncDisposable
             if (method == "ping") return new { jsonrpc = "2.0", id, result = new { } };
             try
             {
-                await EnsureConnected(lifetime.Token);
-                using var response = await Send(request.GetRawText(), lifetime.Token);
+                await EnsureConnected(cancellation.Token);
+                using var response = await Send(request.GetRawText(), cancellation.Token);
                 // These statuses are rejected before tool dispatch. A connection loss,
                 // timeout, 500, or tool error may have an outcome: never replay those.
                 if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.NotFound)
                 {
                     session = null;
-                    await EnsureConnected(lifetime.Token);
-                    using var retry = await Send(request.GetRawText(), lifetime.Token);
+                    await EnsureConnected(cancellation.Token);
+                    using var retry = await Send(request.GetRawText(), cancellation.Token);
                     retry.EnsureSuccessStatusCode();
                     using var retried = JsonDocument.Parse(await retry.Content.ReadAsStringAsync());
                     return retried.RootElement.Clone();
@@ -60,6 +74,7 @@ internal sealed class ReconnectingBridge : IAsyncDisposable
                 using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                 return body.RootElement.Clone();
             }
+            catch(OperationCanceledException) when(cancellation.IsCancellationRequested){return null;}
             catch
             {
                 session = null;
@@ -67,7 +82,8 @@ internal sealed class ReconnectingBridge : IAsyncDisposable
                 return new { jsonrpc = "2.0", id, error = new { code = -32001, message = Offline } };
             }
         }
-        finally { gate.Release(); }
+        catch(OperationCanceledException) when(cancellation.IsCancellationRequested){return null;}
+        finally { pending.TryRemove(key,out _);if(entered)gate.Release(); }
     }
 
     private async Task TryConnect()
@@ -150,4 +166,5 @@ internal sealed class ReconnectingBridge : IAsyncDisposable
             catch { }
         http.Dispose(); gate.Dispose(); lifetime.Dispose();
     }
+    public void Stop()=>lifetime.Cancel();
 }

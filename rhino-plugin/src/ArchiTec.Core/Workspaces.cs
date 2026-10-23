@@ -18,6 +18,7 @@ public sealed class WorkspaceSessions
 public sealed class DocumentWorkspaceState
 {
     public WorkspaceSessions Sessions {get;}=new();
+    public List<ChatMessage> McpLog {get;}=[];
     public List<Guid> RecentIds {get;}=[];
     public Dictionary<Guid,uint> GeometrySignatures {get;}=[];
     public string? LastReport {get;set;}
@@ -50,7 +51,7 @@ public static class ConversationIntent
 }
 public static class ExecutionFeedback
 {
-    public static string Describe(int revision,int created,int modified,IReadOnlyList<ObjectInfo> objects,string units,bool persian)
+    public static string Describe(int revision,int created,int modified,IReadOnlyList<ObjectInfo> objects,string units,bool persian,bool clientManaged=false)
     {
         var lines=new List<string>{persian?$"نتیجهٔ ثبت‌شده در راینو · مرحلهٔ {revision}\n{created} جزء ساخته شد و {modified} جزء تغییر کرد.":$"CONFIRMED IN RHINO · revision {revision}\n{created} native objects created · {modified} modified."};
         if(objects.Count>0)
@@ -62,7 +63,7 @@ public static class ExecutionFeedback
             if(floors.Length>0)lines.Add(persian?"شمارهٔ طبقات موجود در نتیجه: "+string.Join(", ",floors):"Floor metadata in this result: "+string.Join(", ",floors));
             foreach(var group in objects.GroupBy(o=>o.Role??o.Type).Take(8))lines.Add($"{group.Key}: {group.Count()}");
         }
-        lines.Add(persian?"برای ادامه، تغییر بعدی را در چت بنویسید یا Refine result را بزنید. شناسهٔ اشیا برای ادامه حفظ می‌شود؛ Ctrl+Z این مرحله را برمی‌گرداند.":"Describe the next edit in chat, or choose Refine result. Existing target GUIDs are retained for follow-ups. Rhino Ctrl+Z undoes this operation.");
+        lines.Add(clientManaged?"Continue in your AI client. Object IDs are retained; Rhino Ctrl+Z undoes the completed batch.":persian?"برای ادامه، تغییر بعدی را در چت بنویسید یا Refine result را بزنید. شناسهٔ اشیا برای ادامه حفظ می‌شود؛ Ctrl+Z این مرحله را برمی‌گرداند.":"Describe the next edit in chat, or choose Refine result. Existing target GUIDs are retained for follow-ups. Rhino Ctrl+Z undoes this operation.");
         return string.Join("\n",lines);
     }
 }
@@ -73,19 +74,22 @@ public static class WorkspacePolicy
         if(plan is null)return;
         PlanValidator.Validate(plan);
         if(mode=="analyze")throw new InvalidOperationException("Analyze is read-only. Use Model Assist to edit geometry.");
-        if(mode=="generate"&&plan.Actions.Any(a=>a.Tool is "move_object" or "scale_object" or "select_objects"))
+        if(mode=="generate"&&plan.Actions.Any(a=>a.Tool is "move_object" or "scale_object" or "rotate_object" or "set_visibility" or "delete_objects" or "select_objects"))
             throw new InvalidOperationException("Generate creates new geometry. Switch to Model Assist to edit existing objects.");
         if(mode=="assist")
         {
             if(context.Objects.Length==0)throw new InvalidOperationException("Select target objects or choose recent output in Model Assist.");
             foreach(var action in plan.Actions)
             {
-                if(action.Tool is not ("move_object" or "scale_object" or "extrude_curve" or "select_objects" or "get_object_properties"))
+                if(action.Tool is not ("move_object" or "scale_object" or "rotate_object" or "copy_object" or "set_visibility" or "extrude_curve" or "create_boolean" or "create_sweep" or "create_offset" or "create_layer" or "delete_objects" or "select_objects" or "get_object_properties"))
                     throw new InvalidOperationException("Model Assist edits or inspects existing targets. Use Generate for new concept geometry.");
                 if(action.Parameters.TryGetProperty("object_id",out var id)&&!context.Objects.Any(o=>o.Id==id.GetString()))
                     throw new InvalidOperationException("The proposed target is outside this workspace's target scope.");
-                if(action.Tool=="select_objects"&&action.Parameters.GetProperty("object_ids").EnumerateArray().Any(id=>!context.Objects.Any(o=>o.Id==id.GetString())))
-                    throw new InvalidOperationException("Selection is outside this workspace's target scope.");
+                foreach(var key in new[]{"object_ids","cutter_ids","section_ids"})
+                    if(action.Parameters.TryGetProperty(key,out var ids)&&ids.EnumerateArray().Any(target=>!context.Objects.Any(o=>o.Id==target.GetString())))
+                        throw new InvalidOperationException("An operand is outside this workspace's target scope.");
+                if(action.Parameters.TryGetProperty("rail_id",out var rail)&&!context.Objects.Any(o=>o.Id==rail.GetString()))
+                    throw new InvalidOperationException("The rail is outside this workspace's target scope.");
             }
         }
     }

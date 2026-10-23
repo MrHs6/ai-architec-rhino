@@ -57,15 +57,15 @@ public static class McpClientSetup
     public static string Configuration(string client,string bridge,int port)
     {
         if(port is <1024 or >65535)throw new ArgumentException("Invalid MCP port.");
-        if(client=="Codex")return "[mcp_servers.ai-architec-rhino]\ncommand = "+JsonSerializer.Serialize(bridge)+"\nstartup_timeout_sec = 20\ntool_timeout_sec = 45\n\n[mcp_servers.ai-architec-rhino.env]\nARCHITEC_MCP_PORT = \""+port+"\"\n";
+        if(client=="Codex")return "[mcp_servers.ai-architec-rhino]\ncommand = "+JsonSerializer.Serialize(bridge)+"\nstartup_timeout_sec = 20\ntool_timeout_sec = 150\n\n[mcp_servers.ai-architec-rhino.env]\nARCHITEC_MCP_PORT = \""+port+"\"\n";
         return JsonSerializer.Serialize(new{mcpServers=new Dictionary<string,object>{["ai-architec-rhino"]=new{command=bridge,env=new Dictionary<string,string>{["ARCHITEC_MCP_PORT"]=port.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}},new JsonSerializerOptions{WriteIndented=true});
     }
     public static string Guide(string client)=>client switch
     {
-        "Codex"=>"1. Click Connect to Codex: enable the local connection and save its MCP entry automatically.\n2. If Codex is already open, refresh once in Settings > Plugins > MCPs. Allow the Archi-Tec tools in the client.\n3. Chat in Codex. Review and Apply its previews here. Future Rhino MCP restarts reconnect automatically.\nNo manual copy is needed when automatic setup succeeds.",
+        "Codex"=>"1. Click Connect to Codex: enable the local connection and save its MCP entry automatically.\n2. If Codex is already open, refresh once in Settings > Plugins > MCPs. Allow the Archi-Tec tools in the client.\n3. Chat in Codex. Authorize its modeling tools there; no local Apply click is needed. Future Rhino MCP restarts reconnect automatically.\nNo manual copy is needed when automatic setup succeeds.",
         "ChatGPT web"=>"A browser chat requires separate connector setup or Secure MCP Tunnel. This release does not configure a web connector or sign into your account. Use Codex or Claude Desktop here, or API mode for direct chat in Rhino.",
         "Other MCP client"=>"Enable connection, then expand Manual setup. Add the copied JSON configuration to your desktop client's MCP settings once. Chat in that client and allow Archi-Tec tools. The native bridge reconnects after Rhino MCP restarts.",
-        _=>"1. Click Connect to Claude Desktop to save the MCP entry for this Windows user. Other server entries are preserved.\n2. Fully quit and reopen Claude once after first-time setup. Allow the Archi-Tec tools.\n3. Chat in Claude. Review and Apply its previews in Rhino. Future Rhino MCP restarts reconnect automatically."
+        _=>"1. Click Connect to Claude Desktop to save the MCP entry for this Windows user. Other server entries are preserved.\n2. Fully quit and reopen Claude once after first-time setup. Allow the Archi-Tec tools.\n3. Chat in Claude. Authorize its modeling tools there; no local Apply click is needed. Future Rhino MCP restarts reconnect automatically."
 
     };
 }

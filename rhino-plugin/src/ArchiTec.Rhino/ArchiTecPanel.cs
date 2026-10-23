@@ -21,6 +21,7 @@ public sealed class ArchiTecPanel:Panel
     private List<ChatMessage> history=>sessions[mode].History;
     private List<Guid> lastCreated=>documentState.RecentIds;
     private readonly Dictionary<string,object> mcpResults=[];
+    private readonly McpOperationLedger mcpOperations=new();
     private ConnectionSettings settings=new();
     private IPlannerClient? provider;
     private CancellationTokenSource? requestCancel;
@@ -52,6 +53,7 @@ public sealed class ArchiTecPanel:Panel
         view.LoadSettings(settings);
         view.LoadPreferences(preferences);view.SetWorkspace(preferences.DefaultWorkspace,false);mode=preferences.DefaultWorkspace;
         view.SendRequested+=()=>_ = SendAsync();view.ApplyRequested+=ApplyPending;
+        view.RouteChanged+=()=>{requestCancel?.Cancel();ClearPreview();view.RestoreConversation(view.ChatViaMcp?documentState.McpLog:history);};
         view.CancelRequested+=()=>{requestCancel?.Cancel();ClearPreview();view.SetStatus("Cancelled · document unchanged");};
         view.InputChanged+=()=>{sessions[mode].Prompt=view.Prompt;if(pending is not null)ClearPreview();};
         view.SelectedModelChanged+=()=>{ClearPreview();PersistSettings();};
@@ -150,7 +152,7 @@ public sealed class ArchiTecPanel:Panel
         if(boundDocumentId==doc.RuntimeSerialNumber)return true;
         if(busy){requestCancel?.Cancel();return false;}
         sessions[mode].Prompt=view.Prompt;ClearPreview();boundDocumentId=doc.RuntimeSerialNumber;documentState=documents.For(boundDocumentId);
-        view.Prompt=sessions[mode].Prompt;view.RestoreConversation(history);view.SetAttachment(sessions[mode].ImageName);view.SetRecentResult(null);
+        view.Prompt=sessions[mode].Prompt;view.RestoreConversation(view.ChatViaMcp?documentState.McpLog:history);view.SetAttachment(sessions[mode].ImageName);view.SetRecentResult(null);
         return true;
     }
     private void RememberGeometry(RhinoDoc doc)
@@ -166,8 +168,8 @@ public sealed class ArchiTecPanel:Panel
         var modified=actual.Count(o=>!prior.TryGetValue(o!.Id,out var crc)||crc!=o.Geometry.DataCRC(0));var removed=prior.Count-actual.Count(o=>prior.ContainsKey(o!.Id));
         documentState.Revision++;
         var lead=documentState.Persian?$"نتیجهٔ اخیر در راینو تغییر کرده است؛ {removed} جزء حذف یا Undo شده است.\n":$"Recent geometry changed in Rhino outside this Apply step; {removed} objects removed or undone.\n";
-        documentState.LastReport=lead+(actual.Length==0?(documentState.Persian?"نتیجه دیگر در سند وجود ندارد. برای ادامه یک نتیجهٔ تازه بسازید.":"No recent targets remain in this document. Generate a fresh result to continue."):ExecutionFeedback.Describe(documentState.Revision,0,modified,actual.Select(o=>ContextReader.Info(doc,o!)).ToArray(),doc.ModelUnitSystem.ToString(),documentState.Persian));
-        RememberGeometry(doc);AddMessage("assistant",documentState.LastReport);
+        documentState.LastReport=lead+(actual.Length==0?(documentState.Persian?"نتیجه دیگر در سند وجود ندارد. برای ادامه یک نتیجهٔ تازه بسازید.":"No recent targets remain in this document. Generate a fresh result to continue."):ExecutionFeedback.Describe(documentState.Revision,0,modified,actual.Select(o=>ContextReader.Info(doc,o!)).ToArray(),doc.ModelUnitSystem.ToString(),documentState.Persian,view.ChatViaMcp));
+        RememberGeometry(doc);if(view.ChatViaMcp)AddMcpMessage(documentState.LastReport);else AddMessage("assistant",documentState.LastReport);
     }
     private void RefineRecent()
     {
@@ -186,12 +188,17 @@ public sealed class ArchiTecPanel:Panel
         if(busy)return;var doc=RhinoDoc.ActiveDoc;if(doc is null||!BindDocument(doc))return;
         var objects=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray();
         if(objects.Length==0){view.SetStatus("Recent result is no longer in this document.");return;}
-        AddMessage("assistant",ExecutionFeedback.Describe(documentState.Revision,0,0,objects,doc.ModelUnitSystem.ToString(),documentState.Persian));
+        AddMessage("assistant",ExecutionFeedback.Describe(documentState.Revision,0,0,objects,doc.ModelUnitSystem.ToString(),documentState.Persian,view.ChatViaMcp));
     }
     private void AddMessage(string role,string value,bool error=false)
     {
         history.Add(new ChatMessage(role,value));if(history.Count>24)history.RemoveRange(0,history.Count-24);
         view.AddMessage(role,value,error);
+    }
+    private void AddMcpMessage(string value,bool error=false)
+    {
+        documentState.McpLog.Add(new("assistant",value));if(documentState.McpLog.Count>24)documentState.McpLog.RemoveAt(0);
+        if(view.ChatViaMcp)view.AddMessage("assistant",value,error);
     }
     public async Task SendAsync()
     {
@@ -301,7 +308,7 @@ public sealed class ArchiTecPanel:Panel
         ClearPreview();pending=GeometryEngine.Prepare(doc,plan);conduit=new PlanConduit(doc,pending.Preview){Enabled=true};
         if(preferences.ZoomPreview&&pending.Preview.Any())
         {var bounds=Rhino.Geometry.BoundingBox.Empty;foreach(var geometry in pending.Preview)bounds.Union(geometry.GetBoundingBox(true));if(bounds.IsValid)doc.Views.ActiveView?.ActiveViewport.ZoomBoundingBox(bounds);}
-        view.ShowPreview(plan,doc.ModelUnitSystem.ToString());view.SetStatus("Preview in Rhino · ready for your Apply");doc.Views.Redraw();
+        view.ShowPreview(plan,doc.ModelUnitSystem.ToString());view.SetStatus(view.ChatViaMcp?"Optional preview · authorize apply_plan in your AI client":"Preview in Rhino · ready for your Apply");doc.Views.Redraw();
     }
     public void ClearPreview()
     {
@@ -313,23 +320,25 @@ public sealed class ArchiTecPanel:Panel
         }
         if(conduit is not null){conduit.Enabled=false;conduit=null;}pending?.Dispose();pending=null;view.HidePreview();RhinoDoc.ActiveDoc?.Views.Redraw();
     }
-    public void ApplyPending()
+    public void ApplyPending()=>ApplyPendingCore(default);
+    private void ApplyPendingCore(CancellationToken cancellation)
     {
         if(pending is null)return;
         try
         {
-            var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active document.");var report=GeometryEngine.Apply(doc,pending);
+            var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active document.");var report=GeometryEngine.ApplyCancellable(doc,pending,cancellation);
             if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="applied",created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial};
             if(pendingMcpId is not null)mcp?.Connection.Workflow("applied","Confirmed native Rhino execution");
             if(report.Created.Count>0){lastCreated.Clear();lastCreated.AddRange(report.Created);}
             if(lastCreated.Count==0&&report.Modified.Count>0)lastCreated.AddRange(report.Modified);
             var resultObjects=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray();
-            documentState.Revision++;documentState.LastReport=ExecutionFeedback.Describe(documentState.Revision,report.Created.Count,report.Modified.Count,resultObjects,doc.ModelUnitSystem.ToString(),documentState.Persian);
+            documentState.Revision++;documentState.LastReport=ExecutionFeedback.Describe(documentState.Revision,report.Created.Count,report.Modified.Count,resultObjects,doc.ModelUnitSystem.ToString(),documentState.Persian,view.ChatViaMcp);
             RememberGeometry(doc);
-            AddMessage("assistant",documentState.LastReport+(report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
-            ClearPreview();view.Prompt="";view.SetStatus("Applied · confirmed by Rhino · describe your next edit");RefreshContext();
+            if(pendingMcpId is not null)AddMcpMessage($"Native execution completed · {report.Created.Count} created · {report.Modified.Count} modified. Continue in your AI client. Rhino Undo is available.");
+            else AddMessage("assistant",documentState.LastReport+(report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
+            ClearPreview();if(!view.ChatViaMcp)view.Prompt="";view.SetStatus(view.ChatViaMcp?"Client-controlled execution complete · Rhino Undo available":"Applied · confirmed by Rhino · describe your next edit");RefreshContext();
         }
-        catch(Exception ex){if(pendingMcpId is not null){mcpResults[pendingMcpId]=new{status="failed",message=ex.Message};mcp?.Connection.Workflow("error","Rhino Apply failed");}AddMessage("assistant","Could not apply: "+ex.Message,true);ClearPreview();view.SetStatus("Apply failed · review the message");}
+        catch(Exception ex){if(pendingMcpId is not null){mcpResults[pendingMcpId]=new{status=cancellation.IsCancellationRequested?"cancelled":"failed",message=ex.Message};mcp?.Connection.Workflow("error","Native execution stopped");AddMcpMessage("Could not apply: "+ex.Message);}else AddMessage("assistant","Could not apply: "+ex.Message,true);ClearPreview();view.SetStatus("Apply failed · review the message");}
     }
     private void AttachImage()
     {
@@ -384,10 +393,49 @@ public sealed class ArchiTecPanel:Panel
             if(token.IsCancellationRequested||disposed)return;
             try
             {
-                if(name=="get_plan_status"){var id=args.GetProperty("request_id").GetString()??"";completion.TrySetResult(mcpResults.TryGetValue(id,out var result)?result:new{status="unknown"});return;}
+                if(name=="get_capabilities"){completion.TrySetResult(McpCatalog.Capabilities);return;}
+                if(name=="get_plan_status"){var id=args.GetProperty("request_id").GetString()??"";completion.TrySetResult(mcpOperations.Contains(id)?mcpOperations.Get(id):mcpResults.TryGetValue(id,out var result)?result:new{status="unknown"});return;}
+                if(name=="cancel_plan")
+                {var id=args.GetProperty("request_id").GetString()??"";if(pendingMcpId==id)ClearPreview();completion.TrySetResult(mcpResults.TryGetValue(id,out var result)?result:mcpOperations.Get(id));return;}
                 var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active Rhino document.");
                 if(!BindDocument(doc))throw new InvalidOperationException("A request is active in another document. Retry after it finishes.");
                 if(name=="get_context"){completion.TrySetResult(ContextReader.Read(doc,lastCreated));return;}
+                if(args.GetProperty("document_id").GetUInt32()!=doc.RuntimeSerialNumber)throw new InvalidOperationException("The document changed. Read get_context again.");
+                if(name=="get_objects"){completion.TrySetResult(McpDocumentTools.Inspect(doc,args));return;}
+                if(name=="get_viewport_image"){completion.TrySetResult(McpDocumentTools.Capture(doc));return;}
+                if(name=="set_view"){completion.TrySetResult(McpDocumentTools.Frame(doc,args,lastCreated));return;}
+                if(name=="apply_plan")
+                {
+                    var id=args.GetProperty("request_id").GetString()??"";
+                    if(pendingMcpId==id){token.ThrowIfCancellationRequested();ApplyPendingCore(token);}
+                    completion.TrySetResult(mcpResults.TryGetValue(id,out var receipt)?receipt:new{status="unknown"});return;
+                }
+                if(name=="execute_plan")
+                {
+                    if(busy)throw new InvalidOperationException("An API request is active. Stop it before sending an MCP batch.");
+                    if(pending is not null)throw new InvalidOperationException("An optional preview is active. Use apply_plan or cancel_plan in this client first.");
+                    var id=args.GetProperty("request_id").GetString()??"";
+                    var executionPlan=Wire.Read<ActionPlan>(args.GetProperty("plan").GetRawText());
+                    if(!mcpOperations.Begin(id,doc.RuntimeSerialNumber,executionPlan,out var receipt)){completion.TrySetResult(receipt);return;}
+                    try
+                    {
+                        token.ThrowIfCancellationRequested();mcp?.Connection.Workflow("working","Executing a client-authorized native batch");
+                        using var prepared=GeometryEngine.Prepare(doc,executionPlan);token.ThrowIfCancellationRequested();
+                        var report=GeometryEngine.ApplyCancellable(doc,prepared,token);
+                        if(report.Created.Count>0){lastCreated.Clear();lastCreated.AddRange(report.Created);}
+                        documentState.Revision++;RememberGeometry(doc);
+                        receipt=new{request_id=id,status="applied",document_id=doc.RuntimeSerialNumber,created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial,objects=report.Created.Concat(report.Modified).Distinct().Select(v=>doc.Objects.FindId(v)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray()};
+                        mcpOperations.Complete(id,receipt);mcp?.Connection.Workflow("applied","Native batch complete; continue in the AI client");
+                        AddMcpMessage($"{executionPlan.Summary}\n{report.Created.Count} native objects created · {report.Modified.Count} modified · Rhino Undo {report.UndoSerial}. Continue in your AI client.");
+                        view.SetStatus("Client-controlled execution complete · Rhino Undo available");completion.TrySetResult(receipt);
+                    }
+                    catch(Exception ex)
+                    {
+                        receipt=new{request_id=id,status=token.IsCancellationRequested?"cancelled":"failed",message=ex.Message};mcpOperations.Complete(id,receipt);
+                        mcp?.Connection.Workflow(token.IsCancellationRequested?"cancelled":"error","Batch stopped; inspect its receipt");completion.TrySetResult(receipt);
+                    }
+                    return;
+                }
                 if(name=="post_message")
                 {
                     if(busy)throw new InvalidOperationException("The panel is busy. Retry after the current request finishes.");
@@ -395,18 +443,16 @@ public sealed class ArchiTecPanel:Panel
                     var target=args.TryGetProperty("workspace",out var workspace)?workspace.GetString():mode;
                     if(target is not ("generate" or "analyze" or "assist"))throw new ArgumentException("Unknown workspace.");
                     var message=args.GetProperty("message").GetString()??"";if(string.IsNullOrWhiteSpace(message)||message.Length>8000)throw new ArgumentException("Use a message of 1–8000 characters.");
-                    if(pending is not null&&target!=mode)throw new InvalidOperationException("Apply or Cancel the active preview before switching workspaces.");
-                    SwitchWorkspace(target);view.SetWorkspace(target,false);AddMessage("assistant",message);mcp?.Connection.Workflow("message","Client message delivered to "+target);completion.TrySetResult(new{status="displayed",document_id=doc.RuntimeSerialNumber,workspace=target});return;
+                    AddMcpMessage(message);mcp?.Connection.Workflow("message","Client status delivered to execution log");completion.TrySetResult(new{status="displayed",document_id=doc.RuntimeSerialNumber});return;
                 }
-                if(busy||pending is not null)throw new InvalidOperationException("A request or preview is active. Ask the user to Apply or Cancel first.");
+                if(busy||pending is not null)throw new InvalidOperationException("A request or optional preview is active. Use apply_plan or cancel_plan from this client first.");
                 if(args.GetProperty("document_id").GetUInt32()!=doc.RuntimeSerialNumber)throw new InvalidOperationException("The document changed. Read get_context again.");
                 var plan=Wire.Read<ActionPlan>(args.GetProperty("plan").GetRawText());
-                var targetMode=plan.Actions.Any(a=>a.Tool is "move_object" or "scale_object" or "extrude_curve" or "select_objects" or "get_object_properties")?"assist":"generate";
-                WorkspacePolicy.Validate(targetMode,plan,ContextReader.Read(doc,lastCreated));
-                SwitchWorkspace(targetMode);view.SetWorkspace(targetMode,false);PreparePreview(doc,plan);pendingMcpId=Guid.NewGuid().ToString();
+                PlanValidator.Validate(plan);
+                PreparePreview(doc,plan);pendingMcpId=Guid.NewGuid().ToString();
                 if(mcpResults.Count>=50)mcpResults.Remove(mcpResults.Keys.First());mcpResults[pendingMcpId]=new{status="awaiting_approval"};
-                AddMessage("assistant","MCP proposal · "+plan.Summary);
-                completion.TrySetResult(new{request_id=pendingMcpId,status="awaiting_approval",message="Preview only. The user must click Apply in Rhino."});
+                AddMcpMessage("Optional client preview · "+plan.Summary);
+                completion.TrySetResult(new{request_id=pendingMcpId,status="awaiting_approval",message="Optional preview. Use apply_plan or cancel_plan in this AI client; no switch to Rhino is required."});
             }
             catch(Exception ex){completion.TrySetException(new InvalidOperationException(ex.Message));}
         }));return await completion.Task;

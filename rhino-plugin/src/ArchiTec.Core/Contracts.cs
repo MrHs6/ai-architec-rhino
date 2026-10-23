@@ -46,7 +46,7 @@ public sealed record ModelCatalog(List<ModelDescriptor> Models);
 public static class PlanValidator
 {
     public static readonly string[] Tools = ["create_building", "create_box", "create_line", "create_polyline", "create_curve",
-        "extrude_curve", "move_object", "scale_object", "create_layer", "select_objects", "get_object_properties"];
+        "create_loft", "create_mesh", "create_extrusion", "create_boolean", "create_sweep", "create_revolve", "create_pipe", "create_offset", "create_geometry", "extrude_curve", "move_object", "scale_object", "rotate_object", "copy_object", "set_visibility", "create_layer", "select_objects", "delete_objects", "get_object_properties"];
 
     public static void Validate(ActionPlan plan)
     {
@@ -75,8 +75,20 @@ public static class PlanValidator
             "extrude_curve" => ["object_id", "height", "cap", "layer", "name"],
             "move_object" => ["object_id", "vector"],
             "scale_object" => ["object_id", "factor", "center"],
-            "create_layer" => ["name"],
-            "select_objects" => ["object_ids"],
+            "create_loft" => ["profiles","closed_profiles","curve_degree","cap","layer","name"],
+            "create_mesh" => ["vertices","faces","require_solid","layer","name"],
+            "create_extrusion" => ["points","vector","cap","layer","name"],
+            "create_boolean" => ["operation","object_ids","cutter_ids","layer","name"],
+            "create_sweep" => ["rail_id","section_ids","cap","layer","name"],
+            "create_revolve" => ["points","axis_start","axis_end","angle_degrees","cap","layer","name"],
+            "create_pipe" => ["points","radius","smooth","layer","name"],
+            "create_offset" => ["object_id","distance","solid","layer","name"],
+            "create_geometry" => ["geometry_json","layer","name"],
+            "copy_object" => ["object_id","vector","layer","name"],
+            "rotate_object" => ["object_id","axis_origin","axis_direction","angle_degrees"],
+            "set_visibility" => ["object_id","visible"],
+            "create_layer" => ["name","color","transparency"],
+            "select_objects" or "delete_objects" => ["object_ids"],
             _ => ["object_id"]
         };
         foreach (var prop in p.EnumerateObject())
@@ -100,8 +112,45 @@ public static class PlanValidator
             case "extrude_curve": Id(p, "object_id"); Positive(p, "height"); break;
             case "move_object": Id(p, "object_id"); Point(p, "vector"); break;
             case "scale_object": Id(p, "object_id"); Positive(p, "factor", 1000); Point(p, "center"); break;
-            case "create_layer": Text(p, "name"); break;
-            case "select_objects":
+            case "create_loft":
+                var profiles=Required(p,"profiles");
+                if(profiles.ValueKind!=JsonValueKind.Array||profiles.GetArrayLength() is <2 or >64)throw new ArgumentException("profiles must contain 2–64 ordered sections.");
+                foreach(var profile in profiles.EnumerateArray())ValidatePoints(profile,3,256);
+                if(p.TryGetProperty("curve_degree",out var degree)&&(degree.ValueKind!=JsonValueKind.Number||!degree.TryGetInt32(out var d)||d is not (1 or 3)))throw new ArgumentException("curve_degree must be 1 or 3.");
+                break;
+            case "create_mesh":
+                var vertices=Required(p,"vertices");ValidatePoints(vertices,4,20000);
+                var faces=Required(p,"faces");
+                if(faces.ValueKind!=JsonValueKind.Array||faces.GetArrayLength() is <1 or >40000)throw new ArgumentException("faces must contain 1–40000 triangles or quads.");
+                foreach(var face in faces.EnumerateArray())
+                {
+                    if(face.ValueKind!=JsonValueKind.Array||face.GetArrayLength() is not (3 or 4))throw new ArgumentException("Each face requires 3 or 4 vertex indices.");
+                    var indices=face.EnumerateArray().Select(v=>v.ValueKind==JsonValueKind.Number&&v.TryGetInt32(out var i)?i:-1).ToArray();
+                    if(indices.Any(i=>i<0||i>=vertices.GetArrayLength())||indices.Distinct().Count()!=indices.Length)throw new ArgumentException("Mesh indices must be distinct valid vertex indices.");
+                }
+                break;
+            case "create_extrusion": ValidatePoints(Required(p,"points"),3,1000);Point(p,"vector");break;
+            case "create_boolean":
+                if(Required(p,"operation").GetString() is not ("union" or "difference" or "intersection" or "join"))throw new ArgumentException("operation must be union, difference, intersection or join.");
+                ValidateIds(Required(p,"object_ids"));if(p.TryGetProperty("cutter_ids",out var cutters))ValidateIds(cutters);break;
+            case "create_sweep": ParseId(Required(p,"rail_id"));ValidateIds(Required(p,"section_ids"));break;
+            case "create_revolve":ValidatePoints(Required(p,"points"),2,1000);Point(p,"axis_start");Point(p,"axis_end");Positive(p,"angle_degrees",360);break;
+            case "create_pipe":ValidatePoints(Required(p,"points"),2,1000);Positive(p,"radius");break;
+            case "create_offset":Id(p,"object_id");if(Math.Abs(Number(p,"distance"))<1e-9)throw new ArgumentException("Offset distance cannot be zero.");break;
+            case "create_geometry":
+                var encoded=Required(p,"geometry_json");if(encoded.ValueKind!=JsonValueKind.String||string.IsNullOrEmpty(encoded.GetString())||encoded.GetString()!.Length>1_500_000)throw new ArgumentException("Use a bounded native Rhino geometry JSON string.");break;
+            case "copy_object":Id(p,"object_id");Point(p,"vector");break;
+            case "rotate_object":Id(p,"object_id");Point(p,"axis_origin");Point(p,"axis_direction");Number(p,"angle_degrees");break;
+            case "set_visibility": Id(p,"object_id");Required(p,"visible");break;
+            case "create_layer":
+                Text(p, "name");
+                if(p.TryGetProperty("color",out var rgb))
+                {
+                    var values=Coordinates(rgb);if(values.Any(v=>v<0||v>255||v!=Math.Truncate(v)))throw new ArgumentException("color must contain three integer RGB values from 0 to 255.");
+                }
+                if(p.TryGetProperty("transparency",out _)){var t=Number(p,"transparency");if(t<0||t>1)throw new ArgumentException("transparency must be between 0 and 1.");}
+                break;
+            case "select_objects": case "delete_objects":
                 var ids = Required(p, "object_ids");
                 if (ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() is < 1 or > 100)
                     throw new ArgumentException("object_ids must contain 1–100 IDs.");
@@ -111,9 +160,16 @@ public static class PlanValidator
         }
         foreach (var name in new[] { "layer", "name" }) if (p.TryGetProperty(name, out _)) Text(p, name);
         foreach (var name in new[] { "origin", "center" }) if (p.TryGetProperty(name, out var point)) Coordinates(point);
-        foreach (var name in new[] { "cap", "closed" }) if (p.TryGetProperty(name, out var b) && b.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        foreach (var name in new[] { "cap", "closed", "closed_profiles", "require_solid", "visible", "smooth", "solid" }) if (p.TryGetProperty(name, out var b) && b.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
             throw new ArgumentException($"{name} must be boolean.");
     }
+    private static void ValidatePoints(JsonElement points,int minimum,int maximum)
+    {
+        if(points.ValueKind!=JsonValueKind.Array||points.GetArrayLength()<minimum||points.GetArrayLength()>maximum)throw new ArgumentException($"Expected {minimum}–{maximum} coordinate triples.");
+        foreach(var point in points.EnumerateArray())Coordinates(point);
+    }
+    private static void ValidateIds(JsonElement ids)
+    {if(ids.ValueKind!=JsonValueKind.Array||ids.GetArrayLength() is <1 or >64)throw new ArgumentException("Use 1–64 source IDs.");foreach(var id in ids.EnumerateArray())ParseId(id);}
     public static JsonElement Required(JsonElement p, string key) => p.TryGetProperty(key, out var value)
         ? value : throw new ArgumentException($"Missing parameter: {key}.");
     public static double Number(JsonElement p, string key) => Finite(Required(p, key));

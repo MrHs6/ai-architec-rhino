@@ -1,6 +1,6 @@
 # Install AI Archi-Tec for Rhino 8
 
-[Project overview](../README.md) · [Download 0.4.2-beta.1](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.2-beta.1) · [فارسی](INSTALLATION.fa.md)
+[Project overview](../README.md) · [Download 0.5.0-beta.6](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6) · [فارسی](INSTALLATION.fa.md)
 
 ![Installation quick start](assets/installation-quickstart.png)
 
@@ -20,9 +20,9 @@ Use Rhino's version information to check your build. Rhino 7, macOS and earlier 
 
 ## 2. Download the installer
 
-Open [the release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.4.2-beta.1), expand **Assets**, and download:
+Open [the release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6), expand **Assets**, and download:
 
-**[ai-architec-rhino-0.4.2-beta.1-windows-installer.zip](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.4.2-beta.1/ai-architec-rhino-0.4.2-beta.1-windows-installer.zip)**
+**[ai-architec-rhino-0.5.0-beta.6-windows-installer.zip](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/ai-architec-rhino-0.5.0-beta.6-windows-installer.zip)**
 
 The automatically listed **Source code (zip/tar.gz)** downloads are for developers, not plugin installers. The separate `.yak` asset is for direct Yak installation.
 
@@ -35,7 +35,7 @@ install.cmd
 install.ps1
 repair-registration.cmd
 repair-registration.ps1
-ai-architec-rhino-0.4.2-beta.1-rh8_31-win.yak
+ai-architec-rhino-0.5.0-beta.6-rh8_31-win.yak
 README.md
 PRIVACY.md
 SHA256SUMS.txt
@@ -96,13 +96,13 @@ Press **Enter**. Studio opens as a Rhino panel. Use **AIArchitectFloat** if you 
 2. Select **Codex** or **Claude Desktop** and click **Connect**. The plugin starts localhost MCP, registers the installed bridge for this Windows user, and opens the client when available.
 3. On **first setup or a plugin upgrade**, refresh Codex's tools once in **Settings → Plugins → MCPs** (refresh beside Servers), or restart the client. Fully quit and reopen Claude Desktop after its configuration changes. Allow the tools if the client asks.
 4. In the client, ask: **“Use ai-architec-rhino and call get_context.”**
-5. Check Rhino for **Connected · Codex/Claude Desktop**. Then chat and attach references in that client. Rhino receives replies and model previews; the MCP workspace has no second chat composer.
+5. Check Rhino for **Connected · Codex/Claude Desktop**. Then chat and attach references in that client. Authorize native tools there and inspect their receipts; the MCP workspace has no second chat composer or local Apply step.
 
 **Expected:** an actual client handshake and context read, not merely a running server. For later Rhino MCP off/on, keep the client open and click Connect again; the bridge reconnects without another client reload. A plugin upgrade still needs one refresh to load its new executable. [Detailed MCP guide](MCP-QUICKSTART.en.md)
 
 Browser ChatGPT is a separate connector/tunnel workflow. Opening its website or pasting a configuration into chat does not register the local bridge. This release does not provision a browser connector, account login or public tunnel.
 
-## 8. Create your first preview
+## 8. Create your first model
 
 For a deterministic test without an API account, use the API/offline route and the **Try a five-floor building example** button, or submit this numeric example:
 
@@ -110,13 +110,13 @@ For a deterministic test without an API account, use the API/offline route and t
 Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights and a glazed facade.
 ```
 
-For MCP, send a request from your client and ask it to use `propose_plan` after reading `get_context`.
+For MCP, use the [client-only first modeling request](MCP-QUICKSTART.en.md#first-modeling-request): read `get_context` and `get_capabilities`, then `execute_plan`, `get_objects` and `get_viewport_image`. Authorize the modeling tools in that client; no Rhino Apply click is needed. The steps below apply to the API/offline route.
 
 ![Modeling workflow](assets/modeling-workflow.png)
 
 1. Inspect the validated preview and its dimensions in the active Rhino document.
 2. Click **Apply to Rhino** yourself to create the native objects. **Cancel** leaves the proposal unbuilt.
-3. Read the measured result. With MCP, ask the client to read `get_plan_status` and explain it with `post_message`.
+3. Read the measured result. The API conversation can continue from this measured result.
 4. Use **Zoom Extents** if the geometry is outside the current view. Use **Ctrl+Z in Rhino** to undo the applied batch.
 
 The offline parser understands limited numeric examples. Free-form requests require an online model; a reference image is not a promise of exact reconstruction.
@@ -124,7 +124,7 @@ The offline parser understands limited numeric examples. Free-form requests requ
 ## 9. Analyze or refine the result
 
 - **Analyze:** choose Selection or Recent output, select Dimensions, Health or Layers, and run the local read-only audit. This needs no API and makes no geometry changes.
-- **Assist:** choose selected objects or recent output. Use Move, Scale or Extrude controls in the API route, or request a scoped edit in your MCP client. Review and Apply the new preview.
+- **Assist:** choose selected objects or recent output. Use Move, Scale or Extrude controls in the API route, or request a scoped edit in your MCP client. In API mode review and Apply the new preview. In MCP, all follow-ups stay in the external client.
 - **Generate:** create new geometry. Each workspace keeps its own session conversation and draft. Switching workspaces cancels the current preview.
 
 ## Update, verify or uninstall
@@ -134,7 +134,7 @@ For an update, save documents, close all Rhino windows, install the new ZIP and 
 When PowerShell is permitted by your device policy, run `install.ps1 -CheckOnly` to check Rhino/package identity and the bundled checksum; `install.ps1` installs. To check a downloaded asset manually:
 
 ```powershell
-Get-FileHash .\ai-architec-rhino-0.4.2-beta.1-windows-installer.zip -Algorithm SHA256
+Get-FileHash .\ai-architec-rhino-0.5.0-beta.6-windows-installer.zip -Algorithm SHA256
 ```
 
 Compare with **SHA256SUMS.txt from that same release**. The ZIP's internal checksum file covers its extracted files. The direct `.yak` may be installed using Yak or dragged onto Rhino; existing manually registered prototype users should use the ZIP installer so registration is repaired.
