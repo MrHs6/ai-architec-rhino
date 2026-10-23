@@ -1,45 +1,102 @@
-# Distribution draft
+# Food4Rhino listing — 0.5.0-beta.6
 
 Product: **AI Archi-Tec for Rhino**
-Owner: **Hasan Sharif Askari**
+Creator: **Hasan Sharif Askari**
 Website: https://ai-arch.ir
-Version: **0.4.2-beta.1**
-Platform: Rhino 8.31+, Windows x64, .NET 8. Tested with Rhino 8.31.
+Requirements: licensed Rhino 8.31+ within Rhino 8, Windows x64, .NET 8 runtime.
+Release: https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6
 
-## Listing text
+## Short description
 
-AI Archi-Tec turns architectural conversation into editable native Rhino geometry. Open the dockable panel with `archtec`. Generate new concept geometry, inspect a read-only model report, or refine selected objects and recent results in Model Assist. Review the viewport preview, Apply, then receive a measured result report in chat. Continue editing the same object GUIDs; manual changes and Undo refresh the recent-result feedback.
+Native Rhino modeling with your AI. Chat in Codex/Claude through MCP, or use your own API in Rhino. Editable solids, model inspection and Undo.
 
-Bring your own OpenAI, OpenRouter, Gemini, Anthropic/Claude, xAI/Grok or compatible/local API key, or connect a compatible desktop AI client through authenticated localhost MCP. Profiles, model choices and key-storage preferences are independent. Save and network status are separate, and a no-key network test helps diagnose failed connections. Direct OpenAI uses the Responses API with structured output.
+## Listing body
 
-Connect Codex or Claude Desktop from the MCP page with automatic per-user registration. Chat in the AI client; Rhino shows replies, previews and Apply. The bridge recovers after Rhino MCP off/on without another client reload. Initial setup or a plugin upgrade may require one client refresh. Browser ChatGPT connectors/tunnels are not provisioned.
+AI Archi-Tec connects architectural conversation to editable native Rhino geometry. Stay in your external AI client through MCP, or chat inside Rhino using your own API account. The two routes have distinct controls and histories.
 
-Concept-modeling beta for Rhino 8.31+ on Windows x64 (.NET 8). Includes rectangular multi-floor buildings with slabs, columns and facades, boxes, curves, extrusion, movement, scaling, layers and scoped property reports. Limited offline examples work without a key. User accounts and API billing stay with the chosen provider; no shared key is included. Optional remembered keys use Windows DPAPI for the current Windows user. Model history is session-based and separated by document.
+VERSION AND REQUIREMENTS
 
-Grasshopper graph authoring, photorealistic rendering, unrestricted image reconstruction, automatic code execution and engineering simulations are not included. Live provider/vision acceptance still depends on the user's account and selected model.
+0.5.0-beta.6 — public evaluation beta. Licensed Rhino 8.31 or later within Rhino 8, Windows x64 and the Rhino .NET 8 runtime. The ready-made installer needs no developer tools. macOS, Rhino 7 and Grasshopper graph authoring are outside this release.
 
-## متن کوتاه فارسی
+MCP: STAY IN YOUR AI CLIENT
 
-آرشتک یک دستیار معماری داخل Rhino 8 است. با فرمان `archtec` پنل را باز کنید؛ مدل مفهومی بسازید، نتیجه را بررسی کنید و با گفت‌وگو همان مدل را تغییر دهید. هر اجرا پیش‌نمایش و Apply دارد؛ چت پس از اجرا از هندسهٔ واقعی گزارش می‌دهد و Undo در خود راینو کار می‌کند. API شخصی چند سرویس و MCP محلی، گزینه‌های مستقل اتصال هستند. کلید اختیاری به‌صورت رمزگذاری‌شده روی همان حساب ویندوز ذخیره می‌شود. نسخهٔ فعلی ویندوزی و آزمایشی است.
+Open archtec in Rhino, choose MCP connection, select Codex or Claude Desktop, and click Connect. The per-user setup registers the installed local bridge. First setup or an upgrade may need one client refresh.
 
-## Listing fields and attachments
+Describe, plan, authorize tool execution, inspect results and request edits in your AI client. Rhino validates and executes native operations and returns measured results. There is no second chatbot or mandatory Apply click in Rhino on the MCP route. Optional previews can be applied or cancelled from the client. The plugin does not run an autonomous AI planner in MCP mode.
 
-- Product / command: AI Archi-Tec for Rhino / `archtec`.
-- Author: Hasan Sharif Askari. Website: https://ai-arch.ir
-- Project, installation and support: https://github.com/MrHs6/ai-architec-rhino
-- Categories to choose from the current form: Architecture, Artificial Intelligence and Modeling, where available.
-- Version: 0.4.2-beta.1; Rhino 8.31+; Windows x64; .NET 8.
-- License: proprietary / source available for inspection under the repository's actual LICENSE.md. Do not label it MIT or open source.
-- Attach the tested Yak or installer ZIP, SHA256SUMS, the original product logo, and genuine Generate/API/result screenshots from this build.
-- Include the API cost note, current beta limitations, installation tutorial and change log. Screenshots must not expose credentials or MCP session tokens.
+Stop cancels pending work; completed batches remain undoable. Disconnect stops the Rhino listener. Enable connection restores it, and the existing client reconnects without copying configuration again. Request receipts prevent identical retries from duplicating a completed operation within the running panel session.
 
-## Publication steps for owner
+Codex has been tested with the installed plugin. Claude Desktop setup is provided; live Claude-account acceptance remains outstanding. Browser ChatGPT and cloud clients require a compatible connector and separate setup. Opening a website alone does not connect it to Windows localhost; this beta does not provision public tunnels or cloud-account authentication.
 
-1. Review the built `.yak`, privacy text, screenshots and ownership/license terms. No license to redistribute source has been assumed; source is available in the dedicated public plugin repository.
-2. Sign into the owner's McNeel/Yak account and upload the tested package with the Yak CLI, or use the owner's normal release process. Public package-name availability must be checked at publication time.
-3. Create or update the Food4Rhino app page, link the Yak package, and add the listing text, genuine plugin screenshots, beta status, requirements and support information.
-4. Test installation from the published listing on a separate licensed Windows/Rhino machine before marking the release stable.
+API: CONVERSATION INSIDE RHINO
 
-This document is a ready-to-enter listing draft. It is not evidence of a published Food4Rhino or Package Manager listing. McNeel authentication and publication remain owner-account operations.
+Use Generate, Analyze and Model Assist with your own OpenAI, OpenRouter, Google Gemini, Anthropic, xAI/Grok or compatible/local provider profile. In this route, review the viewport preview and click Apply to Rhino. Continue refining selected or recent native objects, with measured result feedback and Rhino Undo.
 
-References: [Yak package structure](https://developer.rhino3d.com/en/guides/yak/the-anatomy-of-a-package/), [manifest](https://developer.rhino3d.com/en/guides/yak/the-package-manifest/), [Rhino plugin installation](https://www.rhino3d.com/en/docs/guides/scripts-plugins/how-to-use/).
+Provider accounts, model access and API charges stay with your provider. No shared key or AI credit is included. Optional remembered keys use Windows DPAPI for the current Windows user. Profiles retain separate endpoints, models and storage preferences.
+
+NATIVE MODELING TOOLS
+
+The 24-action catalog includes capped NURBS lofts, Brep booleans and join, sweep, revolution, pipes, offsets, extrusion, validated native geometry payloads, closed manifold meshes, transformations, layers, visibility, selection and explicit object deletion. Object inspection reports dimensions, validity, closure, area and volume. Viewport capture supports visual review. Model-generated scripts and arbitrary Rhino commands are not executed.
+
+BUILT WITH THIS SYSTEM: AZADI TOWER
+
+The gallery includes a normal Rendered viewport capture of the final tower built in Rhino through AI Archi-Tec MCP, with Codex directing the tools. The editable result contains 339 valid closed native Breps: four flared stone piers, clear crossing passages, a curved turquoise vault, fitted stone lattice, facade inlays and crown details. The deliverable contains only the tower, without landscape.
+
+The model uses a 63 x 42 meter base and 45 meter overall height. It is a photo-based architectural reconstruction with assumed fine dimensions, not a surveyed/as-built model. Read-only checks verified 84 clear passage samples and four positive stone-pier controls. Sampling does not certify continuous clearance, structure or construction readiness.
+
+Editable model and modeling report:
+https://github.com/MrHs6/ai-architec-rhino/blob/main/docs/AZADI-MCP-DEMO.en.md
+
+INSTALL IN A FEW STEPS
+
+1. Download the 0.5.0-beta.6 Windows installer ZIP and extract all files.
+2. Save your work, close every Rhino window, and run install.cmd beside the included Yak package.
+3. Reopen Rhino and type archtec.
+4. For MCP, Connect your desktop client and continue the conversation there. For API, save your personal profile, choose a model, and use the local preview/Apply workflow.
+5. Inspect the native result. Use Rhino Undo when needed.
+
+Installation and troubleshooting:
+https://github.com/MrHs6/ai-architec-rhino/blob/main/docs/INSTALLATION.en.md
+
+MCP connection and recovery:
+https://github.com/MrHs6/ai-architec-rhino/blob/main/docs/MCP-QUICKSTART.en.md
+
+Downloads, release notes and SHA256 checksums:
+https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6
+
+Support:
+https://github.com/MrHs6/ai-architec-rhino/issues
+
+Privacy:
+https://github.com/MrHs6/ai-architec-rhino/blob/main/rhino-plugin/PRIVACY.md
+
+VERIFICATION AND BETA SCOPE
+
+144 automated checks pass. Installed-plugin acceptance covers Codex registration, native modeling, object inspection, failure/Undo recovery and listener off/on reconnect without client Reload. Live paid-provider/vision testing, a real Claude account and a second licensed workstation remain unverified.
+
+This beta does not provide BIM, construction documentation, engineering simulation, unrestricted image reconstruction or a photorealistic render engine. Future AI output quality depends on the client, model, brief and geometry review. Gallery model images record actual Rhino geometry; diagrams explain the workflow. Earlier conceptual product illustrations are not evidence of generated geometry.
+
+Created by Hasan Sharif Askari. Website: https://ai-arch.ir
+
+Source is available for inspection. Beta binary evaluation and source rights follow the actual project license:
+https://github.com/MrHs6/ai-architec-rhino/blob/main/LICENSE.md
+
+## Installer entry
+
+- Title: **AI Archi-Tec 0.5.0-beta.6 — Windows installer**
+- Platform: **Rhino > Windows > Version 8**
+- File: `ai-architec-rhino-0.5.0-beta.6-windows-installer.zip` from the verified GitHub CI release.
+- Description: Public evaluation beta for licensed Rhino 8.31+ on Windows x64 (.NET 8). Extract all files, close Rhino, run install.cmd, reopen Rhino and type archtec. MCP stays in the external AI client without a local Apply click; API chat retains preview/Apply. Includes native CAD tools, reconnect recovery and checksums. Installation guide and release: https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6
+
+## Current gallery files
+
+- `azadi-tower-render.png`: normal Rendered Rhino capture of the final 339-solid MCP model.
+- `azadi-front-050.png`: front view and open central passage.
+- `azadi-vault-050.png`: curved vault detail.
+- `installation-quickstart.png`, `modeling-workflow.png`, `connection-architecture.png`: current English diagrams from `docs/assets/`.
+- The original product logo remains the project icon.
+- Historical 0.4.2 MCP preview/Apply screenshots should not describe the current MCP workflow.
+
+## Owner review before final Save
+
+Check the version, installer, gallery, English text, requirements, categories and license. The last Food4Rhino Save/publication action remains with the owner. Preparing this form does not establish that listing changes are published. GitHub releases and Food4Rhino/Yak catalog publication are separate.
