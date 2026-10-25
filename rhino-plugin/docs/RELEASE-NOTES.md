@@ -1,3 +1,16 @@
+AI Archi-Tec 0.6.0-beta.6 candidate — editable Grasshopper through MCP and API
+
+- Add native component discovery, graph inspection and a validated `grasshopper_definition` action. Create editable components, sliders, typed input branches and wires; update an open bridge-owned graph in place. Bake is explicit.
+- Keep MCP conversation and authorization in the external client. Add the Grasshopper target to Studio API with separate conversation history, graph-plan review and Apply. The solver runs only on commit.
+- Load the installed Grasshopper editor through its official automation interface. Support zero-based RuntimeID, enable detached candidate solving and convert native geometric outputs for baking.
+- Validate graph topology/ports/inputs, reject stale updates and scripts/third-party libraries, and roll back partial bakes. Graph Undo/Redo and Rhino bake Undo are independent.
+- Verify 165 automated tests; real installed MCP create/update/idempotency/solid inspection; 19 in-Rhino API workflow checks using a mock planner, including Undo/Redo, rollback and `.gh` export/reopen. Paid providers and a second workstation remain untested.
+- Compile against pinned official RhinoCommon/Grasshopper SDKs; keep host SDK assemblies out of the ten-file package. Add English/Persian Grasshopper setup and scope guides.
+
+This candidate is prepared for evaluation; existing published 0.5 download links and Food4Rhino publication are not changed automatically.
+
+---
+
 AI Archi-Tec 0.5.0-beta.6 — client-controlled MCP and native CAD execution
 
 - Keep MCP conversation, planning, tool approval, execution, inspection and follow-ups in the external AI client. Hide local API/chat/commit controls on the MCP route. API mode remains a separate in-Rhino conversation with preview and Apply.

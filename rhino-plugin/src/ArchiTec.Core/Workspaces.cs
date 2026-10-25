@@ -18,10 +18,12 @@ public sealed class WorkspaceSessions
 public sealed class DocumentWorkspaceState
 {
     public WorkspaceSessions Sessions {get;}=new();
+    public WorkspaceSessions GrasshopperSessions {get;}=new();
     public List<ChatMessage> McpLog {get;}=[];
     public List<Guid> RecentIds {get;}=[];
     public Dictionary<Guid,uint> GeometrySignatures {get;}=[];
     public string? LastReport {get;set;}
+    public string? LastGraphReport {get;set;}
     public bool Persian {get;set;}
     public int Revision {get;set;}
 }
@@ -74,6 +76,12 @@ public static class WorkspacePolicy
         if(plan is null)return;
         PlanValidator.Validate(plan);
         if(mode=="analyze")throw new InvalidOperationException("Analyze is read-only. Use Model Assist to edit geometry.");
+        if(GrasshopperPlan.IsGrasshopper(plan))
+        {
+            if(context.Grasshopper is null)throw new InvalidOperationException("Choose the Grasshopper API target before proposing a definition.");
+            return;
+        }
+        if(context.Grasshopper is not null)throw new InvalidOperationException("The selected target is Grasshopper. Rhino geometry actions cannot substitute for an editable definition.");
         if(mode=="generate"&&plan.Actions.Any(a=>a.Tool is "move_object" or "scale_object" or "rotate_object" or "set_visibility" or "delete_objects" or "select_objects"))
             throw new InvalidOperationException("Generate creates new geometry. Switch to Model Assist to edit existing objects.");
         if(mode=="assist")

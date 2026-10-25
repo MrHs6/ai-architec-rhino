@@ -35,7 +35,7 @@ public sealed record ActionPlan
 public sealed record ObjectInfo(string Id, string Type, string Layer, double[] Min, double[] Max,string? Name=null,string? Role=null,int? Floor=null);
 public sealed record ModelContext(uint DocumentId, string Units, string ActiveLayer,
     string[] Layers, int ObjectCount, ObjectInfo[] Objects, string[] SelectedIds,
-    string[] LastCreatedIds, bool Truncated);
+    string[] LastCreatedIds, bool Truncated, object? Grasshopper = null);
 public sealed record ChatMessage(string Role, string Content);
 public sealed record PlanRequest(string Prompt, string Model, string Mode, ModelContext Context,
     List<ChatMessage> History, string? ImageDataUrl = null);
@@ -46,7 +46,7 @@ public sealed record ModelCatalog(List<ModelDescriptor> Models);
 public static class PlanValidator
 {
     public static readonly string[] Tools = ["create_building", "create_box", "create_line", "create_polyline", "create_curve",
-        "create_loft", "create_mesh", "create_extrusion", "create_boolean", "create_sweep", "create_revolve", "create_pipe", "create_offset", "create_geometry", "extrude_curve", "move_object", "scale_object", "rotate_object", "copy_object", "set_visibility", "create_layer", "select_objects", "delete_objects", "get_object_properties"];
+        "create_loft", "create_mesh", "create_extrusion", "create_boolean", "create_sweep", "create_revolve", "create_pipe", "create_offset", "create_geometry", "extrude_curve", "move_object", "scale_object", "rotate_object", "copy_object", "set_visibility", "create_layer", "select_objects", "delete_objects", "get_object_properties", GrasshopperPlan.Tool];
 
     public static void Validate(ActionPlan plan)
     {
@@ -57,6 +57,8 @@ public static class PlanValidator
             throw new ArgumentException("A concise plan summary is required.");
         if (plan.Actions is null || plan.Actions.Count is < 1 or > 100)
             throw new ArgumentException("Plans must contain 1–100 actions.");
+        if (GrasshopperPlan.IsGrasshopper(plan) && (plan.Actions.Count != 1 || plan.LengthUnit != "document"))
+            throw new ArgumentException("A Grasshopper plan must contain exactly one grasshopper_definition action and use length_unit=document. Keep Rhino edits in a separate batch.");
         foreach (var action in plan.Actions) ValidateAction(action);
     }
 
@@ -66,6 +68,7 @@ public static class PlanValidator
         var p = a.Parameters;
         if (p.ValueKind != JsonValueKind.Object) throw new ArgumentException("Parameters must be an object.");
         if(p.EnumerateObject().Select(v=>v.Name).Distinct().Count()!=p.EnumerateObject().Count())throw new ArgumentException("Duplicate tool parameters are not allowed.");
+        if(a.Tool==GrasshopperPlan.Tool){GrasshopperPlan.Read(p);return;}
         string[] allowed = a.Tool switch
         {
             "create_building" => ["width","depth","floors","floor_height","slab_thickness","facade","origin","layer"],

@@ -68,6 +68,7 @@ passed+=await ProviderProtocolTests.Run();
 passed+=await ConnectionWorkflowTests.Run();
 passed+=await McpConnectionTests.Run();
 passed+=await BridgeReconnectTests.Run();
+passed+=await GrasshopperTests.Run();
 Console.WriteLine($"{passed} tests passed.");
 return 0;
 

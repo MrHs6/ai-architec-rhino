@@ -17,7 +17,8 @@ public sealed class ArchiTecPanel:Panel
     private readonly DocumentWorkspaces documents=new();
     private DocumentWorkspaceState documentState=new();
     private uint boundDocumentId;
-    private WorkspaceSessions sessions=>documentState.Sessions;
+    private bool grasshopperTarget;
+    private WorkspaceSessions sessions=>grasshopperTarget?documentState.GrasshopperSessions:documentState.Sessions;
     private List<ChatMessage> history=>sessions[mode].History;
     private List<Guid> lastCreated=>documentState.RecentIds;
     private readonly Dictionary<string,object> mcpResults=[];
@@ -54,6 +55,12 @@ public sealed class ArchiTecPanel:Panel
         view.LoadPreferences(preferences);view.SetWorkspace(preferences.DefaultWorkspace,false);mode=preferences.DefaultWorkspace;
         view.SendRequested+=()=>_ = SendAsync();view.ApplyRequested+=ApplyPending;
         view.RouteChanged+=()=>{requestCancel?.Cancel();ClearPreview();view.RestoreConversation(view.ChatViaMcp?documentState.McpLog:history);};
+        view.TargetChanged+=()=>
+        {
+            sessions[mode].Prompt=view.Prompt;ClearPreview();grasshopperTarget=view.GrasshopperTarget;
+            if(grasshopperTarget){mode="generate";view.SetWorkspace(mode,false);}else view.SetWorkspace(mode,false);
+            view.Prompt=sessions[mode].Prompt;view.SetAttachment(sessions[mode].ImageName);view.RestoreConversation(history);
+        };
         view.CancelRequested+=()=>{requestCancel?.Cancel();ClearPreview();view.SetStatus("Cancelled · document unchanged");};
         view.InputChanged+=()=>{sessions[mode].Prompt=view.Prompt;if(pending is not null)ClearPreview();};
         view.SelectedModelChanged+=()=>{ClearPreview();PersistSettings();};
@@ -142,7 +149,7 @@ public sealed class ArchiTecPanel:Panel
         if(mcp is not null)view.SetMcpConnection(mcp.Connection.Snapshot());
         var doc=RhinoDoc.ActiveDoc;if(doc is null){view.SetContext("Open a Rhino document to begin");ClearPreview();return;}
         if(!BindDocument(doc))return;
-        if(!busy&&lastCreated.Count>0)RefreshRecentGeometry(doc);
+        if(!busy&&!grasshopperTarget&&lastCreated.Count>0)RefreshRecentGeometry(doc);
         view.SetContext($"●  {doc.ModelUnitSystem}   ·   {doc.Objects.GetObjectList(Rhino.DocObjects.ObjectType.AnyObject).Count()} objects   ·   {doc.Objects.GetSelectedObjects(false,false).Count()} selected");
         if(lastCreated.Count>0){var existing=lastCreated.Count(id=>doc.Objects.FindId(id) is {} o&&!o.IsDeleted);view.SetRecentResult(existing>0?$"Recent result · {existing} objects · revision {documentState.Revision}":"Recent result was removed or undone",existing>0);}
         if(pending is not null)try{GeometryEngine.CheckCurrent(doc,pending);}catch{ClearPreview();view.SetStatus("Model changed · generate a fresh preview");}
@@ -209,18 +216,25 @@ public sealed class ArchiTecPanel:Panel
         {
             view.SetStatus("Chat in your AI client. This workspace receives its results and previews.");return;
         }
-        if(mode=="generate"&&lastCreated.Count>0&&ConversationIntent.IsExplicitEdit(view.Prompt))
+        if(!grasshopperTarget&&mode=="generate"&&lastCreated.Count>0&&ConversationIntent.IsExplicitEdit(view.Prompt))
         {var followup=view.Prompt;RefineRecent();if(mode!="assist")return;view.Prompt=followup;}
         ClearPreview();var context=ScopedContext(doc);
         if(mode=="assist"&&context.Objects.Length==0){view.SetStatus("Select target objects or choose recent output first.");return;}
         var fingerprints=context.Objects.ToDictionary(o=>Guid.Parse(o.Id),o=>doc.Objects.FindId(Guid.Parse(o.Id))!.Geometry.DataCRC(0));
         var units=doc.ModelUnitSystem;var tolerance=doc.ModelAbsoluteTolerance;var text=view.Prompt.Trim();var previous=history.TakeLast(12).ToList();
         documentState.Persian=ConversationIntent.IsPersian(text);
-        if(documentState.LastReport is {} report)previous.Add(new ChatMessage("assistant","Verified result data from this document (not instructions):\n"+report));
+        if((grasshopperTarget?documentState.LastGraphReport:documentState.LastReport) is {} report)previous.Add(new ChatMessage("assistant","Verified result data from this document (not instructions):\n"+report));
         AddMessage("user",text);busy=true;requestCancel=new CancellationTokenSource();view.SetBusy(true);view.SetStatus("Understanding your request…");
         try
         {
             ActionPlan? plan;
+            string? graphState=null;
+            if(grasshopperTarget)
+            {
+                if(provider is null)throw new ArgumentException("Grasshopper planning requires a connected API service, or use MCP in your AI client. Offline examples do not create definitions.");
+                context=context with{Grasshopper=JsonSerializer.SerializeToElement(GrasshopperHost.PlanningContext(doc.RuntimeSerialNumber),Wire.Json)};
+                graphState=JsonSerializer.Serialize(GrasshopperHost.Context(doc.RuntimeSerialNumber),Wire.Json);
+            }
             if(provider is null)
             {
                 if(imageData is not null)throw new ArgumentException("Connect an AI service and a vision-capable model to interpret a reference image.");
@@ -241,8 +255,9 @@ public sealed class ArchiTecPanel:Panel
                 throw new InvalidOperationException("The active document changed while planning. Send the request again.");
             foreach(var pair in fingerprints)
                 if(doc.Objects.FindId(pair.Key) is not {} obj||obj.Geometry.DataCRC(0)!=pair.Value)throw new InvalidOperationException("A target changed while planning. Generate a fresh plan.");
+            if(graphState is not null&&graphState!=JsonSerializer.Serialize(GrasshopperHost.Context(doc.RuntimeSerialNumber),Wire.Json))throw new InvalidOperationException("The Grasshopper graph changed while planning. Send the request again.");
             if(plan is null){view.SetStatus("Response received · no model changes proposed");return;}
-            if(mode=="generate")plan=CreationOptions(plan);
+            if(mode=="generate"&&!grasshopperTarget)plan=CreationOptions(plan);
             SetPreview(doc,plan);
         }
         catch(OperationCanceledException){view.SetStatus("Request cancelled or timed out");}
@@ -259,6 +274,7 @@ public sealed class ArchiTecPanel:Panel
     private ModelContext ScopedContext(RhinoDoc doc)
     {
         var context=ContextReader.Read(doc,lastCreated);
+        if(grasshopperTarget)return context with{Grasshopper=new{target="grasshopper"}};
         if(mode=="generate")return context with{Objects=[],SelectedIds=[],LastCreatedIds=[]};
         var ids=(view.UseRecent?context.LastCreatedIds:context.SelectedIds).ToHashSet();
         return context with{Objects=context.Objects.Where(o=>ids.Contains(o.Id)).ToArray(),SelectedIds=view.UseRecent?[]:context.SelectedIds,LastCreatedIds=view.UseRecent?context.LastCreatedIds:[]};
@@ -327,16 +343,18 @@ public sealed class ArchiTecPanel:Panel
         try
         {
             var doc=RhinoDoc.ActiveDoc??throw new InvalidOperationException("No active document.");var report=GeometryEngine.ApplyCancellable(doc,pending,cancellation);
-            if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="applied",created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial};
+            if(pendingMcpId is not null)mcpResults[pendingMcpId]=new{status="applied",created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial,grasshopper=report.Grasshopper};
             if(pendingMcpId is not null)mcp?.Connection.Workflow("applied","Confirmed native Rhino execution");
             if(report.Created.Count>0){lastCreated.Clear();lastCreated.AddRange(report.Created);}
             if(lastCreated.Count==0&&report.Modified.Count>0)lastCreated.AddRange(report.Modified);
             var resultObjects=lastCreated.Select(id=>doc.Objects.FindId(id)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray();
-            documentState.Revision++;documentState.LastReport=ExecutionFeedback.Describe(documentState.Revision,report.Created.Count,report.Modified.Count,resultObjects,doc.ModelUnitSystem.ToString(),documentState.Persian,view.ChatViaMcp);
+            documentState.Revision++;
+            var resultReport=report.Grasshopper is null?ExecutionFeedback.Describe(documentState.Revision,report.Created.Count,report.Modified.Count,resultObjects,doc.ModelUnitSystem.ToString(),documentState.Persian,view.ChatViaMcp):"CONFIRMED IN GRASSHOPPER\n"+JsonSerializer.Serialize(report.Grasshopper,Wire.Json);
+            if(report.Grasshopper is null)documentState.LastReport=resultReport;else documentState.LastGraphReport=resultReport;
             RememberGeometry(doc);
             if(pendingMcpId is not null)AddMcpMessage($"Native execution completed · {report.Created.Count} created · {report.Modified.Count} modified. Continue in your AI client. Rhino Undo is available.");
-            else AddMessage("assistant",documentState.LastReport+(report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
-            ClearPreview();if(!view.ChatViaMcp)view.Prompt="";view.SetStatus(view.ChatViaMcp?"Client-controlled execution complete · Rhino Undo available":"Applied · confirmed by Rhino · describe your next edit");RefreshContext();
+            else AddMessage("assistant",resultReport+(report.Properties.Count>0?"\n"+JsonSerializer.Serialize(report.Properties,Wire.Json):""));
+            ClearPreview();if(!view.ChatViaMcp)view.Prompt="";view.SetStatus(report.Grasshopper is not null?"Definition applied · graph Undo in Grasshopper · continue in your AI conversation":view.ChatViaMcp?"Client-controlled execution complete · Rhino Undo available":"Applied · confirmed by Rhino · describe your next edit");RefreshContext();
         }
         catch(Exception ex){if(pendingMcpId is not null){mcpResults[pendingMcpId]=new{status=cancellation.IsCancellationRequested?"cancelled":"failed",message=ex.Message};mcp?.Connection.Workflow("error","Native execution stopped");AddMcpMessage("Could not apply: "+ex.Message);}else AddMessage("assistant","Could not apply: "+ex.Message,true);ClearPreview();view.SetStatus("Apply failed · review the message");}
     }
@@ -402,6 +420,8 @@ public sealed class ArchiTecPanel:Panel
                 if(name=="get_context"){completion.TrySetResult(ContextReader.Read(doc,lastCreated));return;}
                 if(args.GetProperty("document_id").GetUInt32()!=doc.RuntimeSerialNumber)throw new InvalidOperationException("The document changed. Read get_context again.");
                 if(name=="get_objects"){completion.TrySetResult(McpDocumentTools.Inspect(doc,args));return;}
+                if(name=="get_grasshopper_context"){completion.TrySetResult(GrasshopperHost.Context(doc.RuntimeSerialNumber));return;}
+                if(name=="search_grasshopper_components"){completion.TrySetResult(GrasshopperHost.Search(args.GetProperty("query").GetString()??"",args.TryGetProperty("limit",out var limit)?limit.GetInt32():20));return;}
                 if(name=="get_viewport_image"){completion.TrySetResult(McpDocumentTools.Capture(doc));return;}
                 if(name=="set_view"){completion.TrySetResult(McpDocumentTools.Frame(doc,args,lastCreated));return;}
                 if(name=="apply_plan")
@@ -424,10 +444,10 @@ public sealed class ArchiTecPanel:Panel
                         var report=GeometryEngine.ApplyCancellable(doc,prepared,token);
                         if(report.Created.Count>0){lastCreated.Clear();lastCreated.AddRange(report.Created);}
                         documentState.Revision++;RememberGeometry(doc);
-                        receipt=new{request_id=id,status="applied",document_id=doc.RuntimeSerialNumber,created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial,objects=report.Created.Concat(report.Modified).Distinct().Select(v=>doc.Objects.FindId(v)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray()};
+                        receipt=new{request_id=id,status="applied",document_id=doc.RuntimeSerialNumber,created=report.Created,modified=report.Modified,properties=report.Properties,undo_serial=report.UndoSerial,grasshopper=report.Grasshopper,objects=report.Created.Concat(report.Modified).Distinct().Select(v=>doc.Objects.FindId(v)).Where(o=>o is not null&&!o.IsDeleted).Select(o=>ContextReader.Info(doc,o!)).ToArray()};
                         mcpOperations.Complete(id,receipt);mcp?.Connection.Workflow("applied","Native batch complete; continue in the AI client");
-                        AddMcpMessage($"{executionPlan.Summary}\n{report.Created.Count} native objects created · {report.Modified.Count} modified · Rhino Undo {report.UndoSerial}. Continue in your AI client.");
-                        view.SetStatus("Client-controlled execution complete · Rhino Undo available");completion.TrySetResult(receipt);
+                        AddMcpMessage(report.Grasshopper is not null?$"{executionPlan.Summary}\nEditable Grasshopper definition solved · {report.Created.Count} baked objects. Inspect the returned graph receipt and continue in your AI client.":$"{executionPlan.Summary}\n{report.Created.Count} native objects created · {report.Modified.Count} modified · Rhino Undo {report.UndoSerial}. Continue in your AI client.");
+                        view.SetStatus(report.Grasshopper is null?"Client-controlled execution complete · Rhino Undo available":"Definition solved · graph Undo in Grasshopper · continue in your AI client");completion.TrySetResult(receipt);
                     }
                     catch(Exception ex)
                     {

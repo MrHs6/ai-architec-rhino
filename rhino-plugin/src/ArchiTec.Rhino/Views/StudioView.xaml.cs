@@ -16,6 +16,7 @@ public partial class StudioView:UserControl
     public event Action? TestNetworkRequested,RefineResultRequested,SelectResultRequested,ExplainResultRequested;
     public event Action? CopyMcpTestRequested,SetupMcpClientRequested,OpenMcpClientRequested;
     public event Action? RouteChanged;
+    public event Action? TargetChanged;
     public event Action<string>? ModeChanged;
     private readonly Dictionary<string,ConnectionSettings> profiles=[];
     private readonly Dictionary<string,List<ModelDescriptor>> modelLists=[];
@@ -23,6 +24,7 @@ public partial class StudioView:UserControl
     private bool loading,compact,resultAvailable,isBusy;
     public string Prompt{get=>PromptInput.Text;set=>PromptInput.Text=value;}
     public bool ChatViaMcp=>ChatRouteSelector.SelectedIndex==1;
+    public bool GrasshopperTarget=>TargetSelector?.SelectedIndex==1;
     public string McpClient=>McpClientSelector.SelectedIndex switch{1=>"Codex",2=>"Other MCP client",_=>"Claude Desktop"};
     public string Source=>SourceSelector.SelectedItem as string??"OpenRouter";
     public string Endpoint=>ApiUrl.Text.Trim();
@@ -72,7 +74,7 @@ public partial class StudioView:UserControl
     }
     public void ProfileSaveError(string message)=>ProfileSaveStatus.Text="Could not save profile: "+message;
     public void NetworkMessage(string message)=>NetworkStatus.Text=message;
-    public void SetRecentResult(string? message,bool available=true){resultAvailable=message is not null&&available;RecentResultBar.Visibility=message is null?Visibility.Collapsed:Visibility.Visible;RecentResultLabel.Text=message??"";RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=resultAvailable&&!isBusy;}
+    public void SetRecentResult(string? message,bool available=true){resultAvailable=message is not null&&available;RecentResultBar.Visibility=message is null||GrasshopperTarget?Visibility.Collapsed:Visibility.Visible;RecentResultLabel.Text=message??"";RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=resultAvailable&&!isBusy;}
     public void UseRecentResult(){AssistScope.SelectedIndex=1;AnalysisScope.SelectedIndex=1;}
     public void FocusPrompt()=>PromptInput.Focus();
     public void SetCatalog(List<ModelDescriptor> models,string selected,string source)
@@ -92,6 +94,7 @@ public partial class StudioView:UserControl
         ApiCancelButton.Visibility=value?Visibility.Visible:Visibility.Collapsed;
         SourceSelector.IsEnabled=!value;ApiUrl.IsEnabled=!value;ApiKey.IsEnabled=!value;RememberKey.IsEnabled=!value;ModelSelector.IsEnabled=!value;ProfileModelSelector.IsEnabled=!value;
         GenerateOptions.IsEnabled=!value;AnalyzeOptions.IsEnabled=!value;AssistOptions.IsEnabled=!value;
+        TargetSelector.IsEnabled=!value;
     }
     public void SetContext(string value)=>ContextLabel.Text=value;
     public void SetStatus(string value)=>StatusLabel.Text=value;
@@ -111,7 +114,7 @@ public partial class StudioView:UserControl
         Conversation.Children.Add(new Border{Child=stack,Padding=new Thickness(compact?9:13),Margin=new Thickness(role=="user"?14:0,0,role=="user"?0:5,compact?7:12),CornerRadius=new CornerRadius(10),Background=Brush(role=="user"?"#202039":"#14182A"),BorderBrush=Brush(error?"#72434E":"#252B43"),BorderThickness=new Thickness(1)});
         while(Conversation.Children.Count>25)Conversation.Children.RemoveAt(1);ConversationScroll.ScrollToEnd();
     }
-    public void ShowPreview(ActionPlan plan,string units){PlanSummary.Text=plan.Summary;ActionCount.Text=$"{plan.Actions.Count} operations";PlanUnits.Text=$"{plan.LengthUnit} → {units} · Rhino Undo";PlanDetails.Text=string.Join("\n",plan.Actions.Select((a,i)=>$"{i+1}. {a.Tool.Replace('_',' ')}\n{a.Parameters.GetRawText()}"));PreviewCard.Visibility=Visibility.Visible;}
+    public void ShowPreview(ActionPlan plan,string units){PlanSummary.Text=plan.Summary;ActionCount.Text=$"{plan.Actions.Count} operations";PlanUnits.Text=GrasshopperPlan.IsGrasshopper(plan)?"Definition plan · solves on Apply · Grasshopper Undo":$"{plan.LengthUnit} → {units} · Rhino Undo";PlanDetails.Text=string.Join("\n",plan.Actions.Select((a,i)=>$"{i+1}. {a.Tool.Replace('_',' ')}\n{a.Parameters.GetRawText()}"));PreviewCard.Visibility=Visibility.Visible;}
     public void HidePreview()=>PreviewCard.Visibility=Visibility.Collapsed;
     public void SetMcp(bool running,string? url=null,string? token=null)
     {
@@ -167,9 +170,10 @@ public partial class StudioView:UserControl
         ImportButton.Visibility=ChatViaMcp||value=="analyze"?Visibility.Collapsed:Visibility.Visible;
         WorkspaceHelp.Text=value switch{"analyze"=>"Analyze never changes geometry. Select objects in Rhino or choose Recent output. Dimensions measures bounds, Health checks geometry validity and closure, and Layers summarizes scoped objects. Run local audit works without an API. Conversational interpretation needs a connected API or an external MCP client.","assist"=>"Assist edits Selection or Recent output. Move uses a distance and axis. Scale uses a factor: 2 doubles size; 0.5 halves it. Extrude uses a height on a suitable curve. Preview first, then Apply. Ctrl+Z undoes the operation. Free-form instructions require an API or external MCP client.",_=>"Generate creates new geometry. With an API connected, chat here. For MCP, send your request in Claude or Codex; replies and proposals return through the MCP tools. Starting MCP alone does not connect this input to an online model. Offline tools support limited geometry examples. Review the preview, then Apply in Rhino."};
         GenerateNav.Background=Brush(value=="generate"?"#38265D":"#101222");AnalyzeNav.Background=Brush(value=="analyze"?"#38265D":"#101222");AssistNav.Background=Brush(value=="assist"?"#38265D":"#101222");
+        UpdateChatRoute();
         if(notify)ModeChanged?.Invoke(value);
     }
-    public string PlanningOptions=>mode switch{"analyze"=>$"Analysis focus: {AuditFocus}. Read-only response.","assist"=>$"Model Assist only: existing target scope is {(UseRecent?"recent output":"selection")}. Do not create unrelated objects.",_=>$"Generate new geometry. Concept building facade preference: {Facade}. Output layer prefix: {LayerPrefix}. State assumptions."};
+    public string PlanningOptions=>GrasshopperTarget?"Target: Grasshopper. Return a complete editable grasshopper_definition using catalog component IDs, document units and explicit wires. Include bake_nodes only if requested. For edits use definition_id and the complete revised graph.":mode switch{"analyze"=>$"Analysis focus: {AuditFocus}. Read-only response.","assist"=>$"Model Assist only: existing target scope is {(UseRecent?"recent output":"selection")}. Do not create unrelated objects.",_=>$"Generate new geometry. Concept building facade preference: {Facade}. Output layer prefix: {LayerPrefix}. State assumptions."};
     private static SolidColorBrush Brush(string hex)=>new((Color)ColorConverter.ConvertFromString(hex));
     private void SendClick(object s,RoutedEventArgs e)=>SendRequested?.Invoke();
     private void ApplyClick(object s,RoutedEventArgs e)=>ApplyRequested?.Invoke();
@@ -188,9 +192,12 @@ public partial class StudioView:UserControl
     private void CopyMcpTestClick(object s,RoutedEventArgs e)=>CopyMcpTestRequested?.Invoke();
     private void McpClientChanged(object s,SelectionChangedEventArgs e)=>UpdateMcpGuide();
     private void ChatRouteChanged(object s,SelectionChangedEventArgs e){UpdateChatRoute();RouteChanged?.Invoke();}
+    private void TargetSelectionChanged(object s,SelectionChangedEventArgs e){if(SendButton is null)return;UpdateChatRoute();TargetChanged?.Invoke();}
     private void UpdateChatRoute()
     {
         if(SendButton is null)return;
+        TargetSelector.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
+        if(GrasshopperTarget)RecentResultBar.Visibility=Visibility.Collapsed;
         ApiConnectionButton.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;McpRouteLabel.Visibility=ChatViaMcp?Visibility.Visible:Visibility.Collapsed;
         ImportButton.Visibility=ChatViaMcp||mode=="analyze"?Visibility.Collapsed:Visibility.Visible;
         ComposerCard.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
@@ -200,12 +207,23 @@ public partial class StudioView:UserControl
         PreviewCommitControls.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
         ModelSelector.Visibility=!ChatViaMcp&&ModelSelector.Items.Count>0?Visibility.Visible:Visibility.Collapsed;
         GenerateOptions.Visibility=!ChatViaMcp&&mode=="generate"?Visibility.Visible:Visibility.Collapsed;
+        if(!ChatViaMcp&&GrasshopperTarget)
+        {
+            GenerateOptions.Visibility=AnalyzeOptions.Visibility=AssistOptions.Visibility=Visibility.Collapsed;
+            AnalyzeNav.Visibility=AssistNav.Visibility=Visibility.Collapsed;
+            WorkspaceTitle.Text="Grasshopper definition";
+            WorkspaceDescription.Text="Create and refine editable components, sliders, data trees and wires. Bake only when requested.";
+            WorkspaceHelp.Text="Select your API service and model, describe a parametric definition, review its structured plan, then Apply. The solver runs on Apply. Continue edits here. Graph Undo is in Grasshopper; baked objects use Rhino Undo. Existing non-bridge definitions are read-only. In MCP, stay in your external AI client.";
+            ExampleButton.Content="Try a parametric box definition";
+            PromptPlaceholder.Text="Describe the Grasshopper definition or its next change…";
+        }
         AssistOptions.Visibility=!ChatViaMcp&&mode=="assist"?Visibility.Visible:Visibility.Collapsed;
         ExampleButton.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
         SendButton.Content=mode switch{"analyze"=>"Analyze ↗","assist"=>"Assist ↗",_=>"Generate ↗"};
         ModeLabel.Text=mode=="assist"?"MODEL ASSIST":mode.ToUpperInvariant();
         if(ChatViaMcp){HeroTitle.Text="Rhino execution bridge";HeroDescription.Text="Keep working in your AI client. It sends native modeling operations and receives measured results. This is a status log, not another chatbot.";}
         else{HeroTitle.Text=mode switch{"analyze"=>"Understand your model.","assist"=>"Refine the geometry you have.",_=>"Start a new architectural concept."};HeroDescription.Text="Describe your request here using your connected API service, or try the limited offline tools.";}
+        if(!ChatViaMcp&&GrasshopperTarget){HeroTitle.Text="Parametric thinking. Editable definitions.";HeroDescription.Text="Build, solve and refine in Grasshopper using your API account. Geometry stays parametric until you request a bake.";}
     }
     public void SelectApiRoute()=>ChatRouteSelector.SelectedIndex=0;
     public void SetMcpSetupBusy(bool value){SetupMcpClientButton.IsEnabled=!value;McpClientSelector.IsEnabled=!value;McpStartButton.IsEnabled=!value;}
@@ -228,7 +246,7 @@ public partial class StudioView:UserControl
     private void WebsiteClick(object s,RoutedEventArgs e)=>OpenUrl("https://ai-arch.ir");
     private void GithubClick(object s,RoutedEventArgs e)=>OpenUrl("https://github.com/MrHs6/ai-architec-rhino");
     private static void OpenUrl(string url)=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url){UseShellExecute=true});
-    private void WorkspaceExample(object s,RoutedEventArgs e){Prompt=mode switch{"analyze"=>"Summarize the dimensions and visible geometry issues in this target scope.","assist"=>"Move the scoped objects 2 document units along X, keeping their GUIDs.",_=>"Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights."};PromptInput.Focus();}
+    private void WorkspaceExample(object s,RoutedEventArgs e){Prompt=GrasshopperTarget?"Create an editable Grasshopper box with width, depth and height sliders, initially 2 by 4 by 3 document units. Do not bake it yet.":mode switch{"analyze"=>"Summarize the dimensions and visible geometry issues in this target scope.","assist"=>"Move the scoped objects 2 document units along X, keeping their GUIDs.",_=>"Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights."};PromptInput.Focus();}
     private void PromptChanged(object s,TextChangedEventArgs e){if(PromptPlaceholder is not null)PromptPlaceholder.Visibility=string.IsNullOrWhiteSpace(PromptInput.Text)?Visibility.Visible:Visibility.Collapsed;if(!loading)InputChanged?.Invoke();}
     private void PromptKey(object s,KeyEventArgs e){if(e.Key==Key.Enter&&(Keyboard.Modifiers&ModifierKeys.Control)!=0){e.Handled=true;SendRequested?.Invoke();}}
     private void ModelChanged(object s,SelectionChangedEventArgs e){if(loading)return;DashboardApiStatus.Text=activeSource+" connected\n"+SelectedModel?.Id;if(Source==activeSource){loading=true;ProfileModelSelector.SelectedItem=SelectedModel;loading=false;}SelectedModelChanged?.Invoke();}

@@ -21,6 +21,14 @@ Open **`archtec`** inside Rhino to generate concept geometry, inspect your model
 
 **Concept-modeling beta · Windows x64 · Licensed Rhino 8.31+ within Rhino 8 · .NET 8 runtime.** No shared API key or model credit is included. The ready-made installer needs no developer tools.
 
+## Grasshopper authoring — 0.6 candidate
+
+The **0.6.0-beta.6 candidate** adds editable native Grasshopper definitions through the same MCP bridge or Studio API conversation: discover components, create sliders and wires, refine the same graph and explicitly bake native Rhino geometry. API users select **Grasshopper · parametric definition**; MCP users stay in their AI client. Type `archtec` in Rhino to open Studio beside Grasshopper. There is no separate `.gha` installation.
+
+**[Grasshopper setup and workflow →](docs/GRASSHOPPER.en.md)** · [راهنمای فارسی](docs/GRASSHOPPER.fa.md)
+
+This source candidate is distinct from the published 0.5 download links above. It supports bounded built-in component libraries, not arbitrary scripts, third-party add-ons or replacement of any existing graph. Candidate validation: 165 automated checks plus installed MCP and in-Rhino API acceptance with a mock planner. Paid API accounts remain untested.
+
 ## Built with AI Archi-Tec: Azadi Tower
 
 ![Azadi Tower — normal Rhino rendered view of the final MCP-built model](rhino-plugin/docs/azadi-tower-render.png)
@@ -108,7 +116,7 @@ This deterministic offline example produces 46 native parts for a 15 × 20 meter
 
 **144 automated checks pass.** Installed-plugin acceptance builds a tower-only Azadi reconstruction through native tools, audits 339 valid closed Breps, and checks 84 clear passage samples with four positive stone-pier controls. MCP execution stays in the client; API mode retains its own preview/Apply workflow. [Detailed evidence and actual test images](rhino-plugin/docs/VALIDATION.md)
 
-Live paid-provider/vision trials, a real Claude account and a second licensed workstation remain outstanding. This beta does not provide BIM, construction documentation, Grasshopper authoring, photorealistic rendering, engineering simulation or exact reconstruction of arbitrary images. GitHub availability is separate from Food4Rhino/Yak catalog publication.
+Live paid-provider/vision trials, a real Claude account and a second licensed workstation remain outstanding. The published 0.5 beta does not provide Grasshopper authoring; the bounded 0.6 candidate is described above. Neither provides BIM, construction documentation, photorealistic rendering, engineering simulation or exact reconstruction of arbitrary images. GitHub availability is separate from Food4Rhino/Yak catalog publication.
 
 ## Documentation and presentation assets
 

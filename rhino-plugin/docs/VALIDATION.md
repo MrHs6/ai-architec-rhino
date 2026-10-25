@@ -1,4 +1,21 @@
-# Validation — AI Archi-Tec 0.5.0-beta.6
+# Validation — AI Archi-Tec 0.6.0-beta.6 candidate
+
+## Grasshopper acceptance — 25 October 2026
+
+- **165 automated tests pass.** Includes graph isolation/document units, zero-based runtime IDs, duplicate/malformed input rejection, DAG topology, typed schema, API target policy, provider transport fixtures and the existing real STDIO cancellation/reconnect tests.
+- Installed the final Yak in licensed Rhino 8.31 on Windows. Local SDK and pinned official NuGet SDK builds both complete with zero warnings/errors. Packaging verifies ten expected payload files and excludes Rhino/Grasshopper SDK binaries and user settings.
+- Real packaged STDIO MCP → authenticated loopback → installed plug-in → native Grasshopper: discover actual GUIDs/ports, create seven nodes/six wires without baking, repeat the UUID with an identical receipt, update the same definition (runtime ID zero) and bake one valid closed native Brep. Measured bounds: [0,0,0]–[5,4,3] meters; volume 60 m³; area 94 m².
+- **19 in-Rhino API checks pass using a mock planner**, not a paid provider. They exercise target-specific help, actual context/catalog, pending graph-plan isolation, Apply, same-definition follow-up, one valid closed 6 × 2 × 3 Brep (volume 36), preservation of earlier MCP geometry, graph Undo/Redo, independent Rhino Undo, rollback after a partially successful bake, unchanged graph after failed bake and `.gh` export/reopen.
+- The returned `.gh` file contains all seven native nodes and can be reopened in Grasshopper. Bridge edit ownership is intentionally session-only; reopened arbitrary files are read-only through this graph-replacement surface.
+- Live listener Stop/Start preserved both open definitions and the same running STDIO bridge process. A request while stopped returned the actionable offline response; the next request after Start succeeded without client Reload or re-registration. No geometry request was replayed.
+- Unsupported: arbitrary scripts, third-party components, feedback cycles, arbitrary graph adoption and unrestricted host access. Native solver cancellation is cooperative. These checks do not establish every component combination or design accuracy.
+- Live paid API/vision generation, other client account workflows and another workstation remain unverified. Public 0.5 release/catalog links remain separate from this source candidate.
+
+See [Grasshopper guide](../../docs/GRASSHOPPER.en.md) and [runtime reproduction instructions](../tests/ArchiTec.RuntimeTests/README.md).
+
+---
+
+# Historical validation — AI Archi-Tec 0.5.0-beta.6
 
 ## Automated and installed-plugin evidence (23 October 2026)
 

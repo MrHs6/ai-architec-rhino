@@ -1,5 +1,7 @@
 # Architecture and client-controlled execution
 
+The 0.6 candidate extends both routes with bounded editable Grasshopper graph execution. `GrasshopperHost` loads the installed host on explicit graph requests; `GrasshopperBridge` discovers trusted native components, prepares a detached graph, solves on commit and optionally bakes valid native geometry. Graph changes use Grasshopper Undo and bakes use a separate Rhino Undo record. See [the graph contract and workflow](GRASSHOPPER.en.md).
+
 [Overview](../README.md) · [Install](INSTALLATION.en.md) · [MCP workflow](MCP-QUICKSTART.en.md)
 
 ![Connection architecture](assets/connection-architecture.png)

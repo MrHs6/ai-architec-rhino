@@ -7,9 +7,10 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>AIArchiTec.Studio</AssemblyName>
     <AssemblyName Condition="'$(StudioAssemblyName)' != ''">$(StudioAssemblyName)</AssemblyName>
-    <Version>0.5.0-beta.6</Version>
+    <Version>0.6.0-beta.6</Version>
     <Title>ai-architec-rhino</Title>
     <RhinoSystemDir Condition="'$(RhinoSystemDir)' == ''">C:\Program Files\Rhino 8\System</RhinoSystemDir>
+    <GrasshopperDir>$(RhinoSystemDir)\..\Plug-ins\Grasshopper</GrasshopperDir>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ArchiTec.Core/ArchiTec.Core.csproj" />
@@ -19,10 +20,13 @@
     <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\netcore\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Eto"><HintPath>$(RhinoSystemDir)\Eto.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Eto.Wpf"><HintPath>$(RhinoSystemDir)\Eto.Wpf.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Grasshopper"><HintPath>$(GrasshopperDir)\Grasshopper.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="GH_IO"><HintPath>$(GrasshopperDir)\GH_IO.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
   <!-- Compile on hosted CI without installing Rhino. The host supplies these assemblies. -->
   <ItemGroup Condition="'$(BuildWithNuGet)' == 'true'">
     <PackageReference Include="RhinoCommon" Version="8.31.26126.13431" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Grasshopper" Version="8.31.26126.13431" PrivateAssets="all" ExcludeAssets="runtime" />
   </ItemGroup>
   <Target Name="RhinoPlugin" AfterTargets="Build">
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)AIArchiTec.rhp" />
