@@ -55,4 +55,4 @@ The model uses a **63 × 42 meter base and 45 meter overall height**. The 45 met
 
 This is a **photo-based architectural reconstruction**, not an exact surveyed/as-built model. Fine section profiles, facade recesses, cladding and lattice geometry are modeled assumptions. A measured drawing set or survey would be needed to establish exact fidelity. Valid closed solids do not certify structure, fabrication, building regulations or the quality of every future AI output.
 
-[Download the editable tower 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/Azadi-Tower-Reference-Rebuild.3dm)
+[Download the editable tower 3DM](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.6.0-beta.9/Azadi-Tower-Reference-Rebuild.3dm)

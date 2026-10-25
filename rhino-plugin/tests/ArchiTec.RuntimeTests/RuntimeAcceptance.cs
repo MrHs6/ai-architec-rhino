@@ -85,7 +85,7 @@ public static class RuntimeAcceptance
                     Check(archive.WriteToFile(Path.Combine(outputDirectory,"API-Parametric-Box.gh"),false,false),"Editable .gh example is exported successfully");
                     using var reopened=new GH_Document();var read=new GH_Archive();
                     Check(read.ReadFromFile(Path.Combine(outputDirectory,"API-Parametric-Box.gh"))&&read.ExtractObject(reopened,"Definition")&&reopened.ObjectCount==7,"Exported .gh file reopens with all seven native nodes");
-                    Check(McpCatalog.Version=="0.6.0-beta.6","Runtime test uses the installed final candidate version");
+                    Check(McpCatalog.Version=="0.6.0-beta.9","Runtime test uses the installed final candidate version");
                 }
                 finally{panel.ClearPreview();providerField.SetValue(panel,original);if(original is null)view.SetOffline();}
                 File.WriteAllText(Path.Combine(outputDirectory,"runtime-api-acceptance.json"),JsonSerializer.Serialize(new{status="passed",passes,mock_api=true,live_paid_provider_tested=false},Wire.Json));

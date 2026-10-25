@@ -1,6 +1,6 @@
 # Grasshopper through AI Archi-Tec
 
-**0.6.0-beta.6 candidate · Windows x64 · licensed Rhino 8.31+ with Grasshopper · .NET 8.** The download buttons on the main README still point to the published 0.5 release, which does not include graph authoring. Install the 0.6 candidate installer supplied with this change to test these features. Public catalog publication is a separate step.
+**0.6.0-beta.9 · Windows x64 · licensed Rhino 8.31+ with Grasshopper · .NET 8.** Use the [current release installer](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.9) linked from the main README. Rhino and Grasshopper support are included in the same installation.
 
 ## One installation, one MCP connection
 
@@ -20,7 +20,7 @@ flowchart LR
 
 ## MCP: stay in your AI client
 
-1. Install the candidate, restart Rhino and run `archtec`.
+1. Install the current release, restart Rhino and run `archtec`.
 2. Open MCP connection, choose your supported desktop client and Connect. After an upgrade, refresh that client's MCP tool list once if needed. A running listener alone is not proof of client contact.
 3. In the client, request **an editable Grasshopper definition**, its parameters and document units. Start with no bake.
 4. The client reads `get_context`, `get_capabilities` and `get_grasshopper_context`, then discovers exact component GUIDs and ports with `search_grasshopper_components`.
@@ -75,7 +75,7 @@ Supported installed libraries: **Curve, Surface, Vector, Math, Transform, Triang
 - Save your `.gh` and `.3dm` normally. Baked geometry does not automatically follow later slider changes.
 - After an uncertain execution result, read its receipt using the same request ID; do not blindly repeat a bake with a new UUID.
 
-## Verified candidate
+## Verified release
 
 ![Actual native Grasshopper canvas from API workflow acceptance: three sliders, three domains and a Domain Box](assets/grasshopper-native-canvas.png)
 

@@ -6,7 +6,7 @@ public sealed record McpImage(string Data,string MimeType,object Metadata);
 
 public static class McpCatalog
 {
-    public const string Version="0.6.0-beta.6";
+    public const string Version="0.6.0-beta.9";
     public const string Instructions="Archi-Tec is a Rhino execution bridge, not another chatbot. Keep all planning, conversation and follow-ups in this MCP client. First read get_context and get_capabilities. Prefer execute_plan with a unique UUID request_id for validated native operations: execution is authorized in this client, with no extra Apply click in Rhino. Inspect actual receipts and geometry before claiming completion. If the outcome is uncertain, call get_plan_status using the SAME request_id; never resubmit a different ID blindly. propose_plan is optional preview-only; apply_plan or cancel_plan manages it from this client. Stop/cancellation stops pending work; completed batches remain undoable. Do not use another router, run arbitrary code, or substitute curves for requested solid surfaces. Use create_loft, create_mesh or create_extrusion for surfaces/solids. get_objects reports validity/closure; set_view and get_viewport_image verify the result. For Grasshopper read get_grasshopper_context and search_grasshopper_components, then execute a grasshopper_definition action with document units in a separate batch. Return editable components and wires, not substituted Rhino geometry. Bake only when requested. No autonomous planning runs in the plugin.";
     private static object Schema(object properties,string[] required)=>new{type="object",properties,required,additionalProperties=false};
     private static readonly object Doc=new{type="integer"};

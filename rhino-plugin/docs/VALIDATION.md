@@ -1,4 +1,23 @@
-# Validation — AI Archi-Tec 0.6.0-beta.6 candidate
+# Validation — AI Archi-Tec 0.6.0-beta.9
+
+## API and workspace acceptance — 25 October 2026
+
+- **196 automated core/protocol checks pass.** Provider HTTP fixtures cover credential, credit, budget, region, gateway, routing, schema and upstream errors without returning raw sensitive bodies. OpenRouter authenticates `/key` before public model discovery. Regression cases preserve existing-object scope when an edit forbids creating replacements or requests new dimensions/position.
+- Installed the final ten-file Yak in licensed Rhino 8.31 on Windows. The installed RHP SHA256 matches the tested build. Official pinned SDK solution build and native runtime-helper build complete with zero warnings/errors. The package excludes host SDK assemblies, profiles and credentials.
+- **Nine real OpenRouter workflow checkpoints pass**, using the saved encrypted profile and explicitly selected `openai/gpt-4.1-mini`. Authenticated discovery returned 389 compatible models at test time. A Persian greeting returned text without a plan or geometry. A live create-box response produced a preview before Apply; Apply created one valid closed native Brep measuring **2 x 4 x 3 meters**, volume **24 m³**. A second live model request moved the same object +3 meters along X, preserving its UUID and dimensions. The saved 3DM reopens with exactly one object. Three inference requests were made in this final run; no mock planner, alternate model or custom network transport was used.
+- **39 native WPF layout checks pass** at 560 x 780, 420 x 640 and 350 x 540. Connection controls, options, history and previews share a scrolling workspace; brand and multiline composer stay fixed. Generate, Analyze, Assist, Grasshopper, MCP and API-profile model display are covered. Closed model selectors display a readable name, and a stale catalog cannot reappear after failure.
+- The preconnection Send check proves that a saved profile cannot silently run offline examples. The standalone failure fixture is available for an existing real failed Connect; it is not counted as passed in this successful final session. Failure transport coverage remains automated/simulated.
+- The initial 403 also affected anonymous API requests and temporarily the browser account page. Restoring the user's normal network connection made the official endpoint reachable; the same saved key then completed real authentication/inference. The plugin did not alter VPN/proxy settings, disable TLS validation or bypass provider access policy. The documented .NET 8 proxy snapshot is a troubleshooting condition, not proof of the sole cause of every 403.
+- Other providers have protocol-fixture coverage, not live personal-account acceptance in this revision. Live vision, second-workstation installation and paid-provider Grasshopper graph generation remain unverified. This record validates the 0.6.0-beta.9 implementation. GitHub releases, Food4Rhino downloads and the public Yak catalog are separate distribution surfaces.
+
+[Sanitized live report](acceptance/api-live-beta9.json) · [Layout measurements](acceptance/ui-layout-beta9.json) · [Core test output](core-test-results.txt) · [Reproduction instructions](../tests/ArchiTec.RuntimeTests/README.md)
+
+![Actual installed connection controls](api-controls-beta9.png)
+
+![Actual installed conversation after scrolling the menus upward](api-conversation-beta9.png)
+
+---
+# Historical validation — AI Archi-Tec 0.6.0-beta.6 candidate
 
 ## Grasshopper acceptance — 25 October 2026
 

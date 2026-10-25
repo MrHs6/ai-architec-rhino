@@ -5,7 +5,7 @@
 ![AI Archi-Tec product cover](docs/assets/product-cover.png)
 
 <p align="center">
-<a href="https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6"><b>Download for Windows</b></a> ·
+<a href="https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.9"><b>Download for Windows</b></a> ·
 <a href="docs/INSTALLATION.en.md">Installation tutorial</a> ·
 <a href="docs/MCP-QUICKSTART.en.md">MCP setup</a> ·
 <a href="docs/ARCHITECTURE.en.md">Architecture</a> ·
@@ -15,20 +15,28 @@
 [![Windows build](https://github.com/MrHs6/ai-architec-rhino/actions/workflows/rhino-plugin.yml/badge.svg?branch=main)](https://github.com/MrHs6/ai-architec-rhino/actions/workflows/rhino-plugin.yml)
 ![Rhino](https://img.shields.io/badge/Rhino-8.31%2B-8970DD)
 ![Platform](https://img.shields.io/badge/Windows-x64-5474C9)
-![Release](https://img.shields.io/badge/release-0.5.0--beta.6-C08D5E)
+![Release](https://img.shields.io/badge/release-0.6.0--beta.9-C08D5E)
 [![M8ven publisher verification](https://m8ven.ai/badge/mcp/mrhs6/ai-architec-rhino?variant=verified)](https://m8ven.ai/mcp/mrhs6/ai-architec-rhino?s=readme)
 
 Open **`archtec`** inside Rhino to generate concept geometry, inspect your model or refine selected objects. Connect your own API account for chat in Studio, or use Codex/Claude Desktop through local MCP. In API mode, review a viewport preview and click **Apply to Rhino**. In MCP mode, stay in your AI client: authorize native tool execution there and inspect the result without a local Apply step.
 
 **Concept-modeling beta · Windows x64 · Licensed Rhino 8.31+ within Rhino 8 · .NET 8 runtime.** No shared API key or model credit is included. The ready-made installer needs no developer tools.
 
-## Grasshopper authoring — 0.6 candidate
+## Latest release — 0.6.0-beta.9
 
-The **0.6.0-beta.6 candidate** adds editable native Grasshopper definitions through the same MCP bridge or Studio API conversation: discover components, create sliders and wires, refine the same graph and explicitly bake native Rhino geometry. API users select **Grasshopper · parametric definition**; MCP users stay in their AI client. Type `archtec` in Rhino to open Studio beside Grasshopper. There is no separate `.gha` installation.
+**Native Rhino and Grasshopper workflows, clearer API connection states and a readable scrolling workspace.** The latest installer includes independent provider profiles, authenticated OpenRouter discovery, explicit model selection and follow-up edits that retain their native object targets.
+
+Connection controls and options scroll with the conversation while the multiline composer stays fixed. Generate, Analyze, Model Assist and the Grasshopper target use the same readable layout.
+
+<p align="center"><img src="rhino-plugin/docs/api-controls-beta9.png" width="340" alt="Actual API controls with readable model names"><img src="rhino-plugin/docs/api-conversation-beta9.png" width="340" alt="Actual conversation after scrolling the upper controls away"></p>
+
+## Editable Grasshopper definitions
+
+**0.6.0-beta.9** includes editable native Grasshopper definitions through the same MCP bridge or Studio API conversation: discover components, create sliders and wires, refine the same graph and explicitly bake native Rhino geometry. API users select **Grasshopper · parametric definition**; MCP users stay in their AI client. Type `archtec` in Rhino to open Studio beside Grasshopper. There is no separate `.gha` installation.
 
 **[Grasshopper setup and workflow →](docs/GRASSHOPPER.en.md)** · [راهنمای فارسی](docs/GRASSHOPPER.fa.md)
 
-This source candidate is distinct from the published 0.5 download links above. It supports bounded built-in component libraries, not arbitrary scripts, third-party add-ons or replacement of any existing graph. Candidate validation: 165 automated checks plus installed MCP and in-Rhino API acceptance with a mock planner. Paid API accounts remain untested.
+The same release installer supports both targets. Grasshopper authoring covers bounded built-in component libraries; arbitrary scripts, third-party add-ons and replacement of unrelated or reopened graphs are excluded. Installed MCP graph creation/editing/baking and the in-Rhino API graph path are verified; paid-provider Grasshopper graph generation remains unverified.
 
 ## Built with AI Archi-Tec: Azadi Tower
 
@@ -38,7 +46,7 @@ This source candidate is distinct from the published 0.5 download links above. I
 
 **339 valid closed native Breps · tower only · 45 m overall model height.** This is a photo-based architectural reconstruction with assumed fine dimensions. The image records the actual model delivered below.
 
-**[Download the editable tower (.3dm)](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/Azadi-Tower-Reference-Rebuild.3dm)** · [See the modeling workflow and checks](docs/AZADI-MCP-DEMO.en.md) · [View the full-size render](rhino-plugin/docs/azadi-tower-render.png)
+**[Download the editable tower (.3dm)](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.6.0-beta.9/Azadi-Tower-Reference-Rebuild.3dm)** · [See the modeling workflow and checks](docs/AZADI-MCP-DEMO.en.md) · [View the full-size render](rhino-plugin/docs/azadi-tower-render.png)
 
 ## Three workspaces, distinct purposes
 
@@ -60,7 +68,7 @@ The native catalog includes capped NURBS lofts, Brep booleans, sweeps, revolutio
 
 ![Download, install, open Studio and choose your conversation route](docs/assets/installation-quickstart.png)
 
-1. **[Download the Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/ai-architec-rhino-0.5.0-beta.6-windows-installer.zip)** from Releases.
+1. **[Download the Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.6.0-beta.9/ai-architec-rhino-0.6.0-beta.9-windows-installer.zip)** from Releases.
 2. **Extract All**. Keep `install.cmd` beside the included `.yak`.
 3. Save your work, close **every Rhino window**, and run **install.cmd**.
 4. Reopen Rhino, type **`archtec`**, and press Enter.
@@ -70,7 +78,7 @@ The native catalog includes capped NURBS lofts, Brep booleans, sweeps, revolutio
 
 Includes expected results for each step, API/MCP onboarding, first model, checksum verification, custom paths, updates, uninstall and troubleshooting. [راهنمای نصب فارسی](docs/INSTALLATION.fa.md)
 
-The automatically generated **Source code** archives are for developers. Install the versioned Windows ZIP or Yak package. [Release assets and SHA256](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6)
+The automatically generated **Source code** archives are for developers. Install the versioned Windows ZIP or Yak package. [Release assets and SHA256](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.9)
 
 ## Choose where you chat
 
@@ -117,9 +125,9 @@ This deterministic offline example produces 46 native parts for a 15 × 20 meter
 
 [M8ven publisher verification](https://m8ven.ai/mcp/mrhs6/ai-architec-rhino) confirms repository control. Its assessment currently has limited C# static-analysis coverage and has not inspected the MCP tool surface; it is not a complete security audit or a guarantee of safety.
 
-**144 automated checks pass.** Installed-plugin acceptance builds a tower-only Azadi reconstruction through native tools, audits 339 valid closed Breps, and checks 84 clear passage samples with four positive stone-pier controls. MCP execution stays in the client; API mode retains its own preview/Apply workflow. [Detailed evidence and actual test images](rhino-plugin/docs/VALIDATION.md)
+**196 automated checks, 39 native layout checks and nine real OpenRouter workflow checkpoints pass.** Live acceptance with explicitly selected `openai/gpt-4.1-mini` covers Persian conversation, preview/Apply of a valid closed 2 × 4 × 3 meter solid, a follow-up move preserving its UUID, and 3DM save/reopen. Installed Grasshopper acceptance covers native graphs, explicit baking and separate Undo stacks. The earlier tower-only Azadi reconstruction contains 339 valid closed Breps. [Detailed evidence and actual test images](rhino-plugin/docs/VALIDATION.md)
 
-Live paid-provider/vision trials, a real Claude account and a second licensed workstation remain outstanding. The published 0.5 beta does not provide Grasshopper authoring; the bounded 0.6 candidate is described above. Neither provides BIM, construction documentation, photorealistic rendering, engineering simulation or exact reconstruction of arbitrary images. GitHub availability is separate from Food4Rhino/Yak catalog publication.
+Live accounts for other providers, vision quality, paid-provider Grasshopper graph generation, a real Claude MCP account and a second licensed workstation remain unverified. This evaluation beta does not provide BIM, construction documentation, photorealistic rendering, engineering simulation or exact reconstruction of arbitrary images. Food4Rhino distribution and the public Yak PackageManager catalog are separate services.
 
 ## Documentation and presentation assets
 

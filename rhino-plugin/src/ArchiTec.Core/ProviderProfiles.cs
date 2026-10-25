@@ -4,7 +4,7 @@ public sealed record ProviderPreset(string Name,string Endpoint,string Protocol,
 public static class ProviderProfiles
 {
     public static readonly ProviderPreset[] All=[
-        new("OpenRouter","https://openrouter.ai/api/v1/","OpenAI","Models are filtered by tools + structured output support. Vision follows the live catalog."),
+        new("OpenRouter","https://openrouter.ai/api/v1/","OpenAI","Connect validates your API key, then lists models with structured output support. Vision follows the live catalog."),
         new("OpenAI","https://api.openai.com/v1/","OpenAI Responses","Direct OpenAI Responses API with JSON schema. Models come from your account; choose a text model that supports structured output. Vision is not confirmed by this catalog."),
         new("xAI / Grok","https://api.x.ai/v1/","OpenAI","Direct xAI connection. Language models and image capabilities are read from your account catalog."),
         new("Google Gemini","https://generativelanguage.googleapis.com/v1beta/","Gemini","Direct Gemini GenerateContent API. Uses x-goog-api-key and native structured output/image parts."),

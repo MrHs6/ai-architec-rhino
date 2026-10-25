@@ -23,11 +23,31 @@ PASS API errors redact credentials
 PASS MCP requires token
 PASS MCP initialize negotiates supported version
 PASS MCP rejects browser origins
-PASS MCP tools contain no execution bypass
+PASS MCP advertises the client-controlled native catalog
 PASS MCP notifications use 202
 PASS MCP tool dispatch
 PASS MCP rejects arbitrary code tools
 PASS MCP rejects unknown protocol headers
+PASS Client setup diagnostics suppress credential-like and assignment lines
+PASS Client setup retains actionable non-credential error detail
+PASS A new client operation is registered before execution
+PASS Retry with the same UUID returns its receipt without a second execution
+PASS Alternate casing and UUID formatting cannot duplicate an operation
+PASS The same operation ID cannot be reused in another document
+PASS The same operation ID cannot silently execute a different plan
+PASS An operation requires a stable valid UUID
+PASS Mesh references outside the vertex array are rejected
+PASS Repeated face indices are rejected
+PASS A loft requires at least two bounded profiles
+PASS Visibility is a typed operation, not a script parameter
+PASS Deletion cannot target an implicit whole document
+PASS Document deletion accepts object UUIDs, never filesystem paths
+PASS Native write tools request client authorization and manage previews without a local click
+PASS Broad native geometry access does not expose arbitrary scripts or system commands
+PASS Containment inspection advertises a bounded three-dimensional point contract
+PASS Client Stop notifications are accepted while another request is running
+PASS Cancellation reaches the active operation token without killing the listener
+PASS A new request works immediately after client cancellation
 PASS Google Gemini filters unsupported models and discovers vision
 PASS Google Gemini uses the exact catalog ID
 PASS Google Gemini parses native structured output
@@ -65,4 +85,113 @@ PASS Workspace rejects assist action outside its purpose/scope
 PASS Workspace rejects assist action outside its purpose/scope
 PASS Model Assist accepts scoped edit
 PASS Generate accepts creation
-67 tests passed.
+PASS OpenRouter confirms authentication before loading its public model catalog
+PASS Schema-capable OpenRouter models do not require unused tool calling
+PASS Rejected OpenRouter keys never reach public model discovery
+PASS OpenRouter rejects is_management_key for inference
+PASS OpenRouter rejects is_provisioning_key for inference
+PASS Malformed key confirmation cannot establish OpenRouter connection
+PASS Non-object key confirmation returns a safe connection error
+PASS API diagnostic classifies credential without leaking data
+PASS API diagnostic classifies credit without leaking data
+PASS API diagnostic classifies guardrail budget without leaking data
+PASS API diagnostic classifies region without leaking data
+PASS API diagnostic classifies permission without leaking data
+PASS API diagnostic classifies gateway without leaking data
+PASS API diagnostic classifies security-policy gateway without leaking data
+PASS API diagnostic classifies HTML interception without leaking data
+PASS API diagnostic classifies rate limit without leaking data
+PASS API diagnostic classifies routing without leaking data
+PASS API diagnostic classifies required feature without leaking data
+PASS API diagnostic classifies server without leaking data
+PASS API diagnostic classifies regional server availability without leaking data
+PASS API diagnostic classifies late API error without leaking data
+PASS API diagnostic classifies oversized body without leaking data
+PASS OpenAI uses shared credential-safe diagnostics
+PASS Anthropic / Claude uses shared credential-safe diagnostics
+PASS Google Gemini uses shared credential-safe diagnostics
+PASS xAI / Grok uses shared credential-safe diagnostics
+PASS Floor follow-up targets the existing fifth floor, not a replacement building
+PASS Persian floor follow-up preserves exact target GUID
+PASS Unrecognized floor cannot silently move the whole building
+PASS Conversation distinguishes a follow-up edit from a new concept
+PASS Live move follow-up keeps target scope when replacement creation is explicitly forbidden
+PASS Negated creation before or after an edit does not turn it into a new concept
+PASS Persian no-new-building constraint preserves the existing-target edit
+PASS Positive creation and conversation without an edit cannot gain existing-target scope
+PASS New position or dimensions describe an edit rather than replacement geometry
+PASS Document histories and recent target IDs stay isolated
+PASS Result feedback uses measured bounds and the user's language
+PASS Recognized OpenAI project keys are not sent to OpenRouter
+PASS Socket-access errors distinguish network policy from key validity without leaking secrets
+PASS Network probe sends no key and treats HTTP 401 as host reachability
+PASS OpenAI discovery excludes image/audio/embedding-only catalog entries
+PASS OpenAI uses stateless Responses with the exact selected model
+PASS OpenAI structured response is parsed and validated
+PASS Incomplete OpenAI output cannot apply geometry
+PASS Unauthenticated traffic cannot announce a connected client
+PASS Authenticated initialization identifies the announced client and creates a bounded session
+PASS Tool discovery advances the visible connection stage
+PASS Conversational replies have a dedicated MCP tool without geometry execution
+PASS Polling execution status does not overwrite the preview workflow stage
+PASS Client shutdown clears its actual session
+PASS An expired session cannot masquerade as connected
+PASS Claude JSON contains the correct bridge port and no copied secret
+PASS Codex receives TOML with escaped Windows paths rather than Claude JSON
+PASS Web setup explains the separate connector requirement
+PASS Windows discovery protects the session token and restores it for the same account
+PASS Session cleanup cannot delete another Rhino owner's descriptor
+PASS The packaged stdio bridge performs a real handshake using encrypted discovery without printing a token
+PASS Closing bridge stdin ends the server's tracked client session
+PASS Automatic Claude setup preserves unrelated settings and exports no session token
+PASS Invalid existing Claude configuration is rejected without overwriting it
+PASS Bridge keeps request correlation across reconnects
+PASS A client can initialize its stable bridge before Rhino MCP starts
+PASS Bridge keeps request correlation across reconnects
+PASS Tools remain discoverable while Rhino MCP is off
+PASS Bridge keeps request correlation across reconnects
+PASS Offline requests return actionable tool errors without killing the bridge
+PASS An already-open client reconnects passively after the server starts
+PASS Bridge keeps request correlation across reconnects
+PASS The same bridge reaches the new authenticated server after restart 1
+PASS Bridge keeps request correlation across reconnects
+PASS UTF-8 messages are delivered exactly once after reconnect 1
+PASS Bridge keeps request correlation across reconnects
+PASS Stopping MCP produces an honest offline error without a client reload
+PASS Bridge keeps request correlation across reconnects
+PASS The same bridge reaches the new authenticated server after restart 2
+PASS Bridge keeps request correlation across reconnects
+PASS UTF-8 messages are delivered exactly once after reconnect 2
+PASS Bridge keeps request correlation across reconnects
+PASS Stopping MCP produces an honest offline error without a client reload
+PASS Bridge keeps request correlation across reconnects
+PASS The same bridge reaches the new authenticated server after restart 3
+PASS Bridge keeps request correlation across reconnects
+PASS UTF-8 messages are delivered exactly once after reconnect 3
+PASS Bridge keeps request correlation across reconnects
+PASS A rejected modeling request is never replayed automatically
+PASS Bridge keeps request correlation across reconnects
+PASS Real STDIO Stop reaches HTTP cancellation while input remains responsive, then the same client resumes
+PASS The reconnecting bridge closes its last authenticated session on EOF
+PASS Grasshopper graph validates as an isolated document-unit plan
+PASS Zero is a valid first Grasshopper RuntimeID for follow-up edits
+PASS Graph aliases and wires survive wire-format roundtrip
+PASS Grasshopper rejects implicit unit conversion
+PASS Grasshopper and Rhino mutations cannot share a transaction
+PASS Duplicate graph aliases rejected
+PASS Missing wire endpoints rejected
+PASS Feedback cycles rejected before solver entry
+PASS Bake cannot select an implicit or unknown node
+PASS Slider values outside range rejected
+PASS Components require a discoverable GUID
+PASS A wired input cannot silently ignore persistent values
+PASS Duplicate nested JSON graph fields rejected
+PASS Graph contract exposes no executable-code field
+PASS API Grasshopper plan requires the selected Grasshopper target
+PASS API Grasshopper target accepts validated graph creation and edits
+PASS Grasshopper analysis stays read-only
+PASS MCP exposes graph inspection and installed component discovery
+PASS Every API protocol shares the Grasshopper action schema
+PASS Mock API transport parses a real structured Grasshopper plan
+PASS API request includes graph context and real component IDs
+196 tests passed.

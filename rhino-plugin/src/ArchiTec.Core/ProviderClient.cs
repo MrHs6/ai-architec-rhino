@@ -32,6 +32,17 @@ public sealed class ProviderClient : IPlannerClient
     }
     public async Task<ModelCatalog> Models(CancellationToken cancel)
     {
+        // /models is a public catalog on OpenRouter. It cannot prove that a supplied key is valid.
+        if(openRouter)
+        {
+            using var authentication=await http.GetAsync("key",HttpCompletionOption.ResponseHeadersRead,cancel);
+            using var key=JsonDocument.Parse(await Body(authentication,cancel));
+            if(key.RootElement.ValueKind!=JsonValueKind.Object||!key.RootElement.TryGetProperty("data",out var data)||data.ValueKind!=JsonValueKind.Object)
+                throw new InvalidOperationException("OpenRouter did not confirm this API key. No model request was sent.");
+            if(data.TryGetProperty("is_management_key",out var management)&&management.ValueKind==JsonValueKind.True ||
+                data.TryGetProperty("is_provisioning_key",out var provisioning)&&provisioning.ValueKind==JsonValueKind.True)
+                throw new InvalidOperationException("This is an OpenRouter management key. Create a standard inference API key for chat and modeling.");
+        }
         using var response=await http.GetAsync(xai?"language-models":"models",HttpCompletionOption.ResponseHeadersRead,cancel);
         using var json=JsonDocument.Parse(await Body(response,cancel));
         var result=new List<ModelDescriptor>();
@@ -48,7 +59,8 @@ public sealed class ProviderClient : IPlannerClient
             if(openRouter)
             {
                 var supported=m.TryGetProperty("supported_parameters",out var p) ? p.EnumerateArray().Select(v=>v.GetString()).ToArray() : [];
-                if(!supported.Contains("structured_outputs") || !supported.Contains("tools"))continue;
+                // Plans use JSON schema, not provider tool calling. Requiring tools excludes valid models.
+                if(!supported.Contains("structured_outputs"))continue;
                 if(m.TryGetProperty("architecture",out var arch))
                 {
                     if(arch.TryGetProperty("input_modalities",out var inputs))vision=inputs.EnumerateArray().Any(v=>v.GetString()=="image");
@@ -90,18 +102,24 @@ public sealed class ProviderClient : IPlannerClient
     }
     internal static async Task<string> Body(HttpResponseMessage response,CancellationToken cancel)
     {
-        if(!response.IsSuccessStatusCode)
-        {
-            var explanation=(int)response.StatusCode switch {401=>"API key rejected",402=>"Insufficient provider credit",403=>"Access denied",404=>"API path or model unavailable",429=>"Rate limit reached",_=>"Request failed"};
-            throw new InvalidOperationException($"{explanation} (HTTP {(int)response.StatusCode}). No model fallback was used.");
-        }
-        const int max=8_000_000;
-        if(response.Content.Headers.ContentLength>max)throw new InvalidOperationException("Provider response is too large.");
+        var max=response.IsSuccessStatusCode?8_000_000:65_536;
+        if(response.IsSuccessStatusCode&&response.Content.Headers.ContentLength>max)throw new InvalidOperationException("Provider response is too large.");
         using var stream=await response.Content.ReadAsStreamAsync(cancel);
         using var output=new MemoryStream();var buffer=new byte[16384];int count;
         while((count=await stream.ReadAsync(buffer,cancel))>0)
-        {if(output.Length+count>max)throw new InvalidOperationException("Provider response is too large.");await output.WriteAsync(buffer.AsMemory(0,count),cancel);}
-        return Encoding.UTF8.GetString(output.ToArray());
+        {
+            if(output.Length+count>max)
+            {
+                if(response.IsSuccessStatusCode)throw new InvalidOperationException("Provider response is too large.");
+                var remaining=(int)(max-output.Length);if(remaining>0)await output.WriteAsync(buffer.AsMemory(0,remaining),cancel);
+                break;
+            }
+            await output.WriteAsync(buffer.AsMemory(0,count),cancel);
+        }
+        var raw=Encoding.UTF8.GetString(output.ToArray());
+        var error=ProviderHttpErrors.Describe(response,raw);
+        if(error is not null)throw new InvalidOperationException(error);
+        return raw;
     }
     public void Dispose()=>http.Dispose();
     private sealed record ProviderReply(string Message,ProviderPlan? Plan);

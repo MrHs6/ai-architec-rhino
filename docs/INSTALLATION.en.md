@@ -1,6 +1,6 @@
 # Install AI Archi-Tec for Rhino 8
 
-[Project overview](../README.md) · [Download 0.5.0-beta.6](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6) · [فارسی](INSTALLATION.fa.md)
+[Project overview](../README.md) · [Download 0.6.0-beta.9](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.9) · [فارسی](INSTALLATION.fa.md)
 
 ![Installation quick start](assets/installation-quickstart.png)
 
@@ -20,9 +20,9 @@ Use Rhino's version information to check your build. Rhino 7, macOS and earlier 
 
 ## 2. Download the installer
 
-Open [the release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.5.0-beta.6), expand **Assets**, and download:
+Open [the release page](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.9), expand **Assets**, and download:
 
-**[ai-architec-rhino-0.5.0-beta.6-windows-installer.zip](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.5.0-beta.6/ai-architec-rhino-0.5.0-beta.6-windows-installer.zip)**
+**[ai-architec-rhino-0.6.0-beta.9-windows-installer.zip](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.6.0-beta.9/ai-architec-rhino-0.6.0-beta.9-windows-installer.zip)**
 
 The automatically listed **Source code (zip/tar.gz)** downloads are for developers, not plugin installers. The separate `.yak` asset is for direct Yak installation.
 
@@ -35,7 +35,7 @@ install.cmd
 install.ps1
 repair-registration.cmd
 repair-registration.ps1
-ai-architec-rhino-0.5.0-beta.6-rh8_31-win.yak
+ai-architec-rhino-0.6.0-beta.9-rh8_31-win.yak
 README.md
 PRIVACY.md
 SHA256SUMS.txt
@@ -134,7 +134,7 @@ For an update, save documents, close all Rhino windows, install the new ZIP and 
 When PowerShell is permitted by your device policy, run `install.ps1 -CheckOnly` to check Rhino/package identity and the bundled checksum; `install.ps1` installs. To check a downloaded asset manually:
 
 ```powershell
-Get-FileHash .\ai-architec-rhino-0.5.0-beta.6-windows-installer.zip -Algorithm SHA256
+Get-FileHash .\ai-architec-rhino-0.6.0-beta.9-windows-installer.zip -Algorithm SHA256
 ```
 
 Compare with **SHA256SUMS.txt from that same release**. The ZIP's internal checksum file covers its extracted files. The direct `.yak` may be installed using Yak or dragged onto Rhino; existing manually registered prototype users should use the ZIP installer so registration is repaired.

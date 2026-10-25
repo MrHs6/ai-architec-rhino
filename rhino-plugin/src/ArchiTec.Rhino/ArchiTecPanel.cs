@@ -25,6 +25,8 @@ public sealed class ArchiTecPanel:Panel
     private readonly McpOperationLedger mcpOperations=new();
     private ConnectionSettings settings=new();
     private IPlannerClient? provider;
+    private string? apiConnectionError;
+    private bool explicitOffline;
     private CancellationTokenSource? requestCancel;
     private PreparedPlan? pending;
     private PlanConduit? conduit;
@@ -42,7 +44,8 @@ public sealed class ArchiTecPanel:Panel
         if(busy)return false;
         value=value with{Endpoint=ProviderProfiles.ValidateEndpoint(value.Source,value.Endpoint),ApiKey=value.ApiKey.Trim()};ProviderProfiles.ValidateCredentialSource(value.Source,value.ApiKey);
         SettingsStore.Save(value);provider?.Dispose();provider=null;settings=value;
-        view.LoadSettings(value);view.SetOffline();ClearPreview();
+        apiConnectionError=null;explicitOffline=false;
+        view.LoadSettings(value);view.SetApiDisconnected(value.Source);ClearPreview();
         view.SetStatus("Connection settings saved. Open Settings to load models and connect.");
         return true;
     }
@@ -52,6 +55,7 @@ public sealed class ArchiTecPanel:Panel
         view=new StudioView();Content=NativeViewHost.Wrap(view);
         try{settings=SettingsStore.Load();view.LoadProfiles(SettingsStore.LoadProfiles());preferences=SettingsStore.LoadPreferences();}catch{view.SetStatus("Saved settings could not be read. Open API profiles to reconnect.");}
         view.LoadSettings(settings);
+        if(settings.ApiKey.Length>0)view.SetApiDisconnected(settings.Source);
         view.LoadPreferences(preferences);view.SetWorkspace(preferences.DefaultWorkspace,false);mode=preferences.DefaultWorkspace;
         view.SendRequested+=()=>_ = SendAsync();view.ApplyRequested+=ApplyPending;
         view.RouteChanged+=()=>{requestCancel?.Cancel();ClearPreview();view.RestoreConversation(view.ChatViaMcp?documentState.McpLog:history);};
@@ -73,7 +77,7 @@ public sealed class ArchiTecPanel:Panel
         view.SavePreferencesRequested+=()=>{try{preferences=view.ReadPreferences();SettingsStore.SavePreferences(preferences);view.LoadPreferences(preferences);view.RestoreConversation(history);view.PreferencesMessage("Preferences saved. The default workspace applies next launch.");}catch(Exception ex){view.PreferencesMessage(ex.Message);}};
         view.AuditRequested+=()=>RunAudit();view.QuickAssistRequested+=QuickAssist;
         view.AttachRequested+=AttachImage;view.ImportRequested+=ImportPlan;view.ConnectRequested+=()=>_ = ConnectAsync();
-        view.OfflineRequested+=()=>{provider?.Dispose();provider=null;view.SetOffline();view.CloseConnections();ClearPreview();};
+        view.OfflineRequested+=()=>{if(busy)return;requestCancel?.Cancel();provider?.Dispose();provider=null;apiConnectionError=null;explicitOffline=true;view.SetOffline();view.CloseConnections();ClearPreview();};
         view.McpStartRequested+=()=>{if(mcp is null){try{var port=view.RequestedMcpPort;StartMcp(port);preferences=preferences with{McpPort=port};SettingsStore.SavePreferences(preferences);}catch(Exception ex){view.McpMessage("MCP: "+ex.Message);}}else StopMcp();};
         view.CopyMcpRequested+=CopyMcpConfiguration;
         view.SetupMcpClientRequested+=()=>_ = SetupMcpClientAsync();
@@ -94,14 +98,14 @@ public sealed class ArchiTecPanel:Panel
     private async Task ConnectAsync()
     {
         if(busy||!SaveProfileCore())return;
-        provider?.Dispose();provider=null;view.SetOffline();
+        provider?.Dispose();provider=null;apiConnectionError=null;explicitOffline=false;view.SetApiConnecting(settings.Source);
         busy=true;requestCancel=new CancellationTokenSource(TimeSpan.FromSeconds(30));view.SetBusy(true);view.ApiMessage("Profile saved. Connecting and discovering models…");
         var source=settings.Source;var endpoint=settings.Endpoint;var key=settings.ApiKey;var remember=settings.RememberKey;
         try
         {
             var candidate=ProviderProfiles.Create(source,endpoint,key);
             ModelCatalog catalog;
-            try{catalog=await candidate.Models(requestCancel.Token);}
+            try{catalog=await candidate.Models(requestCancel.Token);requestCancel.Token.ThrowIfCancellationRequested();}
             catch{candidate.Dispose();throw;}
             if(disposed){candidate.Dispose();return;}
             if(catalog.Models.Count==0){candidate.Dispose();throw new InvalidOperationException("No models with the required capabilities were found.");}
@@ -110,7 +114,7 @@ public sealed class ArchiTecPanel:Panel
             view.SetCatalog(catalog.Models,settings.Model,settings.Source);PersistSettings();ClearPreview();
             view.SelectApiRoute();view.ApiMessage($"Connected · {catalog.Models.Count} models. Choose a model, save the profile and return to your workspace.");view.SetStatus("Connected · selected model will be used exactly");
         }
-        catch(Exception ex){view.ApiMessage("Connection not established. "+ConnectionDiagnostics.Describe(ex));}
+        catch(Exception ex){provider?.Dispose();provider=null;apiConnectionError=ConnectionDiagnostics.Describe(ex);view.SetApiConnectionError(source,apiConnectionError);view.SetStatus("API connection failed · open API profiles for details");}
         finally{busy=false;view.SetBusy(false);requestCancel?.Dispose();requestCancel=null;}
     }
     private async Task TestNetworkAsync()
@@ -137,9 +141,9 @@ public sealed class ArchiTecPanel:Panel
             ProviderProfiles.ValidateCredentialSource(draft.Source,draft.ApiKey);
             SettingsStore.SaveProfile(draft);
             if(draft.Source!=settings.Source||draft.Endpoint!=settings.Endpoint||draft.ApiKey!=settings.ApiKey)
-            {provider?.Dispose();provider=null;view.SetOffline();ClearPreview();}
+            {provider?.Dispose();provider=null;apiConnectionError=null;explicitOffline=false;view.SetApiDisconnected(draft.Source);ClearPreview();}
             settings=draft;view.ProfileSaved(draft);
-            view.ApiMessage(provider is null?"Profile is active. Connect to discover models; no modeling request has been sent.":"Connected profile saved.");
+            view.ApiMessage(provider is null?"Profile saved, not connected. Choose Connect and discover models; no modeling request has been sent.":"Connected profile saved.");
             return true;
         }
         catch(Exception ex){view.ProfileSaveError(ex.Message);return false;}
@@ -227,6 +231,8 @@ public sealed class ArchiTecPanel:Panel
         AddMessage("user",text);busy=true;requestCancel=new CancellationTokenSource();view.SetBusy(true);view.SetStatus("Understanding your request…");
         try
         {
+            if(provider is null&&!explicitOffline&&(settings.ApiKey.Length>0||apiConnectionError is not null))
+                throw new InvalidOperationException($"The saved {settings.Source} profile is not connected. Open API profiles, choose Connect and discover models, then select a model. "+(apiConnectionError is null?"To use local examples instead, choose Disconnect API / use offline tools explicitly.":"Last connection error: "+apiConnectionError));
             ActionPlan? plan;
             string? graphState=null;
             if(grasshopperTarget)
