@@ -1,0 +1,180 @@
+{
+  "status": "passed",
+  "plugin_version": "0.6.0-beta.9",
+  "cloud_requests": 0,
+  "geometry_mutations": 0,
+  "checks": [
+    {
+      "name": "Menus, options, messages and preview share one scroll at 560 x 780",
+      "data": null
+    },
+    {
+      "name": "Brand and composer remain outside the scrolling content at 560 x 780",
+      "data": null
+    },
+    {
+      "name": "Conversation has a useful shared viewport and no tiny independent box at 560 x 780",
+      "data": {
+        "viewport_height": 515.15,
+        "conversation_height": 1983.5999999999997
+      }
+    },
+    {
+      "name": "Scrolling moves upper menus away while brand and composer stay fixed at 560 x 780",
+      "data": null
+    },
+    {
+      "name": "Selected model displays its readable name, not its record serialization at 560 x 780",
+      "data": null
+    },
+    {
+      "name": "Long multiline composer remains bounded and reachable at 560 x 780",
+      "data": {
+        "prompt_height": 180
+      }
+    },
+    {
+      "name": "Menus, options, messages and preview share one scroll at 420 x 640",
+      "data": null
+    },
+    {
+      "name": "Brand and composer remain outside the scrolling content at 420 x 640",
+      "data": null
+    },
+    {
+      "name": "Conversation has a useful shared viewport and no tiny independent box at 420 x 640",
+      "data": {
+        "viewport_height": 375.15,
+        "conversation_height": 2739.6000000000004
+      }
+    },
+    {
+      "name": "Scrolling moves upper menus away while brand and composer stay fixed at 420 x 640",
+      "data": null
+    },
+    {
+      "name": "Selected model displays its readable name, not its record serialization at 420 x 640",
+      "data": null
+    },
+    {
+      "name": "Long multiline composer remains bounded and reachable at 420 x 640",
+      "data": {
+        "prompt_height": 180
+      }
+    },
+    {
+      "name": "Menus, options, messages and preview share one scroll at 350 x 540",
+      "data": null
+    },
+    {
+      "name": "Brand and composer remain outside the scrolling content at 350 x 540",
+      "data": null
+    },
+    {
+      "name": "Conversation has a useful shared viewport and no tiny independent box at 350 x 540",
+      "data": {
+        "viewport_height": 275.15,
+        "conversation_height": 3369.600000000001
+      }
+    },
+    {
+      "name": "Scrolling moves upper menus away while brand and composer stay fixed at 350 x 540",
+      "data": null
+    },
+    {
+      "name": "Selected model displays its readable name, not its record serialization at 350 x 540",
+      "data": null
+    },
+    {
+      "name": "Long multiline composer remains bounded and reachable at 350 x 540",
+      "data": {
+        "prompt_height": 180
+      }
+    },
+    {
+      "name": "generate preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "analyze preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "assist preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "MCP shows a scrolling execution workspace without local chat or recent-result edit controls",
+      "data": null
+    },
+    {
+      "name": "Grasshopper keeps its own guidance and hides native recent-result controls",
+      "data": null
+    },
+    {
+      "name": "Route changes keep stale model selectors hidden after an API failure",
+      "data": null
+    },
+    {
+      "name": "API profile selected model uses the readable-name template too",
+      "data": null
+    },
+    {
+      "name": "generate preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "analyze preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "assist preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "MCP shows a scrolling execution workspace without local chat or recent-result edit controls",
+      "data": null
+    },
+    {
+      "name": "Grasshopper keeps its own guidance and hides native recent-result controls",
+      "data": null
+    },
+    {
+      "name": "Route changes keep stale model selectors hidden after an API failure",
+      "data": null
+    },
+    {
+      "name": "API profile selected model uses the readable-name template too",
+      "data": null
+    },
+    {
+      "name": "generate preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "analyze preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "assist preserves the fixed composer and shared workspace",
+      "data": null
+    },
+    {
+      "name": "MCP shows a scrolling execution workspace without local chat or recent-result edit controls",
+      "data": null
+    },
+    {
+      "name": "Grasshopper keeps its own guidance and hides native recent-result controls",
+      "data": null
+    },
+    {
+      "name": "Route changes keep stale model selectors hidden after an API failure",
+      "data": null
+    },
+    {
+      "name": "API profile selected model uses the readable-name template too",
+      "data": null
+    }
+  ],
+  "error": null
+}

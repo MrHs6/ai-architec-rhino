@@ -1,3 +1,20 @@
+AI Archi-Tec 0.6.0-beta.9 candidate — reliable API conversations and a readable workspace
+
+- Authenticate OpenRouter keys with the official `/key` endpoint before reading its public `/models` catalog. Reject management/provisioning credentials for inference; keep compatible text models that advertise structured output without requiring unused tool calling.
+- Distinguish a saved profile, an active API connection and a failed connection. A saved or failed API profile no longer silently sends its conversation to the limited offline planner; local examples require the user's explicit offline choice.
+- Preserve the selected model ID. If it disappears from the refreshed catalog, require an explicit model choice instead of substituting the first entry. Hide stale model choices while disconnected and keep the dashboard state consistent across workspace/MCP route changes.
+- Cancel an active request before disconnecting. Retain API failure diagnostics and clear a failed provider instance consistently. API conversation histories remain separate from the external-client MCP execution log.
+- Recognize an explicit edit even when its instruction says “do not create a replacement.” Follow-up moves stay scoped to the existing native object instead of entering Generate with no target ID.
+- Keep a compact brand and bounded multiline composer fixed while connection controls, workspace options, recent results, the conversation and preview share one vertical scrolling area. Upper menus can scroll away; the conversation is no longer squeezed into a small independent viewport. Preserve Generate, Analyze, Assist, Grasshopper and external-client MCP routes.
+- Increase conversation/supporting text sizes, render selected model names through the custom ComboBox template, and route the closed selector's mouse wheel to its page instead of accidentally changing models. Keep native recent-result controls hidden in MCP and Grasshopper views.
+- Classify bounded API errors into credential, credit/budget, permission/region, rate, routing/schema and network-gateway failures, including errors carried in HTTP 200 responses. Never display raw provider bodies, credentials, account identifiers or prompts in these diagnostics; no model fallback or automatic modeling replay is introduced.
+- Explain the .NET 8 process-wide Windows proxy snapshot: after an OS network/proxy change, save work and restart Rhino before reconnecting. The plug-in preserves current network settings and TLS validation; this step does not guarantee removal of provider/network restrictions.
+- Verify **196 automated core/protocol checks**, including authenticated discovery ordering, schema-only model compatibility, safe error handling, profile behavior and negated-creation follow-up instructions. Add explicitly scheduled native runtime fixtures for the paid real-provider conversation → preview → Apply → inspect loop, an existing-failure/no-silent-offline path that sends no new cloud requests, and detached WPF layout checks at normal, short and narrow sizes.
+
+Installed 0.6.0-beta.9 passed 39 native WPF layout checks across 560 x 780, 420 x 640 and 350 x 540 panels. Real OpenRouter acceptance with the explicitly selected `openai/gpt-4.1-mini` passed authenticated discovery (389 compatible models at test time), Persian conversation without geometry, preview isolation, Apply of a valid closed 2 x 4 x 3 meter solid (24 cubic meters), follow-up translation by +3 meters along X preserving the object ID, and 3DM save/reopen. Nine native live-flow checkpoints passed; no mock or custom transport was used. Other providers retain protocol-fixture coverage and have not been live-tested with personal accounts in this revision. Public GitHub/Food4Rhino release publication remains separate.
+
+---
+
 AI Archi-Tec 0.6.0-beta.6 candidate — editable Grasshopper through MCP and API
 
 - Add native component discovery, graph inspection and a validated `grasshopper_definition` action. Create editable components, sliders, typed input branches and wires; update an open bridge-owned graph in place. Bake is explicit.

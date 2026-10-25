@@ -47,7 +47,11 @@ public static class ConversationIntent
     public static bool IsExplicitEdit(string text)
     {
         var value=text.Replace('\u200c',' ').ToLowerInvariant();
-        if(System.Text.RegularExpressions.Regex.IsMatch(value,@"\b(create|build|new)\b|ساختمان جدید|بساز|ایجاد کن"))return false;
+        // A request to edit an existing target often explicitly forbids creating a replacement.
+        // Do not let that negative clause hide the edit or remove its target IDs from context.
+        var positive=System.Text.RegularExpressions.Regex.Replace(value,@"\b(?:without\s+(?:creating|building)|(?:do\s+not|don['’]?t|never)\s+(?:create|build))\b.*?(?=\b(?:but|instead|then)\b|[,.;!?]|$)"," ");
+        positive=System.Text.RegularExpressions.Regex.Replace(positive,@"(?:هیچ\s+)?(?:ساختمان|حجم|مدل|چیز)ی?\s+جدیدی?\s+(?:نساز|ایجاد\s+نکن)"," ");
+        if(System.Text.RegularExpressions.Regex.IsMatch(positive,@"\b(create|build)\b|\bnew\b(?!\s+(?:position|location|dimensions|size|height|width|depth|orientation|angle|scale|layer)\b)|ساختمان جدید|بساز|ایجاد کن"))return false;
         return System.Text.RegularExpressions.Regex.IsMatch(value,@"\b(move|shift|scale|extrude|modify|edit|resize|change)\b|جا\s*به\s*جا|جابجا|تغییر|اصلاح|منتقل|بزرگ\s*تر|کوچک\s*تر");
     }
 }

@@ -61,7 +61,7 @@ public partial class StudioView:UserControl
         ApiUrl.Text=value.Endpoint;ApiKey.Password=value.ApiKey;RememberKey.IsChecked=value.RememberKey;
         var preset=ProviderProfiles.Get(value.Source);ProviderNotes.Text=preset.Notes;ProviderProtocol.Text="Protocol · "+preset.Protocol;
         ApiUrl.IsReadOnly=value.Source!="OpenAI-compatible / local";
-        ProfileModelSelector.ItemsSource=modelLists.TryGetValue(value.Source,out var models)?models:null;ProfileModelSelector.DisplayMemberPath="Name";
+        ProfileModelSelector.DisplayMemberPath="Name";ProfileModelSelector.ItemsSource=modelLists.TryGetValue(value.Source,out var models)?models:null;
         ProfileModelSelector.Visibility=models is null?Visibility.Collapsed:Visibility.Visible;
         ProfileModelSelector.SelectedItem=models?.FirstOrDefault(m=>m.Id==value.Model);ApiStatus.Text=models is null?"Load this service's models to connect.":$"{models.Count} discovered models in this profile.";
         ProfileSaveStatus.Text=value.ApiKey.Length==0?"No key in this session. Enter a key, then Save or Connect.":value.RememberKey?"Key loaded for this Windows user.":"Session key · not stored on disk. Enable Remember to retain it after restarting Rhino.";
@@ -70,26 +70,29 @@ public partial class StudioView:UserControl
     public void ProfileSaved(ConnectionSettings value)
     {
         profiles[value.Source]=value;
-        ProfileSaveStatus.Text=$"Active profile saved · {value.Source}. "+(value.RememberKey&&value.ApiKey.Length>0?"Key encrypted for this Windows user.":value.ApiKey.Length>0?"Key kept for this Rhino session only; it will be cleared on exit.":"No key stored.");
+        ProfileSaveStatus.Text=$"Profile saved · {value.Source}. "+(value.RememberKey&&value.ApiKey.Length>0?"Key encrypted for this Windows user.":value.ApiKey.Length>0?"Key kept for this Rhino session only; it will be cleared on exit.":"No key stored.");
     }
     public void ProfileSaveError(string message)=>ProfileSaveStatus.Text="Could not save profile: "+message;
     public void NetworkMessage(string message)=>NetworkStatus.Text=message;
-    public void SetRecentResult(string? message,bool available=true){resultAvailable=message is not null&&available;RecentResultBar.Visibility=message is null||GrasshopperTarget?Visibility.Collapsed:Visibility.Visible;RecentResultLabel.Text=message??"";RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=resultAvailable&&!isBusy;}
+    public void SetRecentResult(string? message,bool available=true){resultAvailable=message is not null&&available;RecentResultBar.Visibility=message is null||GrasshopperTarget||ChatViaMcp?Visibility.Collapsed:Visibility.Visible;RecentResultLabel.Text=message??"";RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=resultAvailable&&!isBusy;}
     public void UseRecentResult(){AssistScope.SelectedIndex=1;AnalysisScope.SelectedIndex=1;}
     public void FocusPrompt()=>PromptInput.Focus();
     public void SetCatalog(List<ModelDescriptor> models,string selected,string source)
     {
-        loading=true;activeSource=source;modelLists[source]=models;ModelSelector.ItemsSource=models;ModelSelector.DisplayMemberPath="Name";
-        ModelSelector.SelectedItem=models.FirstOrDefault(m=>m.Id==selected)??models.FirstOrDefault();ModelSelector.Visibility=Visibility.Visible;
-        if(Source==source){ProfileModelSelector.ItemsSource=models;ProfileModelSelector.Visibility=Visibility.Visible;ProfileModelSelector.DisplayMemberPath="Name";ProfileModelSelector.SelectedItem=ModelSelector.SelectedItem;}
-        loading=false;ConnectionLabel.Text="API · "+source;ConnectionLabel.Foreground=Brush("#6ACDAD");DashboardApiStatus.Text=source+" connected\n"+SelectedModel?.Id;
+        loading=true;activeSource=source;modelLists[source]=models;ModelSelector.DisplayMemberPath="Name";ModelSelector.ItemsSource=models;
+        ModelSelector.SelectedItem=models.FirstOrDefault(m=>m.Id==selected);ModelSelector.Visibility=Visibility.Visible;
+        if(Source==source){ProfileModelSelector.DisplayMemberPath="Name";ProfileModelSelector.ItemsSource=models;ProfileModelSelector.Visibility=Visibility.Visible;ProfileModelSelector.SelectedItem=ModelSelector.SelectedItem;}
+        loading=false;ConnectionLabel.Text="API · "+source;ConnectionLabel.Foreground=Brush("#6ACDAD");DashboardApiStatus.Text=source+" connected\n"+(SelectedModel?.Id??"Choose a model explicitly");
     }
     public void SetOffline(){activeSource="";ModelSelector.Visibility=Visibility.Collapsed;ConnectionLabel.Text="API · not connected · offline tools";ConnectionLabel.Foreground=Brush("#D0B378");DashboardApiStatus.Text="Offline tools · no API connected";}
+    public void SetApiDisconnected(string source){activeSource="";ModelSelector.Visibility=Visibility.Collapsed;ConnectionLabel.Text="API · "+source+" · saved, not connected";ConnectionLabel.Foreground=Brush("#D0B378");DashboardApiStatus.Text="Profile saved · connect to use "+source;}
+    public void SetApiConnecting(string source){SetApiDisconnected(source);ConnectionLabel.Text="API · "+source+" · connecting…";DashboardApiStatus.Text="Checking credentials and model catalog…";}
+    public void SetApiConnectionError(string source,string message){SetApiDisconnected(source);ConnectionLabel.Text="API · "+source+" · connection failed";ConnectionLabel.Foreground=Brush("#F0ABA9");DashboardApiStatus.Text=source+" connection failed · see API profiles";ApiMessage("Connection not established. "+message);}
     public void SetBusy(bool value)
     {
         isBusy=value;
         BusyOverlay.Visibility=value?Visibility.Visible:Visibility.Collapsed;
-        foreach(var button in new[]{SendButton,ConnectButton,TestNetworkButton,GenerateNav,AnalyzeNav,AssistNav,QuickAssistButton,SaveProfileButton,AttachButton,ImportButton,RefineResultButton,SelectResultButton,ExplainResultButton})button.IsEnabled=!value;
+        foreach(var button in new[]{SendButton,ConnectButton,TestNetworkButton,OfflineButton,GenerateNav,AnalyzeNav,AssistNav,QuickAssistButton,SaveProfileButton,AttachButton,ImportButton,RefineResultButton,SelectResultButton,ExplainResultButton})button.IsEnabled=!value;
         RefineResultButton.IsEnabled=SelectResultButton.IsEnabled=ExplainResultButton.IsEnabled=!value&&resultAvailable;
         ApiCancelButton.Visibility=value?Visibility.Visible:Visibility.Collapsed;
         SourceSelector.IsEnabled=!value;ApiUrl.IsEnabled=!value;ApiKey.IsEnabled=!value;RememberKey.IsEnabled=!value;ModelSelector.IsEnabled=!value;ProfileModelSelector.IsEnabled=!value;
@@ -109,12 +112,12 @@ public partial class StudioView:UserControl
     public void AddMessage(string role,string value,bool error=false)
     {
         Welcome.Visibility=Visibility.Collapsed;var stack=new StackPanel();
-        stack.Children.Add(new TextBlock{Text=role=="user"?"YOU":"ARCHI-TEC",FontSize=9,Foreground=Brush(role=="user"?"#AAB1CB":"#B799F4"),Margin=new Thickness(0,0,0,7)});
-        stack.Children.Add(new TextBlock{Text=value,TextWrapping=TextWrapping.Wrap,LineHeight=19,Foreground=Brush(error?"#F0ABA9":"#E5E7F3"),FlowDirection=value.Any(c=>c>='\u0600'&&c<='\u06FF')?FlowDirection.RightToLeft:FlowDirection.LeftToRight});
+        stack.Children.Add(new TextBlock{Text=role=="user"?"YOU":"ARCHI-TEC",FontSize=10,Foreground=Brush(role=="user"?"#AAB1CB":"#B799F4"),Margin=new Thickness(0,0,0,7)});
+        stack.Children.Add(new TextBlock{Text=value,FontSize=13,TextWrapping=TextWrapping.Wrap,LineHeight=21,Foreground=Brush(error?"#F0ABA9":"#E5E7F3"),FlowDirection=value.Any(c=>c>='\u0600'&&c<='\u06FF')?FlowDirection.RightToLeft:FlowDirection.LeftToRight});
         Conversation.Children.Add(new Border{Child=stack,Padding=new Thickness(compact?9:13),Margin=new Thickness(role=="user"?14:0,0,role=="user"?0:5,compact?7:12),CornerRadius=new CornerRadius(10),Background=Brush(role=="user"?"#202039":"#14182A"),BorderBrush=Brush(error?"#72434E":"#252B43"),BorderThickness=new Thickness(1)});
         while(Conversation.Children.Count>25)Conversation.Children.RemoveAt(1);ConversationScroll.ScrollToEnd();
     }
-    public void ShowPreview(ActionPlan plan,string units){PlanSummary.Text=plan.Summary;ActionCount.Text=$"{plan.Actions.Count} operations";PlanUnits.Text=GrasshopperPlan.IsGrasshopper(plan)?"Definition plan · solves on Apply · Grasshopper Undo":$"{plan.LengthUnit} → {units} · Rhino Undo";PlanDetails.Text=string.Join("\n",plan.Actions.Select((a,i)=>$"{i+1}. {a.Tool.Replace('_',' ')}\n{a.Parameters.GetRawText()}"));PreviewCard.Visibility=Visibility.Visible;}
+    public void ShowPreview(ActionPlan plan,string units){PlanSummary.Text=plan.Summary;ActionCount.Text=$"{plan.Actions.Count} operations";PlanUnits.Text=GrasshopperPlan.IsGrasshopper(plan)?"Definition plan · solves on Apply · Grasshopper Undo":$"{plan.LengthUnit} → {units} · Rhino Undo";PlanDetails.Text=string.Join("\n",plan.Actions.Select((a,i)=>$"{i+1}. {a.Tool.Replace('_',' ')}\n{a.Parameters.GetRawText()}"));PreviewCard.Visibility=Visibility.Visible;ConversationScroll.ScrollToEnd();}
     public void HidePreview()=>PreviewCard.Visibility=Visibility.Collapsed;
     public void SetMcp(bool running,string? url=null,string? token=null)
     {
@@ -197,7 +200,7 @@ public partial class StudioView:UserControl
     {
         if(SendButton is null)return;
         TargetSelector.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
-        if(GrasshopperTarget)RecentResultBar.Visibility=Visibility.Collapsed;
+        RecentResultBar.Visibility=!ChatViaMcp&&!GrasshopperTarget&&RecentResultLabel.Text.Length>0?Visibility.Visible:Visibility.Collapsed;
         ApiConnectionButton.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;McpRouteLabel.Visibility=ChatViaMcp?Visibility.Visible:Visibility.Collapsed;
         ImportButton.Visibility=ChatViaMcp||mode=="analyze"?Visibility.Collapsed:Visibility.Visible;
         ComposerCard.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
@@ -205,7 +208,7 @@ public partial class StudioView:UserControl
         WorkspaceOptionsCard.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
         GenerateNav.Visibility=AnalyzeNav.Visibility=AssistNav.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
         PreviewCommitControls.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
-        ModelSelector.Visibility=!ChatViaMcp&&ModelSelector.Items.Count>0?Visibility.Visible:Visibility.Collapsed;
+        ModelSelector.Visibility=!ChatViaMcp&&activeSource.Length>0&&ModelSelector.Items.Count>0?Visibility.Visible:Visibility.Collapsed;
         GenerateOptions.Visibility=!ChatViaMcp&&mode=="generate"?Visibility.Visible:Visibility.Collapsed;
         if(!ChatViaMcp&&GrasshopperTarget)
         {
@@ -217,7 +220,7 @@ public partial class StudioView:UserControl
             ExampleButton.Content="Try a parametric box definition";
             PromptPlaceholder.Text="Describe the Grasshopper definition or its next change…";
         }
-        AssistOptions.Visibility=!ChatViaMcp&&mode=="assist"?Visibility.Visible:Visibility.Collapsed;
+        AssistOptions.Visibility=!ChatViaMcp&&!GrasshopperTarget&&mode=="assist"?Visibility.Visible:Visibility.Collapsed;
         ExampleButton.Visibility=ChatViaMcp?Visibility.Collapsed:Visibility.Visible;
         SendButton.Content=mode switch{"analyze"=>"Analyze ↗","assist"=>"Assist ↗",_=>"Generate ↗"};
         ModeLabel.Text=mode=="assist"?"MODEL ASSIST":mode.ToUpperInvariant();
@@ -226,6 +229,13 @@ public partial class StudioView:UserControl
         if(!ChatViaMcp&&GrasshopperTarget){HeroTitle.Text="Parametric thinking. Editable definitions.";HeroDescription.Text="Build, solve and refine in Grasshopper using your API account. Geometry stays parametric until you request a bake.";}
     }
     public void SelectApiRoute()=>ChatRouteSelector.SelectedIndex=0;
+    private void WorkspaceSelectorWheel(object sender,MouseWheelEventArgs e)
+    {
+        if(sender is not ComboBox{IsDropDownOpen:false} selector)return;
+        // A closed selector should scroll its page, not accidentally change the selected model.
+        for(DependencyObject? parent=VisualTreeHelper.GetParent(selector);parent is not null;parent=VisualTreeHelper.GetParent(parent))
+            if(parent is ScrollViewer scroll){scroll.ScrollToVerticalOffset(scroll.VerticalOffset-e.Delta);e.Handled=true;return;}
+    }
     public void SetMcpSetupBusy(bool value){SetupMcpClientButton.IsEnabled=!value;McpClientSelector.IsEnabled=!value;McpStartButton.IsEnabled=!value;}
     private void SetupMcpClientClick(object s,RoutedEventArgs e)=>SetupMcpClientRequested?.Invoke();
     private void OpenMcpClientClick(object s,RoutedEventArgs e)=>OpenMcpClientRequested?.Invoke();
@@ -249,7 +259,7 @@ public partial class StudioView:UserControl
     private void WorkspaceExample(object s,RoutedEventArgs e){Prompt=GrasshopperTarget?"Create an editable Grasshopper box with width, depth and height sliders, initially 2 by 4 by 3 document units. Do not bake it yet.":mode switch{"analyze"=>"Summarize the dimensions and visible geometry issues in this target scope.","assist"=>"Move the scoped objects 2 document units along X, keeping their GUIDs.",_=>"Create a 15 x 20 meter building with 5 floors and 3.2 meter floor heights."};PromptInput.Focus();}
     private void PromptChanged(object s,TextChangedEventArgs e){if(PromptPlaceholder is not null)PromptPlaceholder.Visibility=string.IsNullOrWhiteSpace(PromptInput.Text)?Visibility.Visible:Visibility.Collapsed;if(!loading)InputChanged?.Invoke();}
     private void PromptKey(object s,KeyEventArgs e){if(e.Key==Key.Enter&&(Keyboard.Modifiers&ModifierKeys.Control)!=0){e.Handled=true;SendRequested?.Invoke();}}
-    private void ModelChanged(object s,SelectionChangedEventArgs e){if(loading)return;DashboardApiStatus.Text=activeSource+" connected\n"+SelectedModel?.Id;if(Source==activeSource){loading=true;ProfileModelSelector.SelectedItem=SelectedModel;loading=false;}SelectedModelChanged?.Invoke();}
+    private void ModelChanged(object s,SelectionChangedEventArgs e){if(loading||activeSource.Length==0)return;DashboardApiStatus.Text=activeSource+" connected\n"+(SelectedModel?.Id??"Choose a model explicitly");if(Source==activeSource){loading=true;ProfileModelSelector.SelectedItem=SelectedModel;loading=false;}SelectedModelChanged?.Invoke();}
     private void ProfileModelChanged(object s,SelectionChangedEventArgs e){if(!loading&&Source==activeSource)ModelSelector.SelectedItem=ProfileModelSelector.SelectedItem;}
     private void SourceChanged(object s,SelectionChangedEventArgs e)
     {
