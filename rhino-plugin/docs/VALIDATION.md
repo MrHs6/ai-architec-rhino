@@ -1,4 +1,4 @@
-# Validation — AI Archi-Tec 0.6.0-beta.9 candidate
+# Validation — AI Archi-Tec 0.6.0-beta.9
 
 ## API and workspace acceptance — 25 October 2026
 
@@ -8,7 +8,7 @@
 - **39 native WPF layout checks pass** at 560 x 780, 420 x 640 and 350 x 540. Connection controls, options, history and previews share a scrolling workspace; brand and multiline composer stay fixed. Generate, Analyze, Assist, Grasshopper, MCP and API-profile model display are covered. Closed model selectors display a readable name, and a stale catalog cannot reappear after failure.
 - The preconnection Send check proves that a saved profile cannot silently run offline examples. The standalone failure fixture is available for an existing real failed Connect; it is not counted as passed in this successful final session. Failure transport coverage remains automated/simulated.
 - The initial 403 also affected anonymous API requests and temporarily the browser account page. Restoring the user's normal network connection made the official endpoint reachable; the same saved key then completed real authentication/inference. The plugin did not alter VPN/proxy settings, disable TLS validation or bypass provider access policy. The documented .NET 8 proxy snapshot is a troubleshooting condition, not proof of the sole cause of every 403.
-- Other providers have protocol-fixture coverage, not live personal-account acceptance in this revision. Live vision, second-workstation installation and paid-provider Grasshopper graph generation remain unverified. Existing public 0.5 download links and Food4Rhino publication are not replaced automatically by this candidate.
+- Other providers have protocol-fixture coverage, not live personal-account acceptance in this revision. Live vision, second-workstation installation and paid-provider Grasshopper graph generation remain unverified. This record validates the 0.6.0-beta.9 implementation. GitHub releases, Food4Rhino downloads and the public Yak catalog are separate distribution surfaces.
 
 [Sanitized live report](acceptance/api-live-beta9.json) · [Layout measurements](acceptance/ui-layout-beta9.json) · [Core test output](core-test-results.txt) · [Reproduction instructions](../tests/ArchiTec.RuntimeTests/README.md)
 

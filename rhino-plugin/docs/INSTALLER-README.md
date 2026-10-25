@@ -1,4 +1,6 @@
-# AI Archi-Tec for Rhino 8 — 0.6.0-beta.6 candidate
+# AI Archi-Tec for Rhino 8 — 0.6.0-beta.9
+
+Includes Rhino and editable Grasshopper workflows, authenticated OpenRouter discovery, explicit model selection and a readable scrolling workspace. Saved profiles and connected API sessions have distinct statuses. Choose Connect and discover models before API chat; preview/Apply stays inside Rhino. In MCP, all conversation and tool authorization stay in your client.
 
 Grasshopper: run `archtec` in Rhino's command line. In API mode choose **Grasshopper · parametric definition**, connect your own service/model, describe the graph, review and Apply. In MCP mode use the same Rhino connection and request an editable Grasshopper definition in your external client. Bake only on explicit request. Graph Undo is in Grasshopper; baked objects use Rhino Undo. No separate `.gha` is installed. Built-in bounded components only; arbitrary scripts, third-party add-ons and replacement of reopened definitions are excluded.
 
