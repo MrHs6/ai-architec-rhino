@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "bridge_pid": 30872,
+  "same_process": true,
+  "graph_preserved": true,
+  "offline_message": "Rhino MCP is off or reconnecting. In Rhino, open Archi-Tec > MCP connection and click Enable connection. Keep this client open; it reconnects automatically. Then retry get_context. Do not repeat a modeling request until you have checked its preview or get_plan_status.",
+  "definitions": 2
+}
