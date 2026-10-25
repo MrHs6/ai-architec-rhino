@@ -16,6 +16,7 @@
 ![Rhino](https://img.shields.io/badge/Rhino-8.31%2B-8970DD)
 ![Platform](https://img.shields.io/badge/Windows-x64-5474C9)
 ![Release](https://img.shields.io/badge/release-0.5.0--beta.6-C08D5E)
+[![M8ven publisher verification](https://m8ven.ai/badge/mcp/mrhs6/ai-architec-rhino?variant=verified)](https://m8ven.ai/mcp/mrhs6/ai-architec-rhino?s=readme)
 
 Open **`archtec`** inside Rhino to generate concept geometry, inspect your model or refine selected objects. Connect your own API account for chat in Studio, or use Codex/Claude Desktop through local MCP. In API mode, review a viewport preview and click **Apply to Rhino**. In MCP mode, stay in your AI client: authorize native tool execution there and inspect the result without a local Apply step.
 
@@ -113,6 +114,8 @@ This deterministic offline example produces 46 native parts for a 15 × 20 meter
 </details>
 
 ## Verified behavior and beta scope
+
+[M8ven publisher verification](https://m8ven.ai/mcp/mrhs6/ai-architec-rhino) confirms repository control. Its assessment currently has limited C# static-analysis coverage and has not inspected the MCP tool surface; it is not a complete security audit or a guarantee of safety.
 
 **144 automated checks pass.** Installed-plugin acceptance builds a tower-only Azadi reconstruction through native tools, audits 339 valid closed Breps, and checks 84 clear passage samples with four positive stone-pier controls. MCP execution stays in the client; API mode retains its own preview/Apply workflow. [Detailed evidence and actual test images](rhino-plugin/docs/VALIDATION.md)
 
