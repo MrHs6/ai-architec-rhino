@@ -77,6 +77,10 @@ Supported installed libraries: **Curve, Surface, Vector, Math, Transform, Triang
 
 ## Verified candidate
 
+![Actual native Grasshopper canvas from API workflow acceptance: three sliders, three domains and a Domain Box](assets/grasshopper-native-canvas.png)
+
+Native canvas export of the tested API definition, with Width 6, Depth 2 and Height 3 in document units. **[Open the editable .gh example](../rhino-plugin/examples/grasshopper-parametric-box.gh)** · [Fresh graph-plan example](../rhino-plugin/examples/grasshopper-parametric-box.json). The JSON creates the separate MCP fixture (2 × 4 × 3 initially, no bake); the saved API example records its tested follow-up values.
+
 The installed plug-in passed the real packaged STDIO MCP → authenticated localhost → Rhino → Grasshopper path. A seven-node definition was created, updated in place and baked as a valid closed 5 × 4 × 3 meter Brep, volume 60 m³. An identical UUID retry returned the same receipt.
 
 The actual in-Rhino API workflow was tested with a **mock planner**, including preview isolation, Apply, follow-up, bake, graph Undo/Redo, independent Rhino Undo, failed partial-bake rollback and `.gh` export/reopen. See [validation](../rhino-plugin/docs/VALIDATION.md). These tests do not establish all component combinations, live paid-provider behavior or performance on a second workstation.
