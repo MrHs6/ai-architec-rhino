@@ -1,10 +1,10 @@
 # Provider protocols and independent profiles
 
-Each service has its own endpoint, credential, remembered-key choice and selected model. Switching services preserves unsaved profile drafts in memory. **Save this profile** persists preferences and makes the selected provider active. Keys are persisted only when Remember is enabled, using Windows DPAPI; otherwise the key remains available in this Rhino session, including the native Options page, and is cleared at exit. Connect saves first, then fetches the catalog. A failed network request does not discard the saved profile. Settings files are replaced atomically. Saving does not send a modeling request.
+Each service has its own endpoint, credential, remembered-key choice and selected model. Switching services preserves unsaved profile drafts in memory. **Save this profile** persists preferences and selects that profile; it does not establish a live API connection. Keys are persisted only when Remember is enabled, using Windows DPAPI; otherwise the key remains available in this Rhino session, including the native Options page, and is cleared at exit. Connect saves first, authenticates where supported, then fetches the catalog. A failed network request does not discard the saved profile. Settings files are replaced atomically. Saving or discovering models does not send a modeling request.
 
 | Service | Discovery | Generation | Authentication |
 |---|---|---|---|
-| OpenRouter | `/api/v1/models`, filter tools/structured_outputs | OpenAI Chat Completions + JSON schema | Bearer header |
+| OpenRouter | Authenticate with `/api/v1/key`, then `/api/v1/models`; require `structured_outputs` | OpenAI Chat Completions + JSON schema | Bearer header |
 | OpenAI | `/v1/models`, exclude known non-text modalities | Responses + `text.format` JSON schema, `store:false` | Bearer header |
 | xAI / Grok | `/v1/language-models`, text output + image metadata | Chat Completions + JSON schema | Bearer header |
 | Google Gemini | `/v1beta/models`, paginated; Gemini text generation | Native `models/<id>:generateContent`, structured generation config | `x-goog-api-key` header |
@@ -15,8 +15,35 @@ Gemini sends reference images as inline image parts. Anthropic sends base64 imag
 
 The local transport tests use simulated official response shapes: credentials in headers, native payloads, model filtering/pagination, images, incomplete output and errors. **Live account-based acceptance still requires the user's own API keys.** These tests do not establish live provider availability or image interpretation quality.
 
+## API connection troubleshooting
+
+1. Select the service that issued the key and keep its official base URL. A key for OpenRouter is not a direct Anthropic or OpenAI key, even when the chosen OpenRouter model comes from that company.
+2. **Saved** means the profile is retained. **Connected** means authentication/discovery completed for the current session. **Test network** sends no key and checks host reachability only; HTTP 401/403 in that test does not validate an account.
+3. Use **Connect and discover models**, choose an exact catalog model and return to the workspace. For OpenRouter, the plug-in first checks the authenticated `/key` endpoint; its public `/models` endpoint alone cannot establish key validity. Management/provisioning keys are rejected for inference.
+4. OpenRouter models must advertise structured output and text generation; tool-calling support is not required because the plug-in requests JSON schema plans. Catalog success does not guarantee account credit or that every endpoint can execute the selected schema. Unsupported combinations fail explicitly; no alternate model is silently selected.
+5. Start with a short chat request, then a small modeling request. Inspect the preview and use **Apply** for geometry. Conversation-only responses need no Apply. Follow-up edits use the current document's selected or recent targets.
+
+Diagnostics show a bounded category and HTTP status, without displaying raw provider bodies, prompts, account identifiers or API keys:
+
+| Diagnostic | What to check |
+|---|---|
+| Credential rejected / 401 | Correct service, key enabled state and account permissions |
+| Credit/quota / 402, spending or guardrail budget | API credit, key/workspace budget and reset window; a chat subscription is separate |
+| Permission/policy / 403 | Key permissions, provider policy or guardrail; 403 alone does not prove an invalid key |
+| Network/security-policy gateway or HTML page | API reachability from Rhino, existing network settings and the process restart note below |
+| Region restriction | Provider availability and account location policy; the plug-in cannot remove a restriction |
+| Rate limit / 429 | Provider reset window or account/model quota |
+| Routing or data policy | Account routing/data-policy requirements; explicitly choose a compatible model if appropriate |
+| Required feature / 400 or 422 | Text model with JSON schema support and provider protocol compatibility |
+
+**Windows proxy changes while Rhino is open:** Rhino's .NET 8 runtime can keep the Windows proxy configuration captured when HTTP networking first initializes in that process. Creating another API client does not refresh that process-wide snapshot. If Windows network/proxy settings changed after Rhino opened, save the document, close Rhino normally, reopen it and reconnect. Keep the existing OS network configuration and TLS validation. This is a documented runtime behavior and a troubleshooting step, not a guarantee that a provider or network access restriction will disappear. The plug-in does not change proxy/VPN settings or replay failed modeling requests automatically.
+
 ## Official references used for implementation
 
+- [OpenRouter current-key authentication](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key)
+- [OpenRouter API errors and debugging](https://openrouter.ai/docs/api_reference/errors-and-debugging)
+- [.NET Windows proxy snapshot and the .NET 9 refresh change](https://devblogs.microsoft.com/dotnet/dotnet-9-networking-improvements/)
+- [.NET 8 system-proxy alias implementation](https://github.com/dotnet/runtime/blob/v8.0.21/src/libraries/System.Net.Requests/src/System/Net/WebRequest.cs#L494)
 - [OpenAI model discovery](https://developers.openai.com/api/reference/resources/models/methods/list)
 - [OpenAI Responses migration / structured output](https://developers.openai.com/api/docs/guides/migrate-to-responses)
 

@@ -1,0 +1,120 @@
+{
+  "status": "passed",
+  "stage": "complete",
+  "started_utc": "2026-10-25T16:20:34.2471959+00:00",
+  "elapsed_ms": 9107,
+  "provider": "OpenRouter",
+  "requested_model_id": "openai/gpt-4.1-mini",
+  "actual_model_id": "openai/gpt-4.1-mini",
+  "plugin_version": "0.6.0-beta.9",
+  "live_api": true,
+  "mock_api": false,
+  "custom_transport": false,
+  "raw_provider_messages_saved": false,
+  "steps": [
+    {
+      "name": "Empty interactive document and remembered OpenRouter profile selected",
+      "elapsed_ms": 14,
+      "measurements": {
+        "units": "Meters",
+        "meters_to_document_scale": 1
+      }
+    },
+    {
+      "name": "Saved API profile refuses silent offline fallback before Connect",
+      "elapsed_ms": 35,
+      "measurements": {
+        "geometry_count": 0,
+        "pending_plan": false,
+        "cloud_request_sent": false
+      }
+    },
+    {
+      "name": "Real API authentication and model discovery completed",
+      "elapsed_ms": 3376,
+      "measurements": {
+        "latency_ms": 3334,
+        "compatible_models": 389,
+        "selected_model": "openai/gpt-4.1-mini"
+      }
+    },
+    {
+      "name": "Persian live API conversation returns no modeling plan",
+      "elapsed_ms": 4951,
+      "measurements": {
+        "latency_ms": 1569,
+        "assistant_characters": 81,
+        "persian": true,
+        "geometry_count": 0,
+        "pending_plan": false
+      }
+    },
+    {
+      "name": "Live API box request produces a preview without committing geometry",
+      "elapsed_ms": 6962,
+      "measurements": {
+        "latency_ms": 2006,
+        "pending_actions": 1,
+        "geometry_count": 0
+      }
+    },
+    {
+      "name": "Apply creates a valid closed native 2 x 4 x 3 meter solid",
+      "elapsed_ms": 7131,
+      "measurements": {
+        "latency_ms": 163,
+        "object_id": "aeaf5b42-692c-4b73-b9e0-d07358d14f0e",
+        "dimensions_m": [
+          2,
+          4,
+          3
+        ],
+        "volume_m3": 24,
+        "valid": true,
+        "solid": true
+      }
+    },
+    {
+      "name": "Live API follow-up targets the original object and waits for Apply",
+      "elapsed_ms": 8994,
+      "measurements": {
+        "latency_ms": 1853,
+        "object_id": "aeaf5b42-692c-4b73-b9e0-d07358d14f0e",
+        "geometry_count": 1
+      }
+    },
+    {
+      "name": "Follow-up Apply preserves the native object ID and measured dimensions",
+      "elapsed_ms": 9010,
+      "measurements": {
+        "latency_ms": 10,
+        "object_id": "aeaf5b42-692c-4b73-b9e0-d07358d14f0e",
+        "min_m": [
+          3,
+          0,
+          0
+        ],
+        "max_m": [
+          5,
+          4,
+          3
+        ],
+        "translation_m": [
+          3,
+          0,
+          0
+        ],
+        "geometry_count": 1
+      }
+    },
+    {
+      "name": "Actual API-created native result saved and reopened",
+      "elapsed_ms": 9101,
+      "measurements": {
+        "file": "Live-API-Box-Moved.3dm",
+        "geometry_count": 1
+      }
+    }
+  ],
+  "error": null
+}

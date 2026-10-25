@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "passes": [
+    "Grasshopper guidance survives workspace refresh",
+    "API planner receives actual Grasshopper context and component catalog",
+    "API Send prepares a real Grasshopper plan",
+    "API proposal does not commit a graph or bake before Apply",
+    "API Apply creates a new definition with seven editable Grasshopper nodes",
+    "API graph remains parametric without an explicit bake",
+    "API follow-up replaces the same definition without duplicate nodes",
+    "API explicit bake creates one Rhino object",
+    "API bake is a valid closed 6 x 2 x 3 native solid with volume 36",
+    "API edits preserve the earlier MCP baked geometry",
+    "Grasshopper Undo restores the earlier graph and slider value",
+    "Grasshopper Redo restores the revised graph",
+    "Rhino Undo is available independently for the baked solid",
+    "Rhino Undo removes only the most recent bake",
+    "A later non-geometric bake item rolls back the earlier baked solid",
+    "Failed baking leaves the existing editable graph unchanged",
+    "Editable .gh example is exported successfully",
+    "Exported .gh file reopens with all seven native nodes",
+    "Runtime test uses the installed final candidate version"
+  ],
+  "mock_api": true,
+  "live_paid_provider_tested": false
+}

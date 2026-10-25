@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF><AssemblyName>ArchiTec.RuntimeTests</AssemblyName></PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeTestAssemblyName)' != ''"><AssemblyName>$(RuntimeTestAssemblyName)</AssemblyName></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/ArchiTec.Rhino/ArchiTec.Rhino.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Reference Include="Eto"><HintPath>C:\Program Files\Rhino 8\System\Eto.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="RhinoCommon"><HintPath>C:\Program Files\Rhino 8\System\netcore\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Grasshopper"><HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\Grasshopper.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="GH_IO"><HintPath>C:\Program Files\Rhino 8\Plug-ins\Grasshopper\GH_IO.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

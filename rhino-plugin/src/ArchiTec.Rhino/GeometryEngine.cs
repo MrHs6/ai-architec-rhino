@@ -36,14 +36,15 @@ public sealed class PreparedPlan : IDisposable
     internal readonly double Tolerance;
     internal readonly Dictionary<Guid, (uint Crc, int Layer)> Fingerprints = [];
     internal readonly List<PreparedAction> Steps = [];
+    internal IPreparedGrasshopper? Grasshopper;
     public ActionPlan Plan { get; }
     public IEnumerable<GeometryBase> Preview => Steps.Where(s=>s.Geometry is not null).Select(s=>s.Geometry!);
     internal PreparedPlan(RhinoDoc doc, ActionPlan plan)
     { DocumentId = doc.RuntimeSerialNumber; Units = doc.ModelUnitSystem; Tolerance = doc.ModelAbsoluteTolerance; Plan = plan; }
-    public void Dispose() { foreach (var s in Steps) s.Geometry?.Dispose(); Steps.Clear(); }
+    public void Dispose() { Grasshopper?.Dispose(); foreach (var s in Steps) s.Geometry?.Dispose(); Steps.Clear(); }
 }
 internal sealed record PreparedAction(string Tool, JsonElement Parameters, Guid Id, GeometryBase? Geometry, string? Layer,string? Role=null,int? Floor=null);
-public sealed record ExecutionReport(List<Guid> Created, List<Guid> Modified, List<ObjectInfo> Properties, uint UndoSerial);
+public sealed record ExecutionReport(List<Guid> Created, List<Guid> Modified, List<ObjectInfo> Properties, uint UndoSerial, object? Grasshopper = null);
 
 public static class GeometryEngine
 {
@@ -54,6 +55,10 @@ public static class GeometryEngine
             throw new ArgumentException("Set standard Rhino document units before planning geometry.");
         var factor = RhinoMath.UnitScale(Unit(plan.LengthUnit, doc), doc.ModelUnitSystem);
         var prepared = new PreparedPlan(doc, plan);
+        if(GrasshopperPlan.IsGrasshopper(plan))
+        {
+            try{GrasshopperHost.Prepare(doc,prepared);return prepared;}catch{prepared.Dispose();throw;}
+        }
         var shadow = new Dictionary<Guid, GeometryBase>();
         try
         {
@@ -166,6 +171,7 @@ public static class GeometryEngine
     public static ExecutionReport ApplyCancellable(RhinoDoc doc, PreparedPlan prepared,CancellationToken cancellation)
     {
         CheckCurrent(doc,prepared);
+        if(prepared.Grasshopper is not null)return prepared.Grasshopper.Apply(doc,cancellation);
         if (doc.CurrentUndoRecordSerialNumber != 0)
             throw new InvalidOperationException($"Rhino is recording another operation (Undo {doc.CurrentUndoRecordSerialNumber}). Finish the active command before applying this plan.");
         // Validate layers again, including locks changed since preview.

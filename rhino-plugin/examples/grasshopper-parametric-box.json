@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "summary": "Create-editable-definition",
+  "length_unit": "document",
+  "actions": [
+    {
+      "tool": "grasshopper_definition",
+      "parameters": {
+        "name": "Archi-Tec Parametric Box",
+        "nodes": [
+          {
+            "id": "width",
+            "kind": "slider",
+            "nickname": "Width",
+            "x": 40,
+            "y": 80,
+            "value": 2,
+            "minimum": 0.1,
+            "maximum": 20
+          },
+          {
+            "id": "width_domain",
+            "component_id": "d1a28e95-cf96-4936-bf34-8bf142d731bf",
+            "x": 300,
+            "y": 80,
+            "inputs": [
+              {
+                "index": 0,
+                "type": "number",
+                "values": [
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "depth",
+            "kind": "slider",
+            "nickname": "Depth",
+            "x": 40,
+            "y": 200,
+            "value": 4,
+            "minimum": 0.1,
+            "maximum": 20
+          },
+          {
+            "id": "depth_domain",
+            "component_id": "d1a28e95-cf96-4936-bf34-8bf142d731bf",
+            "x": 300,
+            "y": 200,
+            "inputs": [
+              {
+                "index": 0,
+                "type": "number",
+                "values": [
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "height",
+            "kind": "slider",
+            "nickname": "Height",
+            "x": 40,
+            "y": 320,
+            "value": 3,
+            "minimum": 0.1,
+            "maximum": 20
+          },
+          {
+            "id": "height_domain",
+            "component_id": "d1a28e95-cf96-4936-bf34-8bf142d731bf",
+            "x": 300,
+            "y": 320,
+            "inputs": [
+              {
+                "index": 0,
+                "type": "number",
+                "values": [
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "id": "box",
+            "component_id": "79aa7f47-397c-4d3f-9761-aaf421bb7f5f",
+            "nickname": "Editable Box",
+            "x": 580,
+            "y": 180,
+            "inputs": [
+              {
+                "index": 0,
+                "type": "plane_xy",
+                "values": [
+                  [
+                    0,
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "wires": [
+          {
+            "from": "width",
+            "output": 0,
+            "to": "width_domain",
+            "input": 1
+          },
+          {
+            "from": "width_domain",
+            "output": 0,
+            "to": "box",
+            "input": 1
+          },
+          {
+            "from": "depth",
+            "output": 0,
+            "to": "depth_domain",
+            "input": 1
+          },
+          {
+            "from": "depth_domain",
+            "output": 0,
+            "to": "box",
+            "input": 2
+          },
+          {
+            "from": "height",
+            "output": 0,
+            "to": "height_domain",
+            "input": 1
+          },
+          {
+            "from": "height_domain",
+            "output": 0,
+            "to": "box",
+            "input": 3
+          }
+        ],
+        "bake_nodes": []
+      }
+    }
+  ]
+}

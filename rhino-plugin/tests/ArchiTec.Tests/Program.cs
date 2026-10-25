@@ -65,9 +65,11 @@ using(var server=new McpServer(port,(name,args,token)=>{calls++;return Task.From
 }
 passed+=await ClientExecutionTests.Run();
 passed+=await ProviderProtocolTests.Run();
+passed+=await ProviderConnectionTests.Run();
 passed+=await ConnectionWorkflowTests.Run();
 passed+=await McpConnectionTests.Run();
 passed+=await BridgeReconnectTests.Run();
+passed+=await GrasshopperTests.Run();
 Console.WriteLine($"{passed} tests passed.");
 return 0;
 
@@ -77,6 +79,7 @@ sealed class FakeHandler:HttpMessageHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
     {
         if(Fail)return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+        if(request.Method==HttpMethod.Get&&request.RequestUri!.AbsolutePath.EndsWith("/key"))return Json("""{"data":{"is_management_key":false}}""");
         if(request.Method==HttpMethod.Get)return Json("""{"data":[{"id":"vendor/test-exact","name":"Test","supported_parameters":["tools","structured_outputs"],"architecture":{"input_modalities":["text","image"],"output_modalities":["text"]}},{"id":"unsupported","supported_parameters":[]}]}""");
         LastBody=await request.Content!.ReadAsStringAsync(cancellationToken);
         var reply=new {message="Preview",plan=new {version=1,summary="Create box",length_unit="meters",actions=new[]{new {tool="create_box",parameters_json="{\"width\":10,\"depth\":15,\"height\":12}"}}}};

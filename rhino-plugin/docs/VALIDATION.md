@@ -1,4 +1,43 @@
-# Validation — AI Archi-Tec 0.5.0-beta.6
+# Validation — AI Archi-Tec 0.6.0-beta.9
+
+## API and workspace acceptance — 25 October 2026
+
+- **196 automated core/protocol checks pass.** Provider HTTP fixtures cover credential, credit, budget, region, gateway, routing, schema and upstream errors without returning raw sensitive bodies. OpenRouter authenticates `/key` before public model discovery. Regression cases preserve existing-object scope when an edit forbids creating replacements or requests new dimensions/position.
+- Installed the final ten-file Yak in licensed Rhino 8.31 on Windows. The installed RHP SHA256 matches the tested build. Official pinned SDK solution build and native runtime-helper build complete with zero warnings/errors. The package excludes host SDK assemblies, profiles and credentials.
+- **Nine real OpenRouter workflow checkpoints pass**, using the saved encrypted profile and explicitly selected `openai/gpt-4.1-mini`. Authenticated discovery returned 389 compatible models at test time. A Persian greeting returned text without a plan or geometry. A live create-box response produced a preview before Apply; Apply created one valid closed native Brep measuring **2 x 4 x 3 meters**, volume **24 m³**. A second live model request moved the same object +3 meters along X, preserving its UUID and dimensions. The saved 3DM reopens with exactly one object. Three inference requests were made in this final run; no mock planner, alternate model or custom network transport was used.
+- **39 native WPF layout checks pass** at 560 x 780, 420 x 640 and 350 x 540. Connection controls, options, history and previews share a scrolling workspace; brand and multiline composer stay fixed. Generate, Analyze, Assist, Grasshopper, MCP and API-profile model display are covered. Closed model selectors display a readable name, and a stale catalog cannot reappear after failure.
+- The preconnection Send check proves that a saved profile cannot silently run offline examples. The standalone failure fixture is available for an existing real failed Connect; it is not counted as passed in this successful final session. Failure transport coverage remains automated/simulated.
+- Final installed **0.6.0-beta.9 Grasshopper retest passes**: the actual STDIO MCP bridge discovers native components, creates seven nodes/six wires without baking, returns the identical receipt for a repeated request UUID, updates the same definition and bakes one valid closed 5 x 4 x 3 meter Brep (volume 60 m³). **19 in-Rhino API workflow checks pass with a mock planner**, including preview isolation, Apply, same-graph follow-up, native baking, independent Grasshopper/Rhino Undo, Redo, failed-bake rollback and editable `.gh` export/reopen. Live listener Stop/Start also preserves both definitions and the same running bridge process, with an actionable offline result while stopped and no client Reload. These graph API checks do not use a paid model; the separate nine-check live OpenRouter run above does.
+- The initial 403 also affected anonymous API requests and temporarily the browser account page. Restoring the user's normal network connection made the official endpoint reachable; the same saved key then completed real authentication/inference. The plugin did not alter VPN/proxy settings, disable TLS validation or bypass provider access policy. The documented .NET 8 proxy snapshot is a troubleshooting condition, not proof of the sole cause of every 403.
+- Other providers have protocol-fixture coverage, not live personal-account acceptance in this revision. Live vision, second-workstation installation and paid-provider Grasshopper graph generation remain unverified. This record validates the 0.6.0-beta.9 implementation. GitHub releases, Food4Rhino downloads and the public Yak catalog are separate distribution surfaces.
+
+[Sanitized live report](acceptance/api-live-beta9.json) · [Layout measurements](acceptance/ui-layout-beta9.json) · [Core test output](core-test-results.txt) · [Reproduction instructions](../tests/ArchiTec.RuntimeTests/README.md)
+
+[Grasshopper API runtime report](acceptance/grasshopper-runtime-beta9.json) · [Live MCP reconnect report](acceptance/grasshopper-reconnect-beta9.json)
+
+![Actual installed connection controls](api-controls-beta9.png)
+
+![Actual installed conversation after scrolling the menus upward](api-conversation-beta9.png)
+
+---
+# Historical validation — AI Archi-Tec 0.6.0-beta.6 candidate
+
+## Grasshopper acceptance — 25 October 2026
+
+- **165 automated tests pass.** Includes graph isolation/document units, zero-based runtime IDs, duplicate/malformed input rejection, DAG topology, typed schema, API target policy, provider transport fixtures and the existing real STDIO cancellation/reconnect tests.
+- Installed the final Yak in licensed Rhino 8.31 on Windows. Local SDK and pinned official NuGet SDK builds both complete with zero warnings/errors. Packaging verifies ten expected payload files and excludes Rhino/Grasshopper SDK binaries and user settings.
+- Real packaged STDIO MCP → authenticated loopback → installed plug-in → native Grasshopper: discover actual GUIDs/ports, create seven nodes/six wires without baking, repeat the UUID with an identical receipt, update the same definition (runtime ID zero) and bake one valid closed native Brep. Measured bounds: [0,0,0]–[5,4,3] meters; volume 60 m³; area 94 m².
+- **19 in-Rhino API checks pass using a mock planner**, not a paid provider. They exercise target-specific help, actual context/catalog, pending graph-plan isolation, Apply, same-definition follow-up, one valid closed 6 × 2 × 3 Brep (volume 36), preservation of earlier MCP geometry, graph Undo/Redo, independent Rhino Undo, rollback after a partially successful bake, unchanged graph after failed bake and `.gh` export/reopen.
+- The returned `.gh` file contains all seven native nodes and can be reopened in Grasshopper. Bridge edit ownership is intentionally session-only; reopened arbitrary files are read-only through this graph-replacement surface.
+- Live listener Stop/Start preserved both open definitions and the same running STDIO bridge process. A request while stopped returned the actionable offline response; the next request after Start succeeded without client Reload or re-registration. No geometry request was replayed.
+- Unsupported: arbitrary scripts, third-party components, feedback cycles, arbitrary graph adoption and unrestricted host access. Native solver cancellation is cooperative. These checks do not establish every component combination or design accuracy.
+- Live paid API/vision generation, other client account workflows and another workstation remain unverified. Public 0.5 release/catalog links remain separate from this source candidate.
+
+See [Grasshopper guide](../../docs/GRASSHOPPER.en.md) and [runtime reproduction instructions](../tests/ArchiTec.RuntimeTests/README.md).
+
+---
+
+# Historical validation — AI Archi-Tec 0.5.0-beta.6
 
 ## Automated and installed-plugin evidence (23 October 2026)
 
