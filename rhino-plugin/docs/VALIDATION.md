@@ -1,3 +1,9 @@
+# MCP continuity validation — 0.6.0-beta.10
+
+199 automated core/protocol checks and 15 installed native checks pass. The native fixture verifies hidden-panel continuity, repeated inspection of the same GUID, preserved listener/discovery, idle status, pagination and an isolated closed-solid edit. No user-document geometry was changed and no cloud inference was requested. [Sanitized native record](acceptance/mcp-lifetime-beta10.json) · [Detailed workflow and scope](../../docs/MCP-CONTINUITY.md).
+
+## Earlier release validation (historical)
+
 # Validation — AI Archi-Tec 0.6.0-beta.9
 
 ## API and workspace acceptance — 25 October 2026

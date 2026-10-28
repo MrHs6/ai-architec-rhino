@@ -17,13 +17,15 @@ public static class McpDocumentTools
         var includeHidden=args.TryGetProperty("include_hidden",out var hidden)&&hidden.GetBoolean();
         var limit=args.TryGetProperty("limit",out var l)?l.GetInt32():200;
         if(limit is <1 or >2000)throw new ArgumentException("limit must be between 1 and 2000.");
+        var offset=args.TryGetProperty("offset",out var page)?page.GetInt32():0;
+        if(offset is <0 or >1_000_000)throw new ArgumentException("offset must be between 0 and 1000000.");
         var probes=args.TryGetProperty("probe_points",out var probeArray)?probeArray.EnumerateArray().Select(Point).ToArray():Array.Empty<Point3d>();
         if(probes.Length>100||probes.Any(p=>!p.IsValid))throw new ArgumentException("Use at most 100 finite probe points in document units.");
         if(probes.Length>0&&(ids is null||ids.Count>20))throw new ArgumentException("Point containment probes require 1–20 explicit object IDs.");
         var enumeration=new ObjectEnumeratorSettings{NormalObjects=true,LockedObjects=true,HiddenObjects=includeHidden,ReferenceObjects=true,ObjectTypeFilter=ObjectType.AnyObject};
         var objects=doc.Objects.GetObjectList(enumeration).Where(o=>!o.IsDeleted&&(includeHidden||!o.IsHidden&&doc.Layers[o.Attributes.LayerIndex].IsVisible))
-            .Where(o=>(ids is null||ids.Contains(o.Id))&&doc.Layers[o.Attributes.LayerIndex].FullPath.StartsWith(prefix,StringComparison.Ordinal)).Take(limit+1).ToArray();
-        return new{document_id=doc.RuntimeSerialNumber,units=doc.ModelUnitSystem.ToString(),truncated=objects.Length>limit,objects=objects.Take(limit).Select(o=>
+            .Where(o=>(ids is null||ids.Contains(o.Id))&&doc.Layers[o.Attributes.LayerIndex].FullPath.StartsWith(prefix,StringComparison.Ordinal)).Skip(offset).Take(limit+1).ToArray();
+        return new{document_id=doc.RuntimeSerialNumber,units=doc.ModelUnitSystem.ToString(),offset,returned=Math.Min(limit,objects.Length),next_offset=objects.Length>limit?(int?)(offset+limit):null,truncated=objects.Length>limit,objects=objects.Take(limit).Select(o=>
         {
             var geometry=o.Geometry;bool? solid=geometry switch{Brep b=>b.IsSolid,Mesh m=>m.IsClosed&&m.IsManifold(true,out _,out _),Extrusion e=>e.IsSolid,_=>null};
             double? volume=null,area=null;

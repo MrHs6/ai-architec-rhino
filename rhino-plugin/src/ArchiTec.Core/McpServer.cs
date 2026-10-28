@@ -16,12 +16,13 @@ public sealed class McpServer : IDisposable
     private readonly ConcurrentDictionary<string,CancellationTokenSource> inFlight=new();
     public string Token {get;}=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     public string Endpoint {get;}
-    public McpConnectionMonitor Connection {get;}=new();
+    public McpConnectionMonitor Connection {get;}
     public bool Running=>listener.IsListening;
-    public McpServer(int port,Func<string,JsonElement,CancellationToken,Task<object>> handler)
+    public McpServer(int port,Func<string,JsonElement,CancellationToken,Task<object>> handler,TimeProvider? clock=null)
     {
         if(port is <1024 or >65535)throw new ArgumentException("Use a port between 1024 and 65535.");
         Endpoint=$"http://127.0.0.1:{port}/mcp";
+        Connection=new(clock);
         listener.Prefixes.Add($"http://127.0.0.1:{port}/");
         call=handler;
     }
@@ -128,6 +129,7 @@ public sealed class McpServer : IDisposable
             var result=await call(name,args,cancel);
             if(name=="get_context")Connection.Touch(session,"context_ready",name);
             else if(name=="propose_plan")Connection.Touch(session,"preview","Client can apply_plan or cancel_plan");
+            else if(name is not ("execute_plan" or "apply_plan" or "cancel_plan" or "get_plan_status" or "post_message"))Connection.Touch(session,"ready","Result returned; continue in your AI client");
             if(result is McpImage image)return new{content=new object[]{new{type="image",data=image.Data,mimeType=image.MimeType},new{type="text",text=JsonSerializer.Serialize(image.Metadata,Wire.Json)}},isError=false};
             return new {content=new[]{new {type="text",text=JsonSerializer.Serialize(result,Wire.Json)}},isError=false};
         }

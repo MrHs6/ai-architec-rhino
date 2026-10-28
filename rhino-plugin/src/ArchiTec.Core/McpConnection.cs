@@ -12,24 +12,27 @@ public sealed class McpConnectionMonitor
     private readonly object gate=new();
     private readonly Dictionary<string,Client> clients=[];
     private readonly List<McpActivity> activity=[];
+    private readonly TimeProvider clock;
     private string stage="waiting";
+    public McpConnectionMonitor(TimeProvider? clock=null)=>this.clock=clock??TimeProvider.System;
     public string Initialize(JsonElement args)
     {
         var name=args.TryGetProperty("clientInfo",out var info)&&info.TryGetProperty("name",out var n)&&n.ValueKind==JsonValueKind.String?n.GetString():null;
         name=new string((name??"MCP client").Where(c=>!char.IsControl(c)).Take(64).ToArray());
         lock(gate)
         {
-            Prune();
             if(clients.Count>=16)clients.Remove(clients.OrderBy(p=>p.Value.Seen).First().Key);
-            var id=Guid.NewGuid().ToString("N");clients[id]=new(name,DateTimeOffset.UtcNow);Add("initialized",name);return id;
+            var id=Guid.NewGuid().ToString("N");clients[id]=new(name,clock.GetUtcNow());Add("initialized",name);return id;
         }
     }
-    public bool Contains(string? id){lock(gate){Prune();return id is not null&&clients.ContainsKey(id);}}
+    // A valid logical session may be idle while its user thinks or switches apps.
+    // Only client DELETE, bounded-session eviction or server shutdown ends it.
+    public bool Contains(string? id){lock(gate){return id is not null&&clients.ContainsKey(id);}}
     public void Touch(string? id,string next,string detail)
     {
         lock(gate)
         {
-            if(id is not null&&clients.TryGetValue(id,out var client))clients[id]=client with{Seen=DateTimeOffset.UtcNow};
+            if(id is not null&&clients.TryGetValue(id,out var client))clients[id]=client with{Seen=clock.GetUtcNow()};
             if(next=="heartbeat")return;
             Add(next,detail);
         }
@@ -38,14 +41,12 @@ public sealed class McpConnectionMonitor
     public void Workflow(string next,string detail){lock(gate)Add(next,detail);}
     private void Add(string next,string detail)
     {
-        stage=next;activity.Add(new(DateTimeOffset.UtcNow,next,detail));if(activity.Count>12)activity.RemoveAt(0);
+        stage=next;activity.Add(new(clock.GetUtcNow(),next,detail));if(activity.Count>12)activity.RemoveAt(0);
     }
-    private void Prune(){foreach(var stale in clients.Where(c=>DateTimeOffset.UtcNow-c.Value.Seen>TimeSpan.FromMinutes(2)).Select(c=>c.Key).ToArray())clients.Remove(stale);}
     public McpConnectionSnapshot Snapshot()
     {
         lock(gate)
         {
-            Prune();
             var latest=clients.Values.OrderByDescending(c=>c.Seen).FirstOrDefault();
             return new(stage,latest?.Name,latest?.Seen,clients.Count,activity.ToArray());
         }

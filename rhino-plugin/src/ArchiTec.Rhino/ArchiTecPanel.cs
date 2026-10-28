@@ -85,7 +85,10 @@ public sealed class ArchiTecPanel:Panel
         view.CopyMcpTestRequested+=()=>{System.Windows.Clipboard.SetText("Use only the ai-architec-rhino MCP server (not rhino-mcp-router). First call get_context, then use post_message with that document_id to confirm the connection in the Rhino panel. Do not create or modify geometry for this connection test.");view.McpMessage("Connection-test prompt copied. Send it in the client chat with ai-architec-rhino tools enabled.");};
         view.OpenChatRequested+=()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://chatgpt.com"){UseShellExecute=true});
         contextTimer.Elapsed+=(_,_)=>RefreshContext();
-        Load+=(_,_)=>contextTimer.Start();UnLoad+=(_,_)=>{contextTimer.Stop();requestCancel?.Cancel();StopMcp();ClearPreview();};
+        // Eto unloads hidden/reparented panels. Visibility is not a Stop command:
+        // the listener, operation receipts and document targets must survive it.
+        Load+=(_,_)=>{contextTimer.Start();RefreshContext();};
+        UnLoad+=(_,_)=>contextTimer.Stop();
         contextTimer.Start();RefreshContext();
     }
     public static void SizeFloatingWindow()=>Application.Instance.AsyncInvoke(()=>

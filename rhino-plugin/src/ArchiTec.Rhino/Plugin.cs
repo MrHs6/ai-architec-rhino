@@ -14,7 +14,9 @@ public sealed class ArchiTecPlugin : PlugIn
     protected override void OptionsDialogPages(List<OptionsDialogPage> pages)=>pages.Add(new ArchiTecOptionsPage());
     protected override LoadReturnCode OnLoad(ref string errorMessage)
     {
-        Panels.RegisterPanel(this, typeof(ArchiTecPanel), "AI Archi-Tec", (System.Drawing.Icon?)null);
+        // This panel owns the local bridge and per-document follow-up state. It
+        // must live for the Rhino session, not for the currently displayed file.
+        Panels.RegisterPanel(this, typeof(ArchiTecPanel), "AI Archi-Tec", (System.Drawing.Icon?)null, PanelType.System);
         var assembly=typeof(ArchiTecPlugin).Assembly;
         var version=assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute),false)
             .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion.Split('+')[0];

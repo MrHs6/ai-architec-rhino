@@ -1,6 +1,6 @@
 # Grasshopper through AI Archi-Tec
 
-**0.6.0-beta.9 · Windows x64 · licensed Rhino 8.31+ with Grasshopper · .NET 8.** Use the [current release installer](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.9) linked from the main README. Rhino and Grasshopper support are included in the same installation.
+**0.6.0-beta.10 · Windows x64 · licensed Rhino 8.31+ with Grasshopper · .NET 8.** Use the [current release installer](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.10) linked from the main README. Rhino and Grasshopper support are included in the same installation.
 
 ## One installation, one MCP connection
 

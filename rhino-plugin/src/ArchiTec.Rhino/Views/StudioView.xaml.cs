@@ -122,9 +122,9 @@ public partial class StudioView:UserControl
     public void SetMcp(bool running,string? url=null,string? token=null)
     {
         if(running)ChatRouteSelector.SelectedIndex=1;
-        McpChip.Content=running?"MCP · waiting":"MCP · off";McpStartButton.Content=running?"Disconnect":"Enable connection";McpStartButton.Visibility=Visibility.Visible;McpStatus.Text=running?"Waiting for your AI client":"Connection disabled";
+        McpChip.Content=running?"MCP · waiting":"MCP · off";McpStartButton.Content=running?"Stop MCP":"Start MCP";McpStartButton.Visibility=Visibility.Visible;McpStatus.Text=running?"MCP enabled · waiting for your AI client":"Connection disabled";
         McpStage.Visibility=McpLastSeen.Visibility=Visibility.Collapsed;
-        McpClientStatus.Text=running?"Keep the client open. An existing bridge reconnects automatically.":"Click Connect to set up your client, or Enable connection if it is already configured.";McpStage.Text="";McpLastSeen.Text="";McpActivityLog.Text="";
+        McpClientStatus.Text=running?"Stays enabled while Rhino is open, including when this panel is hidden. Stop MCP disables the local connection.":"Click Connect to set up your client, or Start MCP if it is already configured.";McpStage.Text="";McpLastSeen.Text="";McpActivityLog.Text="";
         DashboardMcpStatus.Text=running?"Running\n"+url:"Stopped";McpPort.IsEnabled=!running;McpToken.Password=token??"";if(url is not null)McpUrl.Text=url;
         McpWorkspaceStatus.Text=running?"Waiting for "+McpClient+". Enable its Archi-Tec tools if this is your first connection.":"Connection is off. Enable it to receive requests; your AI client can stay open.";UpdateChatRoute();
     }
@@ -133,14 +133,14 @@ public partial class StudioView:UserControl
         var recent=state.LastSeenUtc is {} seen&&DateTimeOffset.UtcNow-seen<TimeSpan.FromSeconds(45);
         var name=state.ClientName?.Contains("codex",StringComparison.OrdinalIgnoreCase)==true?"Codex":state.ClientName?.Contains("claude",StringComparison.OrdinalIgnoreCase)==true?"Claude Desktop":state.ClientName;
         McpStage.Visibility=McpLastSeen.Visibility=Visibility.Visible;
-        McpStatus.Text=state.ClientName is null?"Waiting for your AI client":recent?"Connected · "+name:"Reconnecting · waiting for client contact";
+        McpStatus.Text=state.ClientName is null?"MCP enabled · waiting for your AI client":recent?"Connected · "+name:"Session ready · "+name+" · idle";
         McpChip.Content=state.ClientName is null?"MCP · waiting":recent?"MCP · "+name:"MCP · idle";
-        McpClientStatus.Text=state.ClientName is null?"No client has initialized this connection yet.":recent?"Client controls planning and execution. Continue in "+name+".":"No recent client contact. The bridge reconnects when your client is open.";
-        McpStage.Text=state.Stage switch{"initialized"=>"Finishing connection…","tools_ready"=>"Ready · describe your model in the AI client","context_ready"=>"Rhino document shared with your client","working"=>"Processing your client request…","preview"=>"Optional preview · apply or cancel from your AI client","applied"=>"Applied · native geometry confirmed","cancelled"=>"Client request stopped · completed batches remain undoable","error"=>"Request failed; review the client response and document","message"=>"Client status received","handoff"=>"Client request prepared","disconnected"=>"Client session closed; the server is still running",_=>"Open your client and enable its Archi-Tec tools"};
+        McpClientStatus.Text=state.ClientName is null?"No active client session. The local server remains enabled; reconnect from your AI client.":recent?"Client controls planning and execution. Continue in "+name+". Switching apps does not stop MCP.":"No recent contact; the session remains valid. Continue in your AI client without pressing Start again. Last contact does not prove the client is still open.";
+        McpStage.Text=state.Stage switch{"initialized"=>"Finishing connection…","tools_ready"=>"Ready · describe your model in the AI client","context_ready"=>"Rhino document shared with your client","ready"=>"Result returned · ready for your next request","working"=>"Processing your client request…","preview"=>"Optional preview · apply or cancel from your AI client","applied"=>"Applied · native geometry confirmed · ready for your next edit","cancelled"=>"Client request stopped · connection stays enabled","error"=>"Request failed; connection stays enabled · review the client response","message"=>"Client status received · ready for your next request","handoff"=>"Client request prepared","disconnected"=>"Client session closed; the server is still running",_=>"Open your client and enable its Archi-Tec tools"};
         McpLastSeen.Text=state.LastSeenUtc is {} at?"Last contact: "+at.ToLocalTime().ToString("HH:mm:ss"):"A running server is not a confirmed ChatGPT or Claude connection.";
         McpActivityLog.Text=string.Join("\n",state.Activity.Select(e=>e.At.ToLocalTime().ToString("HH:mm:ss")+" · "+e.Stage+" · "+e.Detail));
         DashboardMcpStatus.Text=McpClientStatus.Text+"\n"+McpStage.Text;
-        McpWorkspaceStatus.Text=state.ClientName is null?"Open "+McpClient+" and enable its Archi-Tec tools.":recent?"Connected to "+name+" · all instructions, execution approvals and follow-ups stay in that client.":"Client idle or closed. No background planning runs here. Reopen your client to resume.";
+        McpWorkspaceStatus.Text=state.ClientName is null?"MCP is enabled. Open "+McpClient+" and enable its Archi-Tec tools.":recent?"Connected to "+name+" · keep analyzing and refining the same model in your client.":"Session ready · continue in your AI client. Model IDs and receipts stay available while this Rhino session is open.";
     }
     private void UpdateMcpGuide()
     {

@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "plugin_version": "0.6.0-beta.10",
+  "user_document_mutations": 0,
+  "cloud_requests": 0,
+  "checks": [
+    "Hiding the real Rhino panel retains its presenter and listening port",
+    "Panel hiding retains encrypted local discovery on the same endpoint",
+    "Hidden panel accepts conversation inspection turn 1",
+    "Follow-up inspects the same native GUID while the panel is hidden, turn 1",
+    "Hidden panel accepts conversation inspection turn 2",
+    "Follow-up inspects the same native GUID while the panel is hidden, turn 2",
+    "Hidden panel accepts conversation inspection turn 3",
+    "Follow-up inspects the same native GUID while the panel is hidden, turn 3",
+    "Hidden panel accepts conversation inspection turn 4",
+    "Follow-up inspects the same native GUID while the panel is hidden, turn 4",
+    "Showing the panel reuses the same server instead of starting another listener",
+    "A valid idle session is not mislabeled as a broken connection",
+    "Paged model inspection reaches every native object without duplicate or missing targets",
+    "Isolated native follow-up preserves GUID, closed 2 x 4 x 3 solid and 24 cubic meter volume",
+    "Closing an unrelated headless document preserves the live bridge and user model"
+  ],
+  "error": null
+}
