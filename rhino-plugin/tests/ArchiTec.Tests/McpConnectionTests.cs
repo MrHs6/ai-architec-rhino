@@ -12,7 +12,8 @@ static class McpConnectionTests
         var passed=0;void Check(bool ok,string name){if(!ok)throw new Exception(name);passed++;Console.WriteLine("PASS "+name);}
         var socket=new System.Net.Sockets.TcpListener(IPAddress.Loopback,0);socket.Start();var port=((IPEndPoint)socket.LocalEndpoint).Port;socket.Stop();
         var dispatched="";
-        using var server=new McpServer(port,(name,args,cancel)=>{dispatched=name;return Task.FromResult<object>(new{ok=true});});server.Start();
+        var clock=new SessionClock();
+        using var server=new McpServer(port,(name,args,cancel)=>{dispatched=name;return Task.FromResult<object>(new{ok=true});},clock);server.Start();
         using var client=new HttpClient();client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/event-stream");
         async Task<HttpResponseMessage> Post(string body)=>await client.PostAsync(server.Endpoint,new StringContent(body,Encoding.UTF8,"application/json"));
         var initialize="""{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","clientInfo":{"name":"ArchiTec protocol acceptance","version":"1"},"capabilities":{}}}""";
@@ -21,8 +22,13 @@ static class McpConnectionTests
         string session;
         using(var response=await Post(initialize)){session=response.Headers.GetValues("Mcp-Session-Id").Single();Check(server.Connection.Snapshot().ClientName=="ArchiTec protocol acceptance"&&session.Length==32,"Authenticated initialization identifies the announced client and creates a bounded session");}
         client.DefaultRequestHeaders.Add("Mcp-Session-Id",session);
+        var seen=server.Connection.Snapshot().LastSeenUtc;
+        clock.Advance(TimeSpan.FromHours(8));
+        Check(server.Connection.Contains(session)&&server.Connection.Snapshot().Clients==1&&server.Connection.Snapshot().LastSeenUtc==seen,"Thinking time does not expire or falsely refresh an initialized MCP session");
+        using(var response=await Post("""{"jsonrpc":"2.0","id":20,"method":"ping"}"""))Check(response.IsSuccessStatusCode&&server.Connection.Snapshot().LastSeenUtc==clock.GetUtcNow(),"The same HTTP session resumes after eight idle hours without another initialization");
         using(var response=await Post("""{"jsonrpc":"2.0","id":2,"method":"tools/list"}"""))Check(server.Connection.Snapshot().Stage=="tools_ready","Tool discovery advances the visible connection stage");
         using(var response=await Post("""{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"post_message","arguments":{"document_id":1,"message":"Hello","workspace":"analyze"}}}"""))Check(dispatched=="post_message","Conversational replies have a dedicated MCP tool without geometry execution");
+        using(var response=await Post("""{"jsonrpc":"2.0","id":21,"method":"tools/call","params":{"name":"get_objects","arguments":{"document_id":1}}}"""))Check(response.IsSuccessStatusCode&&server.Connection.Snapshot().Stage=="ready"&&server.Running,"Finishing model inspection returns to ready without stopping the listener");
         server.Connection.Workflow("preview","awaiting Apply");
         using(var response=await Post("""{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_plan_status","arguments":{"request_id":"fixture"}}}"""))Check(server.Connection.Snapshot().Stage=="preview","Polling execution status does not overwrite the preview workflow stage");
         using(var request=new HttpRequestMessage(HttpMethod.Delete,server.Endpoint))using(var response=await client.SendAsync(request))Check(response.StatusCode==HttpStatusCode.NoContent&&server.Connection.Snapshot().Clients==0,"Client shutdown clears its actual session");
@@ -58,5 +64,11 @@ static class McpConnectionTests
             finally{McpSessionFile.Remove(port,owner);}
         }
         return passed;
+    }
+    private sealed class SessionClock:TimeProvider
+    {
+        private DateTimeOffset now=DateTimeOffset.UtcNow;
+        public override DateTimeOffset GetUtcNow()=>now;
+        public void Advance(TimeSpan duration)=>now+=duration;
     }
 }

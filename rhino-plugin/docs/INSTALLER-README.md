@@ -1,4 +1,4 @@
-# AI Archi-Tec for Rhino 8 — 0.6.0-beta.9
+# AI Archi-Tec for Rhino 8 — 0.6.0-beta.10
 
 Includes Rhino and editable Grasshopper workflows, authenticated OpenRouter discovery, explicit model selection and a readable scrolling workspace. Saved profiles and connected API sessions have distinct statuses. Choose Connect and discover models before API chat; preview/Apply stays inside Rhino. In MCP, all conversation and tool authorization stay in your client.
 

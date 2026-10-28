@@ -1,3 +1,13 @@
+AI Archi-Tec 0.6.0-beta.10 — persistent MCP conversations
+
+- Keep the MCP listener and document follow-up state alive when the panel is hidden, reparented or unloaded. Register it as a Rhino System panel; stop only through explicit Stop MCP or Rhino shutdown.
+- Preserve valid initialized HTTP sessions through thinking time. Idle contact is displayed separately from a disconnected client; finishing read-only model inspection returns the UI to Ready.
+- Page through large native models with `get_objects` offset/next_offset while retaining explicit native GUIDs for follow-up edits. No automatic modeling replay or second chatbot is added.
+- 199 core/protocol tests and 15 installed native lifecycle/model-continuity checks pass. The eight-hour idle test uses a controlled clock; native tests hide/show the actual panel and perform four consecutive target inspections without Start. Geometry edit fixtures use a separate headless document, with zero user-model mutations and zero paid API calls.
+
+[Continuing a modeling conversation](../../../docs/MCP-CONTINUITY.md). This update is distributed on GitHub; external website and Food4Rhino listings are unchanged.
+
+---
 AI Archi-Tec 0.6.0-beta.9 — reliable API conversations and a readable workspace
 
 - Authenticate OpenRouter keys with the official `/key` endpoint before reading its public `/models` catalog. Reject management/provisioning credentials for inference; keep compatible text models that advertise structured output without requiring unused tool calling.
