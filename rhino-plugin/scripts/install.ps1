@@ -3,7 +3,8 @@ param(
     [string]$PackagePath='',
     [uri]$PackageUrl,
     [string]$Sha256='',
-    [string]$RhinoSystemDir=(Join-Path $env:ProgramFiles 'Rhino 8\System'),
+    [ValidateSet(8,9)][int]$RhinoMajor=8,
+    [string]$RhinoSystemDir='',
     [switch]$CheckOnly
 )
 $ErrorActionPreference='Stop'
@@ -12,11 +13,14 @@ if($PackageUrl){
     if($PackageUrl.Scheme -ne 'https' -or $PackageUrl.UserInfo){throw 'PackageUrl must be an HTTPS URL without credentials.'}
     if($Sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw 'Remote installation requires the release SHA256 value.'}
 }
+if(!$RhinoSystemDir){$RhinoSystemDir=Join-Path $env:ProgramFiles "Rhino $RhinoMajor\System"}
 $yak=Join-Path $RhinoSystemDir 'Yak.exe'
 $rhino=Join-Path $RhinoSystemDir 'Rhino.exe'
 if(!(Test-Path -LiteralPath $yak) -or !(Test-Path -LiteralPath $rhino)){throw 'Rhino 8 was not found. Supply -RhinoSystemDir for a custom installation.'}
 $rhinoVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($rhino)
-if($rhinoVersion.FileMajorPart -ne 8 -or $rhinoVersion.FileMinorPart -lt 31){throw 'This package requires Rhino 8.31 or later within Rhino 8.'}
+if($rhinoVersion.FileMajorPart -notin @(8,9) -or ($rhinoVersion.FileMajorPart -eq 8 -and $rhinoVersion.FileMinorPart -lt 31)){throw 'Requires Rhino 8.31+ or Rhino 9 on Windows.'}
+$RhinoMajor=$rhinoVersion.FileMajorPart
+$distribution=if($RhinoMajor -eq 9){'rh9'}else{'rh8_31'}
 $downloadDirectory=$null
 try{
     if($PackageUrl){
@@ -24,15 +28,16 @@ try{
         $downloadDirectory=Join-Path ([IO.Path]::GetTempPath()) ('AIArchiTec-'+[guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $downloadDirectory | Out-Null
         $leaf=[IO.Path]::GetFileName($PackageUrl.AbsolutePath)
-        if($leaf -notmatch '^ai-architec-rhino-[A-Za-z0-9.-]+-rh8_31-win\.yak$'){throw 'The URL must point directly to the versioned AI Archi-Tec .yak asset.'}
+        if($leaf -notmatch '^ai-architec-rhino-[A-Za-z0-9.-]+-(?:rh8_31|rh9)-win\.yak$'){throw 'The URL must point directly to the versioned AI Archi-Tec .yak asset.'}
         $PackagePath=Join-Path $downloadDirectory $leaf
         Invoke-WebRequest -Uri $PackageUrl -OutFile $PackagePath -UseBasicParsing
     }elseif(!$PackagePath){
-        $candidates=@(Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'ai-architec-rhino-*-rh8_31-win.yak' -File)
+        $candidates=@(Get-ChildItem -LiteralPath $PSScriptRoot -Filter "ai-architec-rhino-*-$distribution-win.yak" -File)
         if($candidates.Count -ne 1){throw 'Supply -PackagePath, or extract the installer ZIP containing exactly one .yak next to this script.'}
         $PackagePath=$candidates[0].FullName
     }
     $PackagePath=(Resolve-Path -LiteralPath $PackagePath).Path
+    if([IO.Path]::GetFileName($PackagePath) -notlike "ai-architec-rhino-*-$distribution-win.yak"){throw 'Package distribution does not match the selected Rhino version.'}
     if([IO.Path]::GetExtension($PackagePath) -ne '.yak'){throw 'PackagePath must be a .yak file.'}
     if(!$Sha256){
         $checksumPath=Join-Path (Split-Path -Parent $PackagePath) 'SHA256SUMS.txt'
@@ -60,7 +65,7 @@ try{
     if($PSCmdlet.ShouldProcess($PackagePath,'Install AI Archi-Tec for the current Windows user')){
         & $yak install $PackagePath
         if($LASTEXITCODE -ne 0){throw "Yak installation failed with exit code $LASTEXITCODE."}
-        & (Join-Path $PSScriptRoot 'repair-registration.ps1') -PackagePath $PackagePath
+        & (Join-Path $PSScriptRoot 'repair-registration.ps1') -PackagePath $PackagePath -RhinoMajor $RhinoMajor
         Write-Output 'Installed. Save your work, restart Rhino, then run archtec. Configure your own API key or localhost MCP in Settings.'
     }
 }finally{

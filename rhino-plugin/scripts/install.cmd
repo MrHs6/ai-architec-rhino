@@ -1,6 +1,12 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
-if not defined ARCHITEC_RHINO_SYSTEM set "ARCHITEC_RHINO_SYSTEM=%ProgramFiles%\Rhino 8\System"
+if not defined ARCHITEC_RHINO_MAJOR set "ARCHITEC_RHINO_MAJOR=8"
+if /I "%~1"=="/rhino9" set "ARCHITEC_RHINO_MAJOR=9"
+if /I "%~1"=="/rhino9" shift
+if not "%ARCHITEC_RHINO_MAJOR%"=="8" if not "%ARCHITEC_RHINO_MAJOR%"=="9" exit /b 1
+set "ARCHITEC_DISTRIBUTION=rh8_31"
+if "%ARCHITEC_RHINO_MAJOR%"=="9" set "ARCHITEC_DISTRIBUTION=rh9"
+if not defined ARCHITEC_RHINO_SYSTEM set "ARCHITEC_RHINO_SYSTEM=%ProgramFiles%\Rhino %ARCHITEC_RHINO_MAJOR%\System"
 if not exist "%ARCHITEC_RHINO_SYSTEM%\Yak.exe" (
   echo Rhino 8 was not found. Set ARCHITEC_RHINO_SYSTEM to its System directory.
   exit /b 1
@@ -17,7 +23,7 @@ if not "%~1"=="" (
 )
 :discover
 set /a ARCHITEC_PACKAGE_COUNT=0 >nul
-for %%F in ("%~dp0ai-architec-rhino-*-rh8_31-win.yak") do if exist "%%~fF" (
+for %%F in ("%~dp0ai-architec-rhino-*-%ARCHITEC_DISTRIBUTION%-win.yak") do if exist "%%~fF" (
   set /a ARCHITEC_PACKAGE_COUNT+=1 >nul
   set "ARCHITEC_PACKAGE=%%~fF"
 )
@@ -26,6 +32,12 @@ if not "%ARCHITEC_PACKAGE_COUNT%"=="1" (
   exit /b 1
 )
 :ready
+for %%F in ("%ARCHITEC_PACKAGE%") do set "ARCHITEC_STEM=%%~nF"
+set ARCHITEC_STEM | "%SystemRoot%\System32\findstr.exe" /R /X "ARCHITEC_STEM=ai-architec-rhino-[0-9][0-9.abcdefghijklmnopqrstuvwxyz-]*-%ARCHITEC_DISTRIBUTION%-win" >nul
+if errorlevel 1 (
+  echo Package does not match the selected Rhino version.
+  exit /b 1
+)
 if not exist "%ARCHITEC_PACKAGE%" (
   echo Package file was not found.
   exit /b 1

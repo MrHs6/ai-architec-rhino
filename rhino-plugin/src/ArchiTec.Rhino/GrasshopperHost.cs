@@ -15,7 +15,7 @@ public static class GrasshopperHost
     public static void EnsureLoaded()
     {
         var automation=RhinoApp.GetPlugInObject("Grasshopper")
-            ?? throw new InvalidOperationException("Grasshopper could not load. Enable Grasshopper in this Rhino 8 installation.");
+            ?? throw new InvalidOperationException("Grasshopper could not load. Enable Grasshopper in this Rhino installation.");
         // Loading the plug-in alone does not create its canvas/editor or finish component discovery.
         // Use the official automation entry point before touching Instances.ComponentServer.
         var load=automation.GetType().GetMethod("LoadEditor",Type.EmptyTypes)

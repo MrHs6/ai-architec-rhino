@@ -3,13 +3,18 @@ setlocal EnableExtensions DisableDelayedExpansion
 rem Native CMD companion: keeps installation usable when PowerShell scripts are restricted.
 if "%~1"=="" exit /b 1
 for %%F in ("%~1") do set "ARCHITEC_STEM=%%~nF"
+if not defined ARCHITEC_RHINO_MAJOR set "ARCHITEC_RHINO_MAJOR=8"
+if not "%ARCHITEC_RHINO_MAJOR%"=="8" if not "%ARCHITEC_RHINO_MAJOR%"=="9" exit /b 1
+set "ARCHITEC_DISTRIBUTION=rh8_31"
+if "%ARCHITEC_RHINO_MAJOR%"=="9" set "ARCHITEC_DISTRIBUTION=rh9"
 set "ARCHITEC_VERSION=%ARCHITEC_STEM:ai-architec-rhino-=%"
 set "ARCHITEC_VERSION=%ARCHITEC_VERSION:-rh8_31-win=%"
+set "ARCHITEC_VERSION=%ARCHITEC_VERSION:-rh9-win=%"
 rem Validate before using the filename-derived version in commands or paths.
 set ARCHITEC_VERSION | "%SystemRoot%\System32\findstr.exe" /I /R /X "ARCHITEC_VERSION=[0-9][0-9.abcdefghijklmnopqrstuvwxyz-]*" >nul
 if errorlevel 1 exit /b 1
-if /I not "%ARCHITEC_STEM%"=="ai-architec-rhino-%ARCHITEC_VERSION%-rh8_31-win" exit /b 1
-set "ARCHITEC_DIRECTORY=%APPDATA%\McNeel\Rhinoceros\packages\8.0\ai-architec-rhino\%ARCHITEC_VERSION%"
+if /I not "%ARCHITEC_STEM%"=="ai-architec-rhino-%ARCHITEC_VERSION%-%ARCHITEC_DISTRIBUTION%-win" exit /b 1
+set "ARCHITEC_DIRECTORY=%APPDATA%\McNeel\Rhinoceros\packages\%ARCHITEC_RHINO_MAJOR%.0\ai-architec-rhino\%ARCHITEC_VERSION%"
 set "ARCHITEC_TARGET=%ARCHITEC_DIRECTORY%\AIArchiTec.rhp"
 if not exist "%ARCHITEC_TARGET%" exit /b 1
 if not exist "%ARCHITEC_DIRECTORY%\AIArchiTec.Contracts.dll" exit /b 1
@@ -17,7 +22,7 @@ if not exist "%ARCHITEC_DIRECTORY%\AIArchiTec.Contracts.dll" exit /b 1
 if errorlevel 1 exit /b 1
 "%SystemRoot%\System32\findstr.exe" /X /C:"version: %ARCHITEC_VERSION%" "%ARCHITEC_DIRECTORY%\manifest.yml" >nul
 if errorlevel 1 exit /b 1
-set "ARCHITEC_KEY=HKCU\Software\McNeel\Rhinoceros\8.0\Plug-Ins\0ab9a769-52f9-4378-85cb-cf8177ed5166"
+set "ARCHITEC_KEY=HKCU\Software\McNeel\Rhinoceros\%ARCHITEC_RHINO_MAJOR%.0\Plug-Ins\0ab9a769-52f9-4378-85cb-cf8177ed5166"
 "%SystemRoot%\System32\tasklist.exe" /FI "IMAGENAME eq Rhino.exe" /NH | "%SystemRoot%\System32\findstr.exe" /I /C:"Rhino.exe" >nul
 if not errorlevel 1 (
   echo Close every Rhino window before repairing registration.
@@ -42,7 +47,7 @@ set "ARCHITEC_BACKUP_DIRECTORY=%LOCALAPPDATA%\AIArchiTec\InstallationBackups"
 if not exist "%ARCHITEC_BACKUP_DIRECTORY%" mkdir "%ARCHITEC_BACKUP_DIRECTORY%"
 if not exist "%ARCHITEC_BACKUP_DIRECTORY%" exit /b 1
 :backupname
-set "ARCHITEC_BACKUP=%ARCHITEC_BACKUP_DIRECTORY%\Rhino8-cmd-%RANDOM%-%RANDOM%.reg"
+set "ARCHITEC_BACKUP=%ARCHITEC_BACKUP_DIRECTORY%\Rhino%ARCHITEC_RHINO_MAJOR%-cmd-%RANDOM%-%RANDOM%.reg"
 if exist "%ARCHITEC_BACKUP%" goto backupname
 "%ARCHITEC_REG%" export "%ARCHITEC_KEY%" "%ARCHITEC_BACKUP%" /y >nul
 if errorlevel 1 exit /b 1

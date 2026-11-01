@@ -34,7 +34,7 @@ public static class RuntimeAcceptance
                 var view=(StudioView)typeof(ArchiTecPanel).GetField("view",flags)!.GetValue(panel)!;
                 var providerField=typeof(ArchiTecPanel).GetField("provider",flags)!;
                 var original=providerField.GetValue(panel);
-                var savedIds=doc.Objects.GetObjectList(Rhino.DocObjects.ObjectType.AnyObject).Select(o=>o.Id).ToHashSet();
+                var savedIds=doc.Objects.GetObjectList(Rhino.DocObjects.ObjectType.AnyObject).Where(o=>!o.IsDeleted).Select(o=>o.Id).ToHashSet();
                 var savedCount=savedIds.Count;
                 var template=Wire.Read<ActionPlan>(File.ReadAllText(planPath));
                 var recipe=GrasshopperPlan.Read(template.Actions.Single().Parameters) with{Name="API Parametric Box",DefinitionId=null,BakeNodes=[]};
@@ -53,11 +53,11 @@ public static class RuntimeAcceptance
                     await panel.SendAsync();
                     Check(mock.Request?.Context.Grasshopper is not null,"API planner receives actual Grasshopper context and component catalog");
                     Check(typeof(ArchiTecPanel).GetField("pending",flags)!.GetValue(panel) is not null,"API Send prepares a real Grasshopper plan");
-                    Check(Instances.DocumentServer.DocumentCount==definitions&&doc.Objects.Count==savedCount,"API proposal does not commit a graph or bake before Apply");
+                    Check(Instances.DocumentServer.DocumentCount==definitions&&doc.Objects.GetObjectList(Rhino.DocObjects.ObjectType.AnyObject).Count(o=>!o.IsDeleted)==savedCount,"API proposal does not commit a graph or bake before Apply");
                     panel.ApplyPending();
                     var graph=Instances.ActiveCanvas.Document;
                     Check(graph is not null&&graph.ObjectCount==7&&Instances.DocumentServer.DocumentCount==definitions+1,"API Apply creates a new definition with seven editable Grasshopper nodes");
-                    Check(doc.Objects.Count==savedCount,"API graph remains parametric without an explicit bake");
+                    Check(doc.Objects.GetObjectList(Rhino.DocObjects.ObjectType.AnyObject).Count(o=>!o.IsDeleted)==savedCount,"API graph remains parametric without an explicit bake");
                     var id=graph!.RuntimeID;
                     recipe=recipe with{DefinitionId=id,BakeNodes=["box"],Nodes=recipe.Nodes.Select(n=>n.Id=="width"?n with{Value=6}:n).ToList()};
                     mock.Next=Plan(recipe);view.Prompt="Change the box width to 6 document units and bake the box into Rhino.";
@@ -85,7 +85,7 @@ public static class RuntimeAcceptance
                     Check(archive.WriteToFile(Path.Combine(outputDirectory,"API-Parametric-Box.gh"),false,false),"Editable .gh example is exported successfully");
                     using var reopened=new GH_Document();var read=new GH_Archive();
                     Check(read.ReadFromFile(Path.Combine(outputDirectory,"API-Parametric-Box.gh"))&&read.ExtractObject(reopened,"Definition")&&reopened.ObjectCount==7,"Exported .gh file reopens with all seven native nodes");
-                    Check(McpCatalog.Version=="0.6.0-beta.10","Runtime test uses the installed final candidate version");
+                    Check(McpCatalog.Version=="0.6.1-beta.1","Runtime test uses the installed final candidate version");
                 }
                 finally{panel.ClearPreview();providerField.SetValue(panel,original);if(original is null)view.SetOffline();}
                 File.WriteAllText(Path.Combine(outputDirectory,"runtime-api-acceptance.json"),JsonSerializer.Serialize(new{status="passed",passes,mock_api=true,live_paid_provider_tested=false},Wire.Json));

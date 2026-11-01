@@ -1,0 +1,37 @@
+{
+  "document_id": 268435457,
+  "units": "Meters",
+  "offset": 0,
+  "returned": 1,
+  "next_offset": null,
+  "truncated": false,
+  "objects": [
+    {
+      "info": {
+        "id": "04f9664c-6f25-4efc-8b65-7b2a6a416b4f",
+        "type": "Brep",
+        "layer": "Default",
+        "min": [
+          0,
+          0,
+          0
+        ],
+        "max": [
+          5,
+          4,
+          3
+        ],
+        "name": "Archi-Tec Parametric Box / box",
+        "role": null,
+        "floor": null
+      },
+      "valid": true,
+      "solid": true,
+      "volume": 60,
+      "area": 94,
+      "hidden": false,
+      "locked": false,
+      "contains_probe_points": null
+    }
+  ]
+}

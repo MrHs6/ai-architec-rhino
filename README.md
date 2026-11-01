@@ -1,11 +1,13 @@
+[Rhino 9 installation and compatibility beta](docs/RHINO9.md) · Windows installer includes separate Rhino 8 and Rhino 9 packages.
+
 <p align="center"><img src="rhino-plugin/src/ArchiTec.Rhino/Assets/logo.png" width="72" alt="AI Archi-Tec logo"></p>
-<h1 align="center">AI Archi-Tec for Rhino 8</h1>
+<h1 align="center">AI Archi-Tec for Rhino 8 &amp; 9</h1>
 <p align="center">Architectural modeling. Your AI connection. Native Rhino geometry.</p>
 
 ![AI Archi-Tec product cover](docs/assets/product-cover.png)
 
 <p align="center">
-<a href="https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.10"><b>Download for Windows</b></a> ·
+<a href="https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.1-beta.1"><b>Download for Windows</b></a> ·
 <a href="docs/INSTALLATION.en.md">Installation tutorial</a> ·
 <a href="docs/MCP-QUICKSTART.en.md">MCP setup</a> ·
 <a href="docs/ARCHITECTURE.en.md">Architecture</a> ·
@@ -20,9 +22,9 @@
 
 Open **`archtec`** inside Rhino to generate concept geometry, inspect your model or refine selected objects. Connect your own API account for chat in Studio, or use Codex/Claude Desktop through local MCP. In API mode, review a viewport preview and click **Apply to Rhino**. In MCP mode, stay in your AI client: authorize native tool execution there and inspect the result without a local Apply step.
 
-**Concept-modeling beta · Windows x64 · Licensed Rhino 8.31+ within Rhino 8 · .NET 8 runtime.** No shared API key or model credit is included. The ready-made installer needs no developer tools.
+**Concept-modeling beta · Windows x64 · Licensed Rhino 8.31+ or Rhino 9 (compatibility beta) · Windows .NET runtime.** No shared API key or model credit is included. The ready-made installer needs no developer tools.
 
-## Latest release — 0.6.0-beta.10
+## Latest release — 0.6.1-beta.1
 
 **Persistent MCP conversations across hidden panels and idle time, with native model inspection and follow-up edits.** The latest installer includes independent provider profiles, authenticated OpenRouter discovery, explicit model selection and follow-up edits that retain their native object targets.
 
@@ -34,7 +36,7 @@ Connection controls and options scroll with the conversation while the multiline
 
 ## Editable Grasshopper definitions
 
-**0.6.0-beta.10** includes editable native Grasshopper definitions through the same MCP bridge or Studio API conversation: discover components, create sliders and wires, refine the same graph and explicitly bake native Rhino geometry. API users select **Grasshopper · parametric definition**; MCP users stay in their AI client. Type `archtec` in Rhino to open Studio beside Grasshopper. There is no separate `.gha` installation.
+**0.6.1-beta.1** includes editable native Grasshopper definitions through the same MCP bridge or Studio API conversation: discover components, create sliders and wires, refine the same graph and explicitly bake native Rhino geometry. API users select **Grasshopper · parametric definition**; MCP users stay in their AI client. Type `archtec` in Rhino to open Studio beside Grasshopper. There is no separate `.gha` installation.
 
 **[Grasshopper setup and workflow →](docs/GRASSHOPPER.en.md)** · [راهنمای فارسی](docs/GRASSHOPPER.fa.md)
 
@@ -70,7 +72,7 @@ The native catalog includes capped NURBS lofts, Brep booleans, sweeps, revolutio
 
 ![Download, install, open Studio and choose your conversation route](docs/assets/installation-quickstart.png)
 
-1. **[Download the Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.6.0-beta.10/ai-architec-rhino-0.6.0-beta.10-windows-installer.zip)** from Releases.
+1. **[Download the Windows installer ZIP](https://github.com/MrHs6/ai-architec-rhino/releases/download/rhino-v0.6.1-beta.1/ai-architec-rhino-0.6.1-beta.1-windows-installer.zip)** from Releases.
 2. **Extract All**. Keep `install.cmd` beside the included `.yak`.
 3. Save your work, close **every Rhino window**, and run **install.cmd**.
 4. Reopen Rhino, type **`archtec`**, and press Enter.
@@ -80,7 +82,7 @@ The native catalog includes capped NURBS lofts, Brep booleans, sweeps, revolutio
 
 Includes expected results for each step, API/MCP onboarding, first model, checksum verification, custom paths, updates, uninstall and troubleshooting. [راهنمای نصب فارسی](docs/INSTALLATION.fa.md)
 
-The automatically generated **Source code** archives are for developers. Install the versioned Windows ZIP or Yak package. [Release assets and SHA256](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.0-beta.10)
+The automatically generated **Source code** archives are for developers. Install the versioned Windows ZIP or Yak package. [Release assets and SHA256](https://github.com/MrHs6/ai-architec-rhino/releases/tag/rhino-v0.6.1-beta.1)
 
 ## Choose where you chat
 
