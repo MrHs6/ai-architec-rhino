@@ -1,9 +1,9 @@
 name: ai-architec-rhino
-version: 0.6.0-beta.10
+version: 0.6.1-beta.1
 authors:
   - Hasan Sharif Askari
 description: >
-  AI Archi-Tec architectural modeling assistant for Rhino 8 on Windows.
+  AI Archi-Tec architectural modeling assistant for Rhino 8.31+ and Rhino 9 on Windows.
   Bring your own OpenAI, OpenRouter, Gemini, Anthropic, xAI or compatible API
   key, or connect a desktop AI client through local MCP. Native geometry,
   editable Grasshopper definitions, explicit baking, validated plan previews,

@@ -1,3 +1,11 @@
+Verified on installed Rhino 9.0.26300.09401: 199 core/protocol/provider tests; 11 native MCP lifetime/inspection/edit checks; real STDIO MCP Grasshopper discovery, seven-node graph, idempotent retry and 5 x 4 x 3 closed-solid bake (volume 60); 19 in-panel API-path checks using a mock planner, including real solving, explicit baking, separate Undo/Redo, rollback and .gh export/reopen. No paid provider inference was run. Sanitized reports: rhino-plugin/docs/acceptance/rhino9-*.json.
+
+# 0.6.1-beta.1 — Rhino 9 compatibility beta
+
+Separate rh9-win and rh8_31-win distributions, explicit Rhino 9 installer, version-specific package and registration paths. Shared MCP/API/native/Grasshopper tools retain their existing workflow. Windows only. Core protocol/provider checks use simulated providers; Rhino 9 API scanner results do not substitute for native UI, solver, Undo or paid API acceptance. Previous acceptance records apply to their original Rhino 8 runs.
+
+Installation: extract the Windows ZIP; run install-rhino9.cmd for Rhino 9 or install.cmd for Rhino 8.31+. Documentation: docs/RHINO9.md.
+
 AI Archi-Tec 0.6.0-beta.10 — persistent MCP conversations
 
 - Keep the MCP listener and document follow-up state alive when the panel is hidden, reparented or unloaded. Register it as a Rhino System panel; stop only through explicit Stop MCP or Rhino shutdown.

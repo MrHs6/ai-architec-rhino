@@ -34,8 +34,11 @@ function Write-Archive([string]$Source,[string]$Destination){
 }
 Write-Archive $payload $yakPath
 & (Join-Path $PSScriptRoot 'verify-package.ps1') -PackagePath $yakPath
-Copy-Item -LiteralPath $yakPath -Destination $bundle
-foreach($fileName in @('install.ps1','install.cmd','repair-registration.ps1','repair-registration.cmd')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $fileName) -Destination $bundle}
+$rhino9Path=Join-Path $OutputDirectory "ai-architec-rhino-$version-rh9-win.yak"
+Copy-Item -LiteralPath $yakPath -Destination $rhino9Path
+& (Join-Path $PSScriptRoot 'verify-package.ps1') -PackagePath $rhino9Path
+Copy-Item -LiteralPath $yakPath,$rhino9Path -Destination $bundle
+foreach($fileName in @('install.ps1','install.cmd','install-rhino9.cmd','repair-registration.ps1','repair-registration.cmd')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $fileName) -Destination $bundle}
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\INSTALLER-README.md') -Destination (Join-Path $bundle 'README.md')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'PRIVACY.md') -Destination $bundle
 Get-ChildItem -LiteralPath $bundle -File | Sort-Object Name | ForEach-Object {
@@ -43,7 +46,7 @@ Get-ChildItem -LiteralPath $bundle -File | Sort-Object Name | ForEach-Object {
 } | Set-Content -LiteralPath (Join-Path $bundle 'SHA256SUMS.txt') -Encoding ascii
 $bundlePath=Join-Path $OutputDirectory "ai-architec-rhino-$version-windows-installer.zip"
 Write-Archive $bundle $bundlePath
-@($yakPath,$bundlePath) | ForEach-Object {
+@($yakPath,$rhino9Path,$bundlePath) | ForEach-Object {
     '{0}  {1}' -f (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash.ToLowerInvariant(),[IO.Path]::GetFileName($_)
 } | Set-Content -LiteralPath (Join-Path $OutputDirectory 'SHA256SUMS.txt') -Encoding ascii
 Write-Output $yakPath

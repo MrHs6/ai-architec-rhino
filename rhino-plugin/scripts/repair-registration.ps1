@@ -1,12 +1,13 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
 param(
     [string]$PackagePath='',
+    [ValidateSet(8,9)][int]$RhinoMajor=8,
     [string]$InstalledPluginPath='',
     [switch]$CheckOnly
 )
 $ErrorActionPreference='Stop'
 $pluginId='0ab9a769-52f9-4378-85cb-cf8177ed5166'
-$registration='Software\McNeel\Rhinoceros\8.0\Plug-Ins\'+$pluginId
+$registration="Software\McNeel\Rhinoceros\$RhinoMajor.0\Plug-Ins\"+$pluginId
 if($PackagePath -and $InstalledPluginPath){throw 'Specify PackagePath or InstalledPluginPath, not both.'}
 if($PackagePath){
     Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -19,7 +20,7 @@ if($PackagePath){
         if($manifest -notmatch '(?m)^name:\s*ai-architec-rhino\s*$'){throw 'Unexpected package identity.'}
         $version=[regex]::Match($manifest,'(?m)^version:\s*(\S+)\s*$').Groups[1].Value
         if($version -notmatch '^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$'){throw 'Invalid package version.'}
-        $InstalledPluginPath=Join-Path $env:APPDATA "McNeel\Rhinoceros\packages\8.0\ai-architec-rhino\$version\AIArchiTec.rhp"
+        $InstalledPluginPath=Join-Path $env:APPDATA "McNeel\Rhinoceros\packages\$RhinoMajor.0\ai-architec-rhino\$version\AIArchiTec.rhp"
     }finally{$archive.Dispose()}
 }
 if(!$InstalledPluginPath){throw 'Supply the installed .rhp path or the .yak used for installation.'}
@@ -51,7 +52,7 @@ if(!$PSCmdlet.ShouldProcess('HKCU\'+$registration,'Back up this plugin registrat
 # Touch only this plugin GUID. Preserve load protection, other plugins, documents and API settings.
 $backupDirectory=Join-Path $env:LOCALAPPDATA 'AIArchiTec\InstallationBackups'
 New-Item -ItemType Directory -Path $backupDirectory -Force | Out-Null
-$backup=Join-Path $backupDirectory ('Rhino8-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N')+'.reg')
+$backup=Join-Path $backupDirectory ("Rhino$RhinoMajor-"+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N')+'.reg')
 & "$env:SystemRoot\System32\reg.exe" export ('HKCU\'+$registration) $backup /y | Out-Null
 if($LASTEXITCODE -ne 0){throw 'Registration backup failed. No registration changes were made.'}
 try{

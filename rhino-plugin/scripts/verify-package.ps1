@@ -12,6 +12,6 @@ try{
     $reader=[IO.StreamReader]::new($archive.GetEntry('manifest.yml').Open())
     try{$manifest=$reader.ReadToEnd()}finally{$reader.Dispose()}
     $version=[regex]::Match($manifest,'(?m)^version:\s*(\S+)\s*$').Groups[1].Value
-    if([IO.Path]::GetFileName($PackagePath) -ne "ai-architec-rhino-$version-rh8_31-win.yak"){throw 'Filename, version and Rhino distribution tag do not match.'}
+    if([IO.Path]::GetFileName($PackagePath) -notin @("ai-architec-rhino-$version-rh8_31-win.yak","ai-architec-rhino-$version-rh9-win.yak")){throw 'Filename, version and Rhino distribution tag do not match.'}
     Write-Output "Verified package $version (10 expected files; no host SDK or user settings)."
 }finally{$archive.Dispose()}

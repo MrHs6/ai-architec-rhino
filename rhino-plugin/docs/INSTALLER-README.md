@@ -1,4 +1,7 @@
-# AI Archi-Tec for Rhino 8 — 0.6.0-beta.10
+# Rhino 9 installation
+For Rhino 9 run install-rhino9.cmd; for Rhino 8.31+ run install.cmd. Close all Rhino windows first. Separate packages and registrations are used. Rhino 9 support is a compatibility beta; see docs/RHINO9.md in GitHub for test scope.
+
+# AI Archi-Tec for Rhino 8 — 0.6.1-beta.1
 
 Includes Rhino and editable Grasshopper workflows, authenticated OpenRouter discovery, explicit model selection and a readable scrolling workspace. Saved profiles and connected API sessions have distinct statuses. Choose Connect and discover models before API chat; preview/Apply stays inside Rhino. In MCP, all conversation and tool authorization stay in your client.
 
