@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <RevitDir Condition="'$(RevitDir)' == ''">$(ProgramW6432)\Autodesk\Revit 2025</RevitDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="RevitAPI" HintPath="$(RevitDir)\RevitAPI.dll" Private="false" />
+    <Reference Include="RevitAPIUI" HintPath="$(RevitDir)\RevitAPIUI.dll" Private="false" />
+  </ItemGroup>
+</Project>

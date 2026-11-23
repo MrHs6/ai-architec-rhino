@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>AI Archi-Tec Studio</Name>
+    <Assembly>ArchiTecStudio\ArchiTec.Revit.dll</Assembly>
+    <AddInId>98660290-4C76-4538-819F-D091FE940155</AddInId>
+    <FullClassName>ArchiTec.Revit.DesktopConnection</FullClassName>
+    <VendorId>AIAT</VendorId><VendorDescription>AI Archi-Tec</VendorDescription>
+  </AddIn>
+</RevitAddIns>

@@ -1,0 +1,25 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="AI Archi-Tec Studio" Manufacturer="AI Archi-Tec" Version="0.6.5" Language="1033" Scope="perUser" UpgradeCode="5871912E-829B-4BB8-9F11-FB3A928DD693">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Studio is already installed."/>
+    <MediaTemplate EmbedCab="yes" CompressionLevel="medium"/>
+    <Icon Id="StudioIcon" SourceFile="$(var.BrandIcon)"/>
+    <Property Id="ARPPRODUCTICON" Value="StudioIcon"/>
+    <Property Id="ARPURLINFOABOUT" Value="https://ai-arch.ir/"/>
+    <StandardDirectory Id="LocalAppDataFolder"><Directory Id="VendorFolder" Name="AIArchiTec"><Directory Id="INSTALLFOLDER" Name="Desktop"/></Directory></StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder"/>
+    <Feature Id="Studio" Title="AI Archi-Tec Studio" Level="1">
+      <Files Directory="INSTALLFOLDER" Include="$(var.Payload)\**"/>
+      <Component Id="StartShortcut" Directory="ProgramMenuFolder" Guid="67694FA1-ECCA-4BE1-B26C-3AD49D16F068">
+        <Shortcut Id="StudioShortcut" Name="AI Archi-Tec Studio" Target="[INSTALLFOLDER]ArchiTecStudio.exe" WorkingDirectory="INSTALLFOLDER" Icon="StudioIcon"/>
+        <RegistryValue Root="HKCU" Key="Software\AIArchiTec\Studio" Name="Installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </Feature>
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER"/>
+    <UI>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Condition="NOT Installed" Order="10"/>
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="10"/>
+    </UI>
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.DialogArt)"/>
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.BannerArt)"/>
+  </Package>
+</Wix>

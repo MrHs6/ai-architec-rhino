@@ -154,3 +154,7 @@ cd ai-architec-rhino\rhino-plugin
 Source builds need Windows and .NET SDK 8; the pinned official RhinoCommon SDK is restored from NuGet. Running native UI/geometry acceptance needs licensed Rhino. [Report a reproducible issue](https://github.com/MrHs6/ai-architec-rhino/issues/new/choose) with versions and redacted errors.
 
 Designed and owned by **Hasan Sharif Askari** · [ai-arch.ir](https://ai-arch.ir). Source is available for inspection; an open-source modification/redistribution license has not been granted. Beta binaries are available for public evaluation under [LICENSE.md](LICENSE.md).
+
+## Windows desktop application
+
+[AI Archi-Tec Studio — Windows download, installation and source](desktop/README.md)

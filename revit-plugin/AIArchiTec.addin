@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Text>AI Archi-Tec · Inspect context</Text>
+    <Assembly>ArchiTec.Revit.dll</Assembly>
+    <AddInId>142B00D1-85CE-4A23-BDD6-E7D24F4D3262</AddInId>
+    <FullClassName>ArchiTec.Revit.InspectContext</FullClassName>
+    <VendorId>AIAT</VendorId>
+    <VendorDescription>AI Archi-Tec</VendorDescription>
+  </AddIn>
+</RevitAddIns>
