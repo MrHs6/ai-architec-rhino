@@ -4,7 +4,7 @@ internal sealed record ApplicationCatalog(string Name,string Mark,string Color,s
 {
     internal static readonly ApplicationCatalog[] All =
     [
-        new("Rhino","Rh","#B9B8CC","RhinoCommon · Archi-Tec MCP","https://developer.rhino3d.com/",["Automatic","8","9"]),
+        new("Rhino","Rh","#B9B8CC","RhinoCommon · Native API","https://developer.rhino3d.com/",["Automatic","8","9"]),
         new("Revit","R","#77AFF8","Revit API · BIM documents","https://aps.autodesk.com/developer/overview/revit",["2025","2026","2027"]),
         new("Grasshopper","Gh","#97D19C","Parametric definitions through Rhino","https://developer.rhino3d.com/guides/grasshopper/",["Automatic","8","9"]),
         new("AutoCAD","A","#FF8A96","ActiveX · DWG layers","https://aps.autodesk.com/developer/overview/autocad",["Automatic","2025","2026","2027"]),

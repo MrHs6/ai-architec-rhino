@@ -26,17 +26,15 @@ internal sealed class VoiceInput : IDisposable
         finally {Dispose();}
     }
     public void Dispose(){mciSendString("close "+alias,null,0,IntPtr.Zero);Recording=false;}
-    public static async Task<string> Transcribe(string path,string key,bool router=false)
+    public static async Task<string> Transcribe(string path,string key)
     {
         if(new FileInfo(path).Length>24_000_000)throw new IOException("Choose an audio clip under 24 MB.");
         using var http=new HttpClient(new HttpClientHandler{AllowAutoRedirect=false}){Timeout=TimeSpan.FromMinutes(3)};
-        using var form=new MultipartFormDataContent();
-        form.Add(new StringContent(router?"openai/whisper-large-v3":"whisper-1"),"model");
-        form.Add(new StreamContent(File.OpenRead(path)),"file",Path.GetFileName(path));
-        using var req=new HttpRequestMessage(HttpMethod.Post,router?"https://openrouter.ai/api/v1/audio/transcriptions":"https://api.openai.com/v1/audio/transcriptions"){Content=form};
+        var payload=new {model="openai/whisper-1",input_audio=new {data=Convert.ToBase64String(await File.ReadAllBytesAsync(path)),format="wav"}};
+        using var req=new HttpRequestMessage(HttpMethod.Post,"https://openrouter.ai/api/v1/audio/transcriptions"){Content=System.Net.Http.Json.JsonContent.Create(payload)};
         req.Headers.Authorization=new AuthenticationHeaderValue("Bearer",key);
         using var res=await http.SendAsync(req);
-        if(!res.IsSuccessStatusCode)throw new IOException((router?"OpenRouter":"OpenAI")+" transcription returned HTTP "+(int)res.StatusCode+". Check the voice key, credits and audio format.");
+        if(!res.IsSuccessStatusCode)throw new IOException("OpenRouter"+" transcription returned HTTP "+(int)res.StatusCode+". Check the voice key, credits and audio format.");
         using var json=JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         if(!json.RootElement.TryGetProperty("text",out var value) || value.ValueKind!=JsonValueKind.String || string.IsNullOrWhiteSpace(value.GetString()))throw new IOException("No speech was transcribed. Check your microphone and record again.");
         return value.GetString()!;

@@ -3,8 +3,6 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Studio;
 
-if(args.FirstOrDefault()=="exec"){ConnectionTests.FixtureCodex(args);return;}
-if(args.SequenceEqual(new[]{"--fixture-host"})){ConnectionTests.FixtureHost();return;}
 if(args.SequenceEqual(new[]{"--connections"})){await ConnectionTests.Check();return;}
 if(args.Length==2 && args[0]=="--onboarding"){await Onboarding.Check(args[1]);return;}
 if(args.Length==2 && args[0]=="--layout"){WorkspaceLayout.Verify(args[1]);return;}
@@ -15,19 +13,15 @@ var history = new JsonArray(Wire.Node(new { role="system",content=Workspace.Syst
     Wire.Node(new { role="user",content="Inspect the current project" }));
 var receipts=new List<string>();
 var events=new List<string>();
-var reply=await ws.Chat("Revit","OpenAI","fixture","local-test",history,true,receipts.Add,_=>{},(name,state)=>events.Add(state+" "+name));
+var reply=await ws.Chat("Revit","fixture","local-test",history,true,receipts.Add,_=>{},(name,state)=>events.Add(state+" "+name));
 if(reply!="Project inspected"||receipts.Count!=1||!receipts[0].Contains("document_id"))throw new Exception("Live receipt missing");
 history.Add(Wire.Node(new {role="user",content="Explain the result"}));
-reply=await ws.Chat("Revit","OpenAI","fixture","local-test",history,false,receipts.Add,_=>{});
+reply=await ws.Chat("Revit","fixture","local-test",history,false,receipts.Add,_=>{});
 if(reply!="Context retained"||receipts.Count!=1)throw new Exception("Chat mode produced an unexpected result");
 if(!events.Contains("done revit get context"))throw new Exception("Missing completion event");
-foreach(string provider in new[]{"Gemini","Anthropic","Compatible API","OpenRouter"}){
-    reply=await ws.Chat("Revit",provider,"fixture","fixture",history,false,_=>{},_=>{},customEndpoint:"http://localhost:4211/v1/chat/completions");
-    if(reply!="Context retained")throw new Exception(provider);
-}
 using(var streaming=new Workspace(new StreamFixture())){
     var streamed=new StringBuilder();
-    var answer=await streaming.Chat("Rhino","Gemini","test","key",new JsonArray(),false,_=>{},_=>{},partial:t=>streamed.Append(t));
+    var answer=await streaming.Chat("Rhino","test","key",new JsonArray(),false,_=>{},_=>{},partial:t=>streamed.Append(t));
     if(answer!="سلام دنیا" || answer!=streamed.ToString())throw new Exception("Streaming chunks did not match the final reply.");
 }
 Console.WriteLine("PASS streamed chat (UTF-8 fixture).");
@@ -54,7 +48,7 @@ internal sealed class StreamFixture : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken token)
     {
-        if(request.RequestUri?.Host!="generativelanguage.googleapis.com")throw new Exception("Wrong Gemini destination");
+        if(request.RequestUri?.Host!="openrouter.ai")throw new Exception("Wrong OpenRouter destination");
         var data="data: {\"choices\":[{\"delta\":{\"content\":\"سلام \"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"دنیا\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n";
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(data,Encoding.UTF8,"text/event-stream")});
     }

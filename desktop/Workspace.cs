@@ -57,16 +57,9 @@ internal sealed class Workspace : IDisposable
         return await connections.Call("Rhino","execute_plan",Wire.Node(new {document_id=(int)args["rhino_document_id"]!,request_id=request,plan}));
     }
 
-    public async Task<string> Chat(string target, string provider, string model, string key, JsonArray history, bool build, Action<string> log, Action<byte[]> preview, Action<string,string>? progress=null, string? customEndpoint=null,CancellationToken cancellation=default,Action<string>? partial=null, bool probe=false)
+    public async Task<string> Chat(string target, string model, string key, JsonArray history, bool build, Action<string> log, Action<byte[]> preview, Action<string,string>? progress=null, CancellationToken cancellation=default,Action<string>? partial=null, bool probe=false)
     {
-        string url = provider switch {
-            CodexModel.Provider => "",
-            "OpenAI" => "https://api.openai.com/v1/chat/completions",
-            "Anthropic" => "https://api.anthropic.com/v1/chat/completions",
-            "Gemini" => "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-            "Compatible API" => ValidEndpoint(customEndpoint),
-            "OpenRouter" => "https://openrouter.ai/api/v1/chat/completions",
-            _ => throw new ArgumentException("Unknown provider.") };
+        const string url="https://openrouter.ai/api/v1/chat/completions";
         var tools = new JsonArray();
         if (build){
             progress?.Invoke("Discovering tools · "+target,"running");
@@ -78,13 +71,10 @@ internal sealed class Workspace : IDisposable
         {
             cancellation.ThrowIfCancellationRequested();
             JsonNode answer;
-            if(provider==CodexModel.Provider){
-                progress?.Invoke("Waiting for ChatGPT via Codex","running");
-                answer=await CodexModel.Reply(history,tools,cancellation);
-            } else {
+            {
                 var payload = new JsonObject { ["model"] = model, ["messages"] = history.DeepClone() };
-                if (provider=="Anthropic" || probe) payload[provider=="OpenAI"?"max_completion_tokens":"max_tokens"] = probe ? 64 : 4096;
-                if (build) payload["tools"] = tools.DeepClone();
+                if (probe) payload["max_tokens"] = probe ? 64 : 4096;
+                if (build) { payload["tools"] = tools.DeepClone(); payload["provider"]=Wire.Node(new {require_parameters=true}); }
                 bool stream=!build && partial!=null;
                 if(stream)payload["stream"]=true;
                 using var request = new HttpRequestMessage(HttpMethod.Post, url);
@@ -92,7 +82,7 @@ internal sealed class Workspace : IDisposable
                 request.Content = new StringContent(payload.ToJsonString(), Encoding.UTF8, "application/json");
                 progress?.Invoke("Waiting for "+model,"running");
                 using var response = await http.SendAsync(request,HttpCompletionOption.ResponseHeadersRead,cancellation);
-                if (!response.IsSuccessStatusCode) throw new IOException(ProviderError(provider,(int)response.StatusCode));
+                if (!response.IsSuccessStatusCode) throw new IOException(ProviderError("OpenRouter",(int)response.StatusCode));
                 if(stream && response.Content.Headers.ContentType?.MediaType=="text/event-stream"){
                     using var timeout=CancellationTokenSource.CreateLinkedTokenSource(cancellation);
                     timeout.CancelAfter(TimeSpan.FromMinutes(3));
@@ -156,52 +146,6 @@ internal sealed class Workspace : IDisposable
         _ => "The provider could not complete this request."
     });
 
-    internal static string ValidEndpoint(string? value)
-    {
-        if(!Uri.TryCreate(value,UriKind.Absolute,out var uri) || !(uri.Scheme=="https" || uri.Scheme=="http" && uri.IsLoopback) || uri.UserInfo.Length>0 || uri.Fragment.Length>0 || uri.Query.Length>0)
-            throw new ArgumentException("Enter a full HTTPS chat completions URL (HTTP is supported on localhost).");
-        return uri.AbsoluteUri;
-    }
     public void ResetConnections() => connections.Dispose();
     public void Dispose() { connections.Dispose(); http.Dispose(); }
-}
-
-internal static class Server
-{
-    public static async Task Run(string target)
-    {
-        using var workspace = new Workspace();
-        JsonArray? tools = null;
-        while (await Console.In.ReadLineAsync() is string line)
-        {
-            JsonNode? id = null;
-            try
-            {
-                var msg = JsonNode.Parse(line)!;
-                id = msg["id"];
-                if (id == null) continue;
-                var p = msg["params"];
-                object result;
-                switch ((string?)msg["method"])
-                {
-                    case "initialize":
-                        var version = (string?)p?["protocolVersion"];
-                        result = new { protocolVersion = version is "2025-11-25" or "2025-06-18" or "2024-11-05" ? version : "2025-03-26", capabilities = new { tools = new { } }, serverInfo = new { name = "AI Archi-Tec Studio", version = typeof(Workspace).Assembly.GetName().Version!.ToString(3) }, instructions = Workspace.SystemPrompt }; break;
-                    case "ping": result = new { }; break;
-                    case "tools/list": await StudioAccount.Verify(); tools = await workspace.Tools(target); result = new { tools }; break;
-                    case "tools/call":
-                        await StudioAccount.Verify();
-                        string name = (string)p!["name"]!;
-                        tools ??= await workspace.Tools(target);
-                        if (!tools.Any(t => (string?)t!["name"] == name)) throw new ArgumentException("Unknown tool.");
-                        try { result = await workspace.Call(target, name, p["arguments"] ?? new JsonObject()); }
-                        catch (Exception ex) { result = Wire.Text(ex.Message, true); }
-                        break;
-                    default: throw new ArgumentException("Unsupported MCP method.");
-                }
-                Console.WriteLine(JsonSerializer.Serialize(new { jsonrpc = "2.0", id, result }));
-            }
-            catch (Exception ex) { Console.WriteLine(JsonSerializer.Serialize(new { jsonrpc = "2.0", id, error = new { code = -32602, message = ex.Message } })); }
-        }
-    }
 }

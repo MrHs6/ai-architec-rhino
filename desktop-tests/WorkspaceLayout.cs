@@ -12,7 +12,7 @@ internal static class WorkspaceLayout
         var thread=new Thread(()=>{
             try{
                 var application=new Application();
-                var window=new StudioWindow();
+                var window=new StudioWindow("fixture");
                 var hosts=(ListBox)window.FindName("Host");
                 if(hosts.Items.Count<12)throw new Exception("Missing host rows.");
                 var edit=(TextBox)window.FindName("Prompt");
@@ -32,6 +32,12 @@ internal static class WorkspaceLayout
                 var settings=(Expander)window.FindName("Settings");
                 settings.IsExpanded=true;
                 content.Measure(new Size(410,570));content.Arrange(new Rect(0,0,410,570));content.UpdateLayout();
+                foreach(string name in new[]{"ChatModel","BuildModel"}){
+                    var combo=(ComboBox)window.FindName(name);
+                    combo.ApplyTemplate();
+                    if(combo.Template.FindName("PART_EditableTextBox",combo) is not TextBox editor || editor.Visibility!=Visibility.Visible)throw new Exception("Missing manual model input");
+                    editor.Text="vendor/"+name; if(combo.Text!=editor.Text)throw new Exception("Manual model ID was lost");
+                }
                 if(!settings.IsVisible && settings.Visibility!=Visibility.Visible)throw new Exception("Settings not accessible");
                 if(edit.ActualWidth<150 || edit.ActualHeight<32)throw new Exception("Compact composer unusable");
                 settings.IsExpanded=false;

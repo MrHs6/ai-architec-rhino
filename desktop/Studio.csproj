@@ -2,12 +2,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF><AssemblyName>ArchiTecStudio</AssemblyName>
-    <ApplicationIcon>Assets/Studio.ico</ApplicationIcon><Version>0.6.5</Version><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets/Studio.ico</ApplicationIcon><Version>0.7.0</Version><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup><Resource Include="../rhino-plugin/src/ArchiTec.Rhino/Assets/logo.png" Link="Assets/logo.png"/></ItemGroup>
   <ItemGroup>
     <Resource Include="Assets/hero-wave.jpg;Assets/studio-entry.jpg"/>
-    <EmbeddedResource Include="Assets/site.json"/>
+
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58"/>
     <None Update="Assets/studio-entry.jpg" Link="Brand/studio-entry.jpg" CopyToOutputDirectory="PreserveNewest"/>
     <None Include="../rhino-plugin/src/ArchiTec.Rhino/Assets/logo.png" Link="Brand/logo.png" CopyToOutputDirectory="PreserveNewest"/>

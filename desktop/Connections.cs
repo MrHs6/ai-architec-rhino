@@ -17,55 +17,15 @@ internal static class Wire
 internal sealed class Connections : IDisposable
 {
     private ArchicadHost archicad=new();
-    readonly Func<HostProfile[]> profiles;
-    internal Connections(Func<HostProfile[]>? profiles = null) => this.profiles = profiles ?? HostProfile.Load;
-    private readonly Dictionary<string,StdioHost> servers = new();
     private static bool RhinoFamily(string h) => h.Split(" · ")[0] is "Rhino" or "Grasshopper";
-    public static string Route(string h) => HostProfile.Load().Any(p=>p.Name==h)?"Configured MCP":RhinoFamily(h)?"Rhino bridge":h is "Revit" or "Both"?"Studio bridge":SceneHost.Supports(h)?"Scene connector":h.Split(" · ")[0]=="Archicad"?"Archicad JSON":WindowsAutomation.Supports(h)?"Windows automation":"Connector required";
-    private static string BridgePath(string host)
-    {
-        string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "McNeel", "Rhinoceros", "packages");
-        foreach (var major in host.Contains(" · ") ? new[] {host.Split(" · ")[1]+".0"} : new[] { "9.0", "8.0" })
-        {
-            var folder = Path.Combine(root, major, "ai-architec-rhino");
-            if (!Directory.Exists(folder)) continue;
-            var path = Directory.GetFiles(folder, "AIArchiTec.McpBridge.exe", SearchOption.AllDirectories).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
-            if (path != null) return path;
-        }
-        throw new IOException("Install the AI Archi-Tec Rhino bridge first.");
-    }
-
-    private StdioHost Server(string host, bool catalogOnly=false)
-    {
-        var profile = profiles().FirstOrDefault(p => p.Name == host);
-        int? port = null;
-        var cacheKey = host;
-        if (profile == null)
-        {
-            if (!RhinoFamily(host)) throw new IOException("Configure the MCP connector for "+host+" first.");
-            var session = RhinoSessions.Resolve(host,catalogOnly);
-            port = session?.Port;
-            cacheKey = host + "|" + session?.ProcessId + "|" + port;
-            profile = new HostProfile(host, BridgePath(session==null?host:"Rhino · "+session.Major), []);
-        }
-        if (!servers.TryGetValue(cacheKey, out var server))
-        {
-            foreach (var old in servers.Keys.Where(k=>k.StartsWith(host+"|",StringComparison.Ordinal)).ToArray())
-            {
-                servers[old].Dispose();
-                servers.Remove(old);
-            }
-            server = new StdioHost(profile, port);
-            servers.Add(cacheKey, server);
-        }
-        return server;
-    }
+    public static string Route(string h) => RhinoFamily(h)?"Rhino bridge":h is "Revit" or "Both"?"Studio bridge":SceneHost.Supports(h)?"Scene connector":h.Split(" · ")[0]=="Archicad"?"Archicad JSON":WindowsAutomation.Supports(h)?"Windows automation":"Connector required";
     public async Task<JsonArray> Tools(string host)
     {
         if(Route(host)=="Scene connector")return SceneHost.Tools(host);
         if(Route(host)=="Archicad JSON")return ArchicadHost.Tools();
         if(Route(host)=="Windows automation")return WindowsAutomation.Tools(host);
-        if (host != "Revit") return await Server(host,true).Tools();
+        if (RhinoFamily(host)) return (await RhinoNative.Request(host,"catalog",new JsonObject())).AsArray();
+        if(host!="Revit")throw new IOException("No native connector is available for this edition.");
         var tools = new JsonArray();
         void Add(string name, string description, params string[] fields)
         {
@@ -87,7 +47,8 @@ internal sealed class Connections : IDisposable
         if(Route(host)=="Scene connector")return await SceneHost.Call(host,name,args);
         if(Route(host)=="Archicad JSON")return await archicad.Call(host,name,args);
         if(Route(host)=="Windows automation")return WindowsAutomation.Call(host,name,args);
-        if (host != "Revit") return await Server(host).Call("tools/call", new { name, arguments = args });
+        if(RhinoFamily(host))return await RhinoNative.Request(host,name,args);
+        if(host!="Revit")throw new IOException("No native connector is available for this edition.");
         var processes = Process.GetProcessesByName("Revit");
         try
         {
@@ -109,7 +70,6 @@ internal sealed class Connections : IDisposable
 
     public void Dispose()
     {
-        foreach (var server in servers.Values) server.Dispose();
-        servers.Clear();archicad.Dispose();archicad=new();
+archicad.Dispose();archicad=new();
     }
 }

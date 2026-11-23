@@ -43,8 +43,8 @@ internal static class WindowsAutomation
             if (Type.GetTypeFromProgID(specific) != null) prog=specific;
             else if (Type.GetTypeFromProgID(prog+"."+expected.Split('.')[0]) != null) prog+="."+expected.Split('.')[0];
         }
-        if(CLSIDFromProgIDEx(prog,out var id)<0)throw new IOException("Install the application's Windows scripting interface or configure an MCP connector.");
-        object obj;try{GetActiveObject(ref id,IntPtr.Zero,out obj);}catch(COMException){throw new IOException("Open the application and a document, or configure its MCP connector.");}
+        if(CLSIDFromProgIDEx(prog,out var id)<0)throw new IOException("Install the application's Windows scripting interface.");
+        object obj;try{GetActiveObject(ref id,IntPtr.Zero,out obj);}catch(COMException){throw new IOException("Open the application and a document.");}
         dynamic app=obj;
         try{
             var actual=Convert.ToString(app.Version) as string ?? "";

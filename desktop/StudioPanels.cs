@@ -12,7 +12,7 @@ public partial class StudioWindow
     {
         if (e.OriginalSource != Settings) return;
         TopActions.IsEnabled = WorkspaceRoot.IsEnabled = false;
-        Provider.Focus();
+        ChatModel.Focus();
     }
     void CloseSettings(object sender, RoutedEventArgs e) => Settings.IsExpanded = false;
     void SettingsClosed(object sender, RoutedEventArgs e)
@@ -61,13 +61,14 @@ public partial class StudioWindow
         switch(page)
         {
             case "Studio account":
-                Detail(member == null ? "Studio workspace" : member.Email+"\n"+member.Access);
+                Detail("OpenRouter · Verified session");
+                Detail("Studio version "+typeof(StudioWindow).Assembly.GetName().Version?.ToString(3));
                 ActionRow("link","Application connections",()=>{ShowChat();ConnectPanel.Visibility=Visibility.Visible;UpdateSetup();});
                 ActionRow("settings","Model & API settings",()=>{ShowChat();Settings.IsExpanded=true;});
                 ActionRow("apps","Open web workspace",()=>PlatformClick(this,new RoutedEventArgs()));
                 ActionRow("book","About the studio",()=>OpenStudioPage("About the studio"));
                 ActionRow("mail","Contact the developer",()=>OpenStudioPage("Contact"));
-                ActionRow("exit","Sign out",SignOutClick);
+                ActionRow("exit","End session",Close);
                 break;
             case "About the studio":
                 Detail("Hasan Sharif Askari · Architect and developer");

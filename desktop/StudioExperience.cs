@@ -84,24 +84,15 @@ public partial class StudioWindow
         if(Directory.Exists(folder))Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});
     }
     void RemoveAttachment(object s,RoutedEventArgs e){if(!busy){attachment=null;DisplayAttachment();}}
-    string? VoiceKey()
-    {
-        var key=SpeechKey.Password.Trim();
-        if(key.Length==0 && Service is ("OpenAI" or "OpenRouter"))key=Key.Password.Trim();
-        if(key.Length!=0)return key;
-        Settings.IsExpanded=true;
-        Status.Text=ModelTestStatus.Text="Enter your OpenRouter or OpenAI provider key for integrated recording, or an OpenAI dictation key.";
-        return null;
-    }
     async Task Dictate(string path,string key)
     {
-        var text=await VoiceInput.Transcribe(path,key,Service=="OpenRouter" && string.IsNullOrWhiteSpace(SpeechKey.Password));
+        var text=await VoiceInput.Transcribe(path,key);
         Prompt.AppendText((Prompt.Text.Length>0?" ":"")+text);Prompt.CaretIndex=Prompt.Text.Length;Prompt.Focus();
     }
     async void VoiceClick(object s,RoutedEventArgs e)
     {
         if(busy)return;
-        var key=VoiceKey();if(key==null)return;
+        var key=apiKey;
         try{
             if(!voice.Recording){voice.Start();Mic.Content=new StudioGlyph{Kind="stop"};Status.Text="Recording in Studio · click Stop to transcribe";Host.IsEnabled=Edition.IsEnabled=Settings.IsEnabled=SendButton.IsEnabled=false;return;}
             string path=voice.Stop();Mic.Content=new StudioGlyph{Kind="mic"};

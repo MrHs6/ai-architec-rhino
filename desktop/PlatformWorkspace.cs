@@ -35,7 +35,7 @@ public partial class StudioWindow
         try
         {
             var profile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "AIArchiTec", "Studio", member?.Id.ToString() ?? "Preview", "WebProfile");
+                "AIArchiTec", "Studio", "WebWorkspace", "WebProfile");
             platform = new WebView2
             {
                 CreationProperties = new CoreWebView2CreationProperties { UserDataFolder = profile },

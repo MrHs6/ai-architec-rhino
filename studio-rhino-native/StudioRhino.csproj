@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable><LangVersion>12</LangVersion><ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>ArchiTecStudioNative</AssemblyName>
+    <AssemblyName Condition="'$(StudioAssemblyName)' != ''">$(StudioAssemblyName)</AssemblyName>
+    <Version>0.7.0</Version>
+    <Title>architec-studio-native</Title>
+    <RhinoSystemDir Condition="'$(RhinoSystemDir)' == ''">C:\Program Files\Rhino 8\System</RhinoSystemDir>
+    <GrasshopperDir>$(RhinoSystemDir)\..\Plug-ins\Grasshopper</GrasshopperDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../rhino-plugin/src/ArchiTec.Core/Contracts.cs;../rhino-plugin/src/ArchiTec.Core/GrasshopperContracts.cs;../rhino-plugin/src/ArchiTec.Core/McpOperationLedger.cs;../rhino-plugin/src/ArchiTec.Core/McpCatalog.cs" />
+    <Using Include="System.Text.Json"/>
+    <Compile Include="../rhino-plugin/src/ArchiTec.Rhino/*.cs" Exclude="../rhino-plugin/src/ArchiTec.Rhino/Plugin.cs;../rhino-plugin/src/ArchiTec.Rhino/ArchiTecPanel.cs;../rhino-plugin/src/ArchiTec.Rhino/ArchiTecOptionsPage.cs;../rhino-plugin/src/ArchiTec.Rhino/NativeViewHost.cs;../rhino-plugin/src/ArchiTec.Rhino/SettingsStore.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildWithNuGet)' != 'true'">
+    <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\netcore\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Eto"><HintPath>$(RhinoSystemDir)\Eto.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Eto.Wpf"><HintPath>$(RhinoSystemDir)\Eto.Wpf.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Grasshopper"><HintPath>$(GrasshopperDir)\Grasshopper.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="GH_IO"><HintPath>$(GrasshopperDir)\GH_IO.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <!-- Compile on hosted CI without installing Rhino. The host supplies these assemblies. -->
+  <ItemGroup Condition="'$(BuildWithNuGet)' == 'true'">
+    <PackageReference Include="RhinoCommon" Version="8.31.26126.13431" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Grasshopper" Version="8.31.26126.13431" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <Target Name="RhinoPlugin" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)ArchiTecStudioNative.rhp" />
+  </Target>
+</Project>
+

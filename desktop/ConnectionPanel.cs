@@ -40,8 +40,8 @@ public partial class StudioWindow
         var route=Connections.Route(Target);
         bool custom=route=="Connector required";
         bool missing=install!=null && HostSetup.NeedsInstall(install);
-        InstallBridge.Visibility=missing||custom?Visibility.Visible:Visibility.Collapsed;
-        InstallBridge.Content=custom?"Choose MCP connector":"Install bridge";
+        InstallBridge.Visibility=missing && !custom?Visibility.Visible:Visibility.Collapsed;
+        InstallBridge.Content="Install bridge";
         LaunchHost.Visibility=install==null?Visibility.Collapsed:Visibility.Visible;
         LaunchHost.Content="Open "+install?.Name;
         bool running=false;
@@ -50,15 +50,14 @@ public partial class StudioWindow
             try { running=processes.Any(p=>{try{return string.Equals(p.MainModule?.FileName,install.Exe,StringComparison.OrdinalIgnoreCase);}catch(System.ComponentModel.Win32Exception){return false;}catch(InvalidOperationException){return false;}}); }
             finally { foreach(var p in processes)p.Dispose(); }
         }
-        Step(BridgeStep,"Bridge",!custom && !missing && (install!=null || route=="Configured MCP"));
+        Step(BridgeStep,"Bridge",!custom && !missing && install!=null);
         Step(AppStep,"App open",running);
         Step(HandshakeStep,"Verified",false);
-        SetupHint.Text=custom?"Select the MCP connector for this edition.":
+        SetupHint.Text=custom?"No native connector is available for this edition.":
             missing?"Install the bridge for "+install!.Name+" "+install.Edition+", then reopen the application.":
-            route=="Configured MCP"?"Check the configured server’s available tools.":
             AppName=="Both"?"Open a Rhino model and a Revit project, then check both connections.":
             install==null?"No standard installation found. Open the application manually, then check the connection.":
-            AppName is "Rhino" or "Grasshopper"?"Open a model and enable MCP in the Archi-Tec panel. Then check the connection.":
+            AppName is "Rhino" or "Grasshopper"?"Open a model after installing the Studio native connector.":
             AppName is "Blender" or "3ds Max" or "FreeCAD" or "Maya"?"Open the app from Studio to start its scene bridge, then check the connection.":
             "Open a document in "+install.Name+", then check the connection.";
     }
@@ -69,7 +68,7 @@ public partial class StudioWindow
     }
     async void InstallBridgeClick(object s,RoutedEventArgs e)
     {
-        if(Connections.Route(Target)=="Connector required"){AddHost(s,e);UpdateSetup();return;}
+        if(Connections.Route(Target)=="Connector required")return;
         if(SelectedInstall is not {} host)return;
         await Run(async()=>{await HostSetup.Install(host);UpdateSetup();SetupHint.Text="Bridge installed. Reopen "+host.Name+" and check the connection.";});
     }
@@ -85,12 +84,6 @@ public partial class StudioWindow
             {
                 foreach(var host in Target=="Both"?new[]{"Rhino","Revit"}:new[]{Target})
                 {
-                    if(Connections.Route(host)=="Configured MCP")
-                    {
-                        var tools=await studio.Tools(host);
-                        if(tools.Count==0)throw new IOException("Connected server has no tools.");
-                        continue;
-                    }
                     var command=host is "Revit" or "Rhino"?host.ToLowerInvariant()+"_get_context":"get_context";
                     var result=await studio.Call(host,command,new System.Text.Json.Nodes.JsonObject());
                     if((bool?)result["isError"]==true)throw new IOException(Wire.Describe(result));
@@ -100,7 +93,7 @@ public partial class StudioWindow
                         if((bool?)graph["isError"]==true)throw new IOException(Wire.Describe(graph));
                     }
                 }
-                Step(BridgeStep,"Bridge",true);Step(HandshakeStep,"Verified",true);if(Connections.Route(Target)!="Configured MCP")Step(AppStep,"App open",true);
+                Step(BridgeStep,"Bridge",true);Step(HandshakeStep,"Verified",true);Step(AppStep,"App open",true);
                 SetupHint.Text="✓  "+Target+" responded at "+DateTime.Now.ToShortTimeString()+".";
             }catch(Exception ex){SetupHint.Text="Connection unavailable · "+ex.Message;throw;}
         });
@@ -110,12 +103,5 @@ public partial class StudioWindow
         var options=new List<(string,Action)> {("Attach reference or render",()=>Attach(s,e)),("Inspect document",()=>Inspect(s,e)),("Export conversation",()=>ExportThread(s,e)),("Choose output folder",ChooseFolder)};
         if(Target is "Both" or "Rhino")options.Insert(0,("Capture viewport",()=>Viewport(s,e)));
         Menu((Button)s,options.ToArray());
-    }
-    async void SignOutClick()
-    {
-        if(member==null||busy||voice.Recording)return;
-        IsEnabled=false;
-        try{await StudioAccount.SignOut(); Close();}
-        catch(Exception ex){Status.Text=ex.Message;IsEnabled=true;}
     }
 }

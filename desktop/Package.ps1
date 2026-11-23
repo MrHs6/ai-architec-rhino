@@ -1,18 +1,24 @@
-param([string]$Sdk='dotnet',[string]$Wix='wix',[string]$RhinoPackages)
+param([string]$Sdk='dotnet',[string]$Wix='wix')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
-$stage=Join-Path $root 'outputs/Studio-0.6.5'
+$stage=Join-Path $root 'outputs/Studio-0.7.0'
 $app=Join-Path $stage 'App'
-if (!$RhinoPackages) { $RhinoPackages=Join-Path $root 'outputs/Rhino9-0.6.1-beta.1' }
+
 New-Item -ItemType Directory -Path "$app/Bridges" -Force | Out-Null
 & $Sdk publish "$PSScriptRoot/Studio.csproj" -r win-x64 --self-contained true -c Release -o $app -p:NuGetAudit=false -p:DebugType=None -p:DebugSymbols=false
 if ($LASTEXITCODE) {throw 'Desktop build failed.'}
 & $Sdk build "$root/revit-plugin/ArchiTec.Revit.csproj" -c Release -p:NuGetAudit=false
 if ($LASTEXITCODE) {throw 'Revit build failed.'}
 Copy-Item "$root/revit-plugin/bin/Release/net8.0-windows/ArchiTec.Revit.dll","$PSScriptRoot/Studio.Revit2025.addin" "$app/Bridges" -Force
-foreach ($edition in 'rh8_31','rh9') {
-    $package=Get-Item "$RhinoPackages/ai-architec-rhino-0.6.1-beta.1-$edition-win.yak"
-    Copy-Item -LiteralPath $package.FullName -Destination "$app/Bridges" -Force
+foreach ($major in 8,9) {
+    $hostArgs = if ($major -eq 8) { @('-p:BuildWithNuGet=true') } else { @("-p:RhinoSystemDir=$env:ProgramFiles/Rhino 9/System") }
+    $dest = "$app/Bridges/Rhino$major"
+    $compiled = "$stage/Native$major"
+    & $Sdk build "$root/studio-rhino-native/StudioRhino.csproj" -c Release $hostArgs -p:NuGetAudit=false -o $compiled
+    if ($LASTEXITCODE) {throw "Rhino $major connector build failed."}
+    New-Item -ItemType Directory -Path $dest -Force | Out-Null
+    Copy-Item "$compiled/ArchiTecStudioNative.rhp" $dest -Force
+    Set-Content "$dest/manifest.yml" "name: architec-studio-native`nversion: 0.7.0`nauthors: [AI Archi-Tec]`ndescription: Native document connector for Archi-Tec Studio"
 }
 Copy-Item "$PSScriptRoot/Quickstart.md" $app -Force
 Add-Type -AssemblyName System.Drawing
@@ -29,5 +35,5 @@ foreach ($art in @(@('Dialog',493,312,162),@('Banner',493,58,110))) {
     $g.Dispose(); $bmp.Dispose()
 }
 $photo.Dispose()
-& $Wix build "$PSScriptRoot/StudioSetup.wxs" -arch x64 -ext WixToolset.UI.wixext -d "Payload=$app" -d "BrandIcon=$PSScriptRoot/Assets/Studio.ico" -d "DialogArt=$stage/Dialog.bmp" -d "BannerArt=$stage/Banner.bmp" -o "$root/outputs/AI-Archi-Tec-Studio-0.6.5-x64.msi"
+& $Wix build "$PSScriptRoot/StudioSetup.wxs" -arch x64 -ext WixToolset.UI.wixext -d "Payload=$app" -d "BrandIcon=$PSScriptRoot/Assets/Studio.ico" -d "DialogArt=$stage/Dialog.bmp" -d "BannerArt=$stage/Banner.bmp" -o "$root/outputs/AI-Archi-Tec-Studio-0.7.0-x64.msi"
 if ($LASTEXITCODE) {throw 'MSI build failed.'}

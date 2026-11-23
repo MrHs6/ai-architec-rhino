@@ -10,7 +10,7 @@ internal static class PlatformNavigation
         var thread = new Thread(() =>
         {
             var app = new Application();
-            var window = new StudioWindow { ShowInTaskbar = false, ShowActivated = false };
+            var window = new StudioWindow("fixture") { ShowInTaskbar = false, ShowActivated = false };
             window.ContentRendered += async (_, _) =>
             {
                 try

@@ -1,3 +1,5 @@
+**[AI Archi-Tec Studio 0.7.0 for Windows](desktop/README.md)** · [Installer and release notes](https://github.com/MrHs6/ai-architec-rhino/releases/tag/studio-v0.7.0) · [Installation and connection guide](desktop/Quickstart.md)
+
 [Rhino 9 installation and compatibility beta](docs/RHINO9.md) · Windows installer includes separate Rhino 8 and Rhino 9 packages.
 
 <p align="center"><img src="rhino-plugin/src/ArchiTec.Rhino/Assets/logo.png" width="72" alt="AI Archi-Tec logo"></p>

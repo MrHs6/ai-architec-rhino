@@ -1,5 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="AI Archi-Tec Studio" Manufacturer="AI Archi-Tec" Version="0.6.5" Language="1033" Scope="perUser" UpgradeCode="5871912E-829B-4BB8-9F11-FB3A928DD693">
+  <Package Name="AI Archi-Tec Studio" Manufacturer="AI Archi-Tec" Version="0.7.0" Language="1033" Scope="perUser" UpgradeCode="5871912E-829B-4BB8-9F11-FB3A928DD693">
     <MajorUpgrade DowngradeErrorMessage="A newer version of Studio is already installed."/>
     <MediaTemplate EmbedCab="yes" CompressionLevel="medium"/>
     <Icon Id="StudioIcon" SourceFile="$(var.BrandIcon)"/>

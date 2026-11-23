@@ -65,13 +65,14 @@ internal static class HostSetup
         installs.FirstOrDefault(x=>x.Name==(name=="Grasshopper"?"Rhino":name) &&
             (edition=="Automatic" || x.Edition==edition || edition.EndsWith(".x") && x.Edition.StartsWith(edition[..^1],StringComparison.Ordinal)));
 
+    static string RhinoFolder(HostInstall host)=>Path.Combine(Roaming,"McNeel","Rhinoceros","packages",host.Edition+".0","architec-studio-native","0.7.0");
     static string RevitFolder=>Path.Combine(Roaming,"Autodesk","Revit","Addins","2025");
     static string SketchFile(HostInstall host)=>Path.Combine(Roaming,"SketchUp","SketchUp "+host.Edition,"SketchUp","Plugins","architec_studio.rb");
     internal static bool NeedsInstall(HostInstall host)
     {
         if(host.Name=="Rhino"){
-            var path=Path.Combine(Roaming,"McNeel","Rhinoceros","packages",host.Edition+".0","ai-architec-rhino");
-            return !Directory.Exists(path)||Directory.GetFiles(path,"AIArchiTec.McpBridge.exe",SearchOption.AllDirectories).Length==0;
+            var bundle=Path.Combine(Payload,"Rhino"+host.Edition);
+            return Directory.Exists(bundle) && Directory.GetFiles(bundle).Any(f=>!File.Exists(Path.Combine(RhinoFolder(host),Path.GetFileName(f))) || !File.ReadAllBytes(f).SequenceEqual(File.ReadAllBytes(Path.Combine(RhinoFolder(host),Path.GetFileName(f)))));
         }
         if(host.Name=="Revit" && host.Edition=="2025")return !File.Exists(Path.Combine(RevitFolder,"Studio.Revit2025.addin"))||!File.Exists(Path.Combine(RevitFolder,"ArchiTecStudio","ArchiTec.Revit.dll")) || (File.Exists(Path.Combine(Payload,"ArchiTec.Revit.dll")) && !File.ReadAllBytes(Path.Combine(Payload,"ArchiTec.Revit.dll")).SequenceEqual(File.ReadAllBytes(Path.Combine(RevitFolder,"ArchiTecStudio","ArchiTec.Revit.dll"))));
         if(host.Name!="SketchUp")return false;
@@ -86,7 +87,7 @@ internal static class HostSetup
         try{File.Copy(source,temp);File.Move(temp,target,true);}finally{File.Delete(temp);}
     }
 
-    internal static async Task Install(HostInstall host)
+    internal static Task Install(HostInstall host)
     {
         if(host.Name=="Revit" && host.Edition=="2025"){
             InstallFile(Path.Combine(Payload,"ArchiTec.Revit.dll"),Path.Combine(RevitFolder,"ArchiTecStudio","ArchiTec.Revit.dll"));
@@ -94,12 +95,10 @@ internal static class HostSetup
         }else if(host.Name=="SketchUp"){
             InstallFile(Path.Combine(Scripts,"architec_studio.rb"),SketchFile(host));
         }else if(host.Name=="Rhino"){
-            var pattern=host.Edition switch{"8"=>"*-rh8_31-win.yak","9"=>"*-rh9-win.yak",_=>throw new IOException("Choose Rhino 8 or 9.")};
-            var info=new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(host.Exe)!,"Yak.exe")){UseShellExecute=false,CreateNoWindow=true};
-            info.ArgumentList.Add("install");info.ArgumentList.Add(Directory.GetFiles(Payload,pattern).Single());
-            using var process=Process.Start(info)!;await process.WaitForExitAsync();
-            if(process.ExitCode!=0)throw new IOException("Rhino Package Manager could not install the bridge.");
+            var bundle=Path.Combine(Payload,"Rhino"+host.Edition);
+            foreach(var file in Directory.GetFiles(bundle))InstallFile(file,Path.Combine(RhinoFolder(host),Path.GetFileName(file)));
         }
+        return Task.CompletedTask;
     }
 
     internal static void Launch(HostInstall host)

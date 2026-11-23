@@ -26,7 +26,6 @@ public partial class StudioWindow
     }
     void ToggleRail(object s,RoutedEventArgs e){ ShowChat(); SetRail(Rail.Visibility!=Visibility.Visible); }
     void ProviderMenu(object s,RoutedEventArgs e){ShowChat();Settings.IsExpanded=!Settings.IsExpanded;}
-    void EndpointChanged(object s,TextChangedEventArgs e){if(Key!=null && Service=="Compatible API")Key.Clear();}
     void Menu(Button anchor,params (string title,Action command)[] items)
     {
         var popup=new ContextMenu{Style=(Style)FindResource("PopupMenu"),PlacementTarget=anchor,Placement=PlacementMode.Bottom,Background=ColorBrush("#282331"),Foreground=Brushes.White};
@@ -34,7 +33,7 @@ public partial class StudioWindow
         {
             var icon=title switch {
                 "Rhino + Revit"=>"flow", "New conversation"=>"chat", "Attach reference or render"=>"attach",
-                "Connector setup" or "External MCP configuration"=>"link", "Developer documentation"=>"book",
+                "Developer documentation"=>"book",
                 "Capture viewport" or "Inspect document"=>"build", _=>"apps"
             };
             var row=new StackPanel{Orientation=Orientation.Horizontal};
@@ -49,7 +48,7 @@ public partial class StudioWindow
     }
     void WorkspaceMenu(object s,RoutedEventArgs e){ ShowChat(); Menu((Button)s,
         ("Rhino + Revit",()=>{if(!busy && !voice.Recording) Host.SelectedItem=Host.Items.Cast<ListBoxItem>().First(i=>Equals(i.Tag,"Both"));}),("New conversation",()=>Clear(s,e)),("Export conversation…",()=>ExportThread(s,e)),("Choose output folder…",ChooseFolder),
-        ("Connector setup",()=>AddHost(s,e)),("External MCP configuration",()=>Config(s,e)),("Developer documentation",()=>DocsClick(s,e))); }
+        ("Developer documentation",()=>DocsClick(s,e))); }
     void StudioMenu(object s,RoutedEventArgs e)=>OpenStudioPage("Studio account");
     void OpenLink(string url){try{Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}catch(Exception ex){Status.Text=ex.Message;}}
     void ChooseFolder(){var dialog=new OpenFolderDialog{Title="Choose the default folder for this session"};if(dialog.ShowDialog(this)==true){outputFolder=dialog.FolderName;Status.Text="Output folder · "+outputFolder;}}
@@ -83,17 +82,21 @@ public partial class StudioWindow
         if(state=="done" || state=="failed")currentStep=null;
         Scroll.ScrollToEnd();
     }
-    async void TestModel(object s,RoutedEventArgs e){
-        if(busy || voice.Recording)return;
-        ModelTestStatus.Text="Contacting "+Service+"…";
-        bool verified=false;
-        await Run(async()=>{
-        if(Service is not ("Compatible API" or CodexModel.Provider) && string.IsNullOrWhiteSpace(Key.Password))throw new IOException("Enter the API key for "+Service+".");
-        if(Model.Text.Trim().Length==0)throw new IOException("Enter a model ID.");
-        var thread=new JsonArray(Wire.Node(new{role="user",content="Reply with OK."}));
-        await studio.Chat(Target,Service,Model.Text.Trim(),Key.Password.Trim(),thread,false,_=>{},_=>{},Activity,Endpoint.Text,probe:true);
-        verified=true;
-        });
-        ModelTestStatus.Text=verified?Service+" replied using "+Model.Text.Trim()+".":Status.Text;
+    async void RefreshModelsClick(object sender,RoutedEventArgs e)=>await RefreshModels();
+    bool loadingModels;
+    async Task RefreshModels()
+    {
+        if(loadingModels)return;
+        loadingModels=true;
+        ModelTestStatus.Text="Loading the OpenRouter catalog…";
+        try {
+            var models=await RouterAccess.Models(apiKey);
+            string chat=ChatModel.Text, build=BuildModel.Text;
+            ChatModel.ItemsSource=models.Select(m=>m.Id).ToArray();
+            BuildModel.ItemsSource=models.Where(m=>m.Tools).Select(m=>m.Id).ToArray();
+            ChatModel.Text=chat; BuildModel.Text=build;
+            ModelTestStatus.Text=$"{models.Length} models available.";
+        }catch(Exception ex){ModelTestStatus.Text=ex.Message+" You can still enter a model ID manually.";}
+        finally{loadingModels=false;}
     }
 }
